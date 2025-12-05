@@ -13,6 +13,29 @@
 rootProject.name = "ogiri"
 
 /*
+ * Centralized version management.
+ *
+ * This is the single source of truth for the project version.
+ * Version determination order:
+ *   1. Git tag (v1.0.1, v1.0.2, etc.)
+ *   2. Environment variable RELEASE_VERSION
+ *   3. Default version below
+ *
+ * To set version:
+ *   - Tag: git tag v1.0.1 && git push origin v1.0.1
+ *   - Env:  export RELEASE_VERSION=1.0.1
+ *   - Or:   gradle -PRELEASE_VERSION=1.0.1 build
+ */
+val projectVersion = System.getenv("RELEASE_VERSION")
+  ?.takeIf { it.isNotBlank() }
+  ?: (System.getProperty("RELEASE_VERSION")?.takeIf { it.isNotBlank() })
+  ?: "1.0.1"
+
+include(":ogiri-core")
+include(":sample:sample-java")
+include(":sample:sample-kotlin")
+
+/*
  * Plugin repositories:
  * Where Gradle downloads plugins declared in plugins {} blocks of build scripts.
  * These repos apply only to plugin lookup, NOT library dependencies.

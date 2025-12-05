@@ -1,0 +1,73 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Import GPG key
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
+
+      - name: Publish to Maven Central
+        run: ./gradlew publish --no-daemon
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.VERSION }}
+          ORG_GRADLE_PROJECT_ossrhUsername: ${{ secrets.OSSRH_USERNAME }}
+          ORG_GRADLE_PROJECT_ossrhPassword: ${{ secrets.OSSRH_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingKeyId: ${{ secrets.GPG_KEY_ID }}
+          ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.GPG_PASSPHRASE }}
+          ORG_GRADLE_PROJECT_signingSecretKeyRingFile: ${{ runner.temp }}/secring.gpg
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.version.outputs.VERSION }}
+          name: Release ${{ steps.version.outputs.VERSION }}
+          body: |
+            ## Release ${{ steps.version.outputs.VERSION }}
+
+            ### Artifacts
+            Published to Maven Central: `com.quantipixels.ogiri:ogiri:${{ steps.version.outputs.VERSION }}`
+
+            ### Installation
+            ```gradle
+            implementation 'com.quantipixels.ogiri:ogiri:${{ steps.version.outputs.VERSION }}'
+            ```
+
+            For details, see [CHANGELOG](./CHANGELOG.md) and [README](./README.md).
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify published artifact
+        run: |
+          sleep 30  # Wait for Maven Central to sync
+          curl -f https://repo1.maven.org/maven2/com/quantipixels/ogiri/ogiri/${{ steps.version.outputs.VERSION }}/ogiri-${{ steps.version.outputs.VERSION }}.jar \
+            && echo "✓ Artifact verified on Maven Central" \
+            || echo "⚠ Artifact not yet available on Maven Central (may take a few minutes)"

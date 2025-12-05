@@ -11,11 +11,16 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  */
 
-// Apply centralized version management
-apply(from = "gradle/version.gradle.kts")
+package com.quantipixels.ogiri.samples.kotlin.config
 
-subprojects {
-  repositories {
-    mavenCentral()
-  }
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import org.springframework.security.crypto.password.PasswordEncoder
+
+@Configuration
+class SecurityConfig {
+
+  @Bean
+  fun passwordEncoder(): PasswordEncoder = BCryptPasswordEncoder()
 }
