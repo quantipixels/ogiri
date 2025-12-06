@@ -47,7 +47,7 @@ dependencies {
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 
   // Database drivers
-  implementation("com.h2database:h2:2.2.224")
+  implementation("com.h2database:h2:2.4.240")
   runtimeOnly("org.postgresql:postgresql:42.7.2")
 
   testImplementation("org.springframework.boot:spring-boot-starter-test") {

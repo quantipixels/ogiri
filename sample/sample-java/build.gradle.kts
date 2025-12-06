@@ -40,7 +40,7 @@ dependencies {
   testImplementation("org.springframework.boot:spring-boot-starter-test") {
     exclude(module = "mockito-core")
   }
-  testImplementation("com.h2database:h2:2.2.224")
+  testImplementation("com.h2database:h2:2.4.240")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
