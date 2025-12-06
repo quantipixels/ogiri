@@ -1,0 +1,13 @@
+jdk:
+  - openjdk17
+
+before_install:
+  - sdk install java 17.0.1-open
+  - sdk use java 17.0.1-open
+
+install:
+  - ./gradlew clean build -x test
+
+before_script:
+  - echo "Building with Java 17"
+  - java -version
