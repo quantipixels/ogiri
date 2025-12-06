@@ -35,7 +35,7 @@ dependencies {
   implementation(project(":ogiri-core"))
   implementation("org.springframework.boot:spring-boot-starter-web")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-  implementation("org.postgresql:postgresql:42.7.2")
+  implementation("org.postgresql:postgresql:42.7.8")
 
   testImplementation("org.springframework.boot:spring-boot-starter-test") {
     exclude(module = "mockito-core")
