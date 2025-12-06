@@ -1,8 +1,8 @@
 # Òǵìrì
 
-[![Test](https://github.com/mosobande/ogiri-security/actions/workflows/test.yml/badge.svg)](https://github.com/mosobande/ogiri-security/actions/workflows/test.yml)
-[![Build](https://github.com/mosobande/ogiri-security/actions/workflows/build.yml/badge.svg)](https://github.com/mosobande/ogiri-security/actions/workflows/build.yml)
-[![Lint](https://github.com/mosobande/ogiri-security/actions/workflows/lint.yml/badge.svg)](https://github.com/mosobande/ogiri-security/actions/workflows/lint.yml)
+[![Test](https://github.com/mosobande/ogiri/actions/workflows/test.yml/badge.svg)](https://github.com/mosobande/ogiri/actions/workflows/test.yml)
+[![Build](https://github.com/mosobande/ogiri/actions/workflows/build.yml/badge.svg)](https://github.com/mosobande/ogiri/actions/workflows/build.yml)
+[![Lint](https://github.com/mosobande/ogiri/actions/workflows/lint.yml/badge.svg)](https://github.com/mosobande/ogiri/actions/workflows/lint.yml)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.quantipixels.ogiri/ogiri-core/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.quantipixels.ogiri/ogiri-core)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Java](https://img.shields.io/badge/java-17+-blue.svg)](https://www.oracle.com/java/technologies/javase/jdk17-archive.html)
@@ -53,8 +53,8 @@ For snapshot or development versions directly from git:
 
 <dependency>
   <groupId>com.github.mosobande</groupId>
-  <artifactId>ogiri-security</artifactId>
-  <version>ori</version>
+  <artifactId>ogiri</artifactId>
+  <version>v1.0.1</version>
 </dependency>
 ```
 
@@ -65,9 +65,9 @@ repositories {
 }
 
 dependencies {
-  implementation("com.github.mosobande:ogiri-security:ori")           // Latest from ori branch
-  implementation("com.github.mosobande:ogiri-security:v1.0.1")       // Release tag
-  implementation("com.github.mosobande:ogiri-security:abc123def")    // Specific commit
+  implementation("com.github.mosobande:ogiri:ori")           // Latest from ori branch
+  implementation("com.github.mosobande:ogiri:v1.0.1")       // Release tag (https://jitpack.io/#mosobande/ogiri/v1.0.1)
+  implementation("com.github.mosobande:ogiri:abc123def")    // Specific commit
 }
 ```
 

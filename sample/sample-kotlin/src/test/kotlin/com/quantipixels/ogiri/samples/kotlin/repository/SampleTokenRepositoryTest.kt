@@ -10,13 +10,15 @@
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  */
-
 package com.quantipixels.ogiri.samples.kotlin.repository
 
 import com.quantipixels.ogiri.samples.kotlin.entity.SampleToken
 import java.time.Instant
 import java.time.temporal.ChronoUnit
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -26,9 +28,7 @@ import org.springframework.test.context.ActiveProfiles
 @DataJpaTest
 @ActiveProfiles("test")
 class SampleTokenRepositoryTest {
-
-  @Autowired
-  private lateinit var tokenRepository: SampleTokenRepository
+  @Autowired private lateinit var tokenRepository: SampleTokenRepository
 
   private val testUserId = 1L
   private val testClient = "test-client"
@@ -41,12 +41,13 @@ class SampleTokenRepositoryTest {
 
   @Test
   fun `should save and retrieve token by user and client`() {
-    val token = SampleToken(
-      userId = testUserId,
-      client = testClient,
-      token = testToken,
-      expiryAt = Instant.now().plus(1, ChronoUnit.HOURS)
-    )
+    val token =
+        SampleToken(
+            userId = testUserId,
+            client = testClient,
+            token = testToken,
+            expiryAt = Instant.now().plus(1, ChronoUnit.HOURS),
+        )
     tokenRepository.save(token)
 
     val retrieved = tokenRepository.findByUserIdAndClient(testUserId, testClient)
@@ -66,22 +67,24 @@ class SampleTokenRepositoryTest {
   @Test
   fun `should find all tokens for user ordered by updated_at DESC`() {
     // Create multiple tokens for same user
-    val token1 = SampleToken(
-      userId = testUserId,
-      client = "client-1",
-      token = "token-1",
-      expiryAt = Instant.now().plus(1, ChronoUnit.HOURS)
-    )
-    val token2 = SampleToken(
-      userId = testUserId,
-      client = "client-2",
-      token = "token-2",
-      expiryAt = Instant.now().plus(2, ChronoUnit.HOURS)
-    )
+    val token1 =
+        SampleToken(
+            userId = testUserId,
+            client = "client-1",
+            token = "token-1",
+            expiryAt = Instant.now().plus(1, ChronoUnit.HOURS),
+        )
+    val token2 =
+        SampleToken(
+            userId = testUserId,
+            client = "client-2",
+            token = "token-2",
+            expiryAt = Instant.now().plus(2, ChronoUnit.HOURS),
+        )
 
     tokenRepository.save(token1)
     tokenRepository.flush()
-    Thread.sleep(100)  // Ensure different timestamps
+    Thread.sleep(100) // Ensure different timestamps
     tokenRepository.save(token2)
 
     // Retrieve all tokens
@@ -99,19 +102,21 @@ class SampleTokenRepositoryTest {
     val now = Instant.now()
 
     // Create expired token
-    val expiredToken = SampleToken(
-      userId = testUserId,
-      client = "expired-client",
-      token = testToken,
-      expiryAt = now.minus(1, ChronoUnit.HOURS)
-    )
+    val expiredToken =
+        SampleToken(
+            userId = testUserId,
+            client = "expired-client",
+            token = testToken,
+            expiryAt = now.minus(1, ChronoUnit.HOURS),
+        )
     // Create valid token
-    val validToken = SampleToken(
-      userId = testUserId,
-      client = "valid-client",
-      token = testToken,
-      expiryAt = now.plus(1, ChronoUnit.HOURS)
-    )
+    val validToken =
+        SampleToken(
+            userId = testUserId,
+            client = "valid-client",
+            token = testToken,
+            expiryAt = now.plus(1, ChronoUnit.HOURS),
+        )
 
     tokenRepository.save(expiredToken)
     tokenRepository.save(validToken)
@@ -125,12 +130,13 @@ class SampleTokenRepositoryTest {
 
   @Test
   fun `should delete token by user and client`() {
-    val token = SampleToken(
-      userId = testUserId,
-      client = testClient,
-      token = testToken,
-      expiryAt = Instant.now().plus(1, ChronoUnit.HOURS)
-    )
+    val token =
+        SampleToken(
+            userId = testUserId,
+            client = testClient,
+            token = testToken,
+            expiryAt = Instant.now().plus(1, ChronoUnit.HOURS),
+        )
     tokenRepository.save(token)
 
     // Delete token
@@ -142,24 +148,27 @@ class SampleTokenRepositoryTest {
 
   @Test
   fun `should delete multiple tokens by client list`() {
-    val token1 = SampleToken(
-      userId = testUserId,
-      client = "client-1",
-      token = "token-1",
-      expiryAt = Instant.now().plus(1, ChronoUnit.HOURS)
-    )
-    val token2 = SampleToken(
-      userId = testUserId,
-      client = "client-2",
-      token = "token-2",
-      expiryAt = Instant.now().plus(1, ChronoUnit.HOURS)
-    )
-    val token3 = SampleToken(
-      userId = testUserId,
-      client = "client-3",
-      token = "token-3",
-      expiryAt = Instant.now().plus(1, ChronoUnit.HOURS)
-    )
+    val token1 =
+        SampleToken(
+            userId = testUserId,
+            client = "client-1",
+            token = "token-1",
+            expiryAt = Instant.now().plus(1, ChronoUnit.HOURS),
+        )
+    val token2 =
+        SampleToken(
+            userId = testUserId,
+            client = "client-2",
+            token = "token-2",
+            expiryAt = Instant.now().plus(1, ChronoUnit.HOURS),
+        )
+    val token3 =
+        SampleToken(
+            userId = testUserId,
+            client = "client-3",
+            token = "token-3",
+            expiryAt = Instant.now().plus(1, ChronoUnit.HOURS),
+        )
 
     tokenRepository.save(token1)
     tokenRepository.save(token2)
@@ -175,18 +184,20 @@ class SampleTokenRepositoryTest {
 
   @Test
   fun `should delete all tokens for user`() {
-    val token1 = SampleToken(
-      userId = testUserId,
-      client = "client-1",
-      token = "token-1",
-      expiryAt = Instant.now().plus(1, ChronoUnit.HOURS)
-    )
-    val token2 = SampleToken(
-      userId = testUserId,
-      client = "client-2",
-      token = "token-2",
-      expiryAt = Instant.now().plus(1, ChronoUnit.HOURS)
-    )
+    val token1 =
+        SampleToken(
+            userId = testUserId,
+            client = "client-1",
+            token = "token-1",
+            expiryAt = Instant.now().plus(1, ChronoUnit.HOURS),
+        )
+    val token2 =
+        SampleToken(
+            userId = testUserId,
+            client = "client-2",
+            token = "token-2",
+            expiryAt = Instant.now().plus(1, ChronoUnit.HOURS),
+        )
 
     tokenRepository.save(token1)
     tokenRepository.save(token2)
@@ -200,18 +211,20 @@ class SampleTokenRepositoryTest {
 
   @Test
   fun `should delete tokens from collection`() {
-    val token1 = SampleToken(
-      userId = testUserId,
-      client = "client-1",
-      token = "token-1",
-      expiryAt = Instant.now().plus(1, ChronoUnit.HOURS)
-    )
-    val token2 = SampleToken(
-      userId = testUserId,
-      client = "client-2",
-      token = "token-2",
-      expiryAt = Instant.now().plus(1, ChronoUnit.HOURS)
-    )
+    val token1 =
+        SampleToken(
+            userId = testUserId,
+            client = "client-1",
+            token = "token-1",
+            expiryAt = Instant.now().plus(1, ChronoUnit.HOURS),
+        )
+    val token2 =
+        SampleToken(
+            userId = testUserId,
+            client = "client-2",
+            token = "token-2",
+            expiryAt = Instant.now().plus(1, ChronoUnit.HOURS),
+        )
 
     val saved1 = tokenRepository.save(token1)
     val saved2 = tokenRepository.save(token2)
@@ -226,12 +239,13 @@ class SampleTokenRepositoryTest {
 
   @Test
   fun `should update token properties`() {
-    var token = SampleToken(
-      userId = testUserId,
-      client = testClient,
-      token = testToken,
-      expiryAt = Instant.now().plus(1, ChronoUnit.HOURS)
-    )
+    var token =
+        SampleToken(
+            userId = testUserId,
+            client = testClient,
+            token = testToken,
+            expiryAt = Instant.now().plus(1, ChronoUnit.HOURS),
+        )
     token = tokenRepository.save(token)
 
     // Update token

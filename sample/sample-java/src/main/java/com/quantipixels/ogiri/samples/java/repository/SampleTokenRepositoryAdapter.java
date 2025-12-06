@@ -10,7 +10,6 @@
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  */
-
 package com.quantipixels.ogiri.samples.java.repository;
 
 import com.quantipixels.ogiri.samples.java.entity.SampleToken;
@@ -23,12 +22,11 @@ import org.springframework.stereotype.Repository;
 /**
  * Adapter that implements TokenRepository for SampleTokenRepository.
  *
- * This adapter delegates to SampleTokenRepository (JpaRepository) to provide
- * the TokenRepository interface required by ogiri's TokenService.
+ * <p>This adapter delegates to SampleTokenRepository (JpaRepository) to provide the TokenRepository
+ * interface required by ogiri's TokenService.
  *
- * The adapter pattern is used to avoid method signature conflicts between
- * TokenRepository.save() and JpaRepository.save() which have different
- * generic type bounds.
+ * <p>The adapter pattern is used to avoid method signature conflicts between TokenRepository.save()
+ * and JpaRepository.save() which have different generic type bounds.
  */
 @Repository
 public class SampleTokenRepositoryAdapter implements TokenRepository<SampleToken> {

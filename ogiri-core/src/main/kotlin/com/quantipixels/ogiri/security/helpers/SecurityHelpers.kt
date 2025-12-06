@@ -22,14 +22,14 @@ val pathMatcher = AntPathMatcher()
 
 object SecurityHelpers {
   val WHITE_LIST_PREFIXES: List<String> =
-    listOf(
-      "/swagger-ui/**",
-      "/swagger-ui.html",
-      "/webjars/**",
-      "/openapi/**",
-      "/actuator/health",
-      "/actuator/info",
-    )
+      listOf(
+          "/swagger-ui/**",
+          "/swagger-ui.html",
+          "/webjars/**",
+          "/openapi/**",
+          "/actuator/health",
+          "/actuator/info",
+      )
 
   fun getClientIP(request: HttpServletRequest): String? {
     val xForwardedFor = request.getHeader("X-Forwarded-For")

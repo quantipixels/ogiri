@@ -10,7 +10,6 @@
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  */
-
 package com.quantipixels.ogiri.samples.java.config;
 
 import org.springframework.context.annotation.Bean;

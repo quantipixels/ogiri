@@ -26,7 +26,8 @@ interface SubTokenRegistration {
   val name: String
 
   /** Whether this sub-token should be created when no explicit list is provided. */
-  val includeByDefault: Boolean get() = true
+  val includeByDefault: Boolean
+    get() = true
 
   /** Compute the client id for this sub-token given the parent client id. */
   fun clientIdFor(parentClientId: String): String
@@ -38,7 +39,8 @@ interface SubTokenRegistration {
   fun expiry(parentExpiry: Instant): Instant
 
   /** Whether issuing this sub-token should always rotate (overwrite). */
-  val forceNew: Boolean get() = false
+  val forceNew: Boolean
+    get() = false
 }
 
 interface SubTokenRegistry {
@@ -47,7 +49,7 @@ interface SubTokenRegistry {
 
 /** Simple registry implementation backed by a provided list of [SubTokenRegistration] beans. */
 class DefaultSubTokenRegistry(
-  private val registrations: List<SubTokenRegistration> = emptyList(),
+    private val registrations: List<SubTokenRegistration> = emptyList(),
 ) : SubTokenRegistry {
   override fun registrations(): List<SubTokenRegistration> = registrations
 }

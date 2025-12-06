@@ -13,7 +13,7 @@ We are committed to providing a welcoming and inclusive environment for all cont
 Found a bug? Help us fix it!
 
 **Before reporting:**
-- Check if the issue already exists on [GitHub Issues](https://github.com/mosobande/ogiri-security/issues)
+- Check if the issue already exists on [GitHub Issues](https://github.com/mosobande/ogiri/issues)
 - Review the [README.md](./README.md) and documentation to rule out configuration issues
 - Check [SECURITY.md](./SECURITY.md) if it's a security concern
 
@@ -63,8 +63,8 @@ Have an idea for improvement? We'd love to hear it!
 
 1. **Fork the repository**
    ```bash
-   git clone https://github.com/YOUR_USERNAME/ogiri-security.git
-   cd ogiri-security
+   git clone https://github.com/YOUR_USERNAME/ogiri.git
+   cd ogiri
    ```
 
 2. **Create a branch**
@@ -235,7 +235,7 @@ git commit -m "refactor: extract common validation logic"
 ## Project Structure
 
 ```
-ogiri-security/
+ogiri/
 ├── ogiri-core/              # Main library (published to Maven Central)
 │   ├── src/main/kotlin/     # Source code
 │   ├── src/test/kotlin/     # Tests

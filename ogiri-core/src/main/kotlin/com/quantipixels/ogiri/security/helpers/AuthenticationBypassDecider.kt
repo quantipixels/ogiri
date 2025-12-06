@@ -22,15 +22,14 @@ import org.springframework.security.core.context.SecurityContextHolder
  * paths, CORS preflight, or public routes).
  */
 class AuthenticationBypassDecider(
-  private val routeCatalog: RouteCatalog,
+    private val routeCatalog: RouteCatalog,
 ) {
   fun canSkip(request: HttpServletRequest): Boolean {
     val isAuthenticated = SecurityContextHolder.getContext().authentication != null
     val isWhitelisted = SecurityHelpers.isWhitelisted(request.requestURI)
     val isPreflight = SecurityHelpers.isPreflight(request.method)
     val method = runCatching { HttpMethod.valueOf(request.method) }.getOrNull()
-    val isPublicRoute =
-      method?.let { routeCatalog.isPublicRoute(request.requestURI, it) } ?: false
+    val isPublicRoute = method?.let { routeCatalog.isPublicRoute(request.requestURI, it) } ?: false
     return isAuthenticated || isWhitelisted || isPreflight || isPublicRoute
   }
 }

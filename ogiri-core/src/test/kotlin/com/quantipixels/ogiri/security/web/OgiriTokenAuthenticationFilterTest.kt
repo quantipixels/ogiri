@@ -29,6 +29,7 @@ import com.quantipixels.ogiri.security.tokens.TokenRepository
 import com.quantipixels.ogiri.security.tokens.TokenService
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
+import java.time.Instant
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
@@ -40,7 +41,6 @@ import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.crypto.password.NoOpPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.AuthenticationEntryPoint
-import java.time.Instant
 
 class OgiriTokenAuthenticationFilterTest {
   private val passwordEncoder: PasswordEncoder = NoOpPasswordEncoder.getInstance()
@@ -48,55 +48,57 @@ class OgiriTokenAuthenticationFilterTest {
 
   private val user = TestFixtures.testUser(userId = 1L, username = "user")
   private val userDirectory =
-    object : TokenUserDirectory {
-      override fun loadUserByUsername(username: String) = user
+      object : TokenUserDirectory {
+        override fun loadUserByUsername(username: String) = user
 
-      override fun findById(id: Long) = user.takeIf { it.userId == id }
+        override fun findById(id: Long) = user.takeIf { it.userId == id }
 
-      override fun findByEmail(email: String) = null
+        override fun findByEmail(email: String) = null
 
-      override fun findByUsername(username: String) = user.takeIf { it.username == username }
+        override fun findByUsername(username: String) = user.takeIf { it.username == username }
 
-      override fun recordSuccessfulLogin(userId: Long) {}
-    }
+        override fun recordSuccessfulLogin(userId: Long) {}
+      }
 
   // Custom TokenService that implements tokenFactory for TestToken
   private inner class TestTokenService(
-    repository: TokenRepository<TestToken>,
-    passwordEncoder: PasswordEncoder,
-    userDirectory: TokenUserDirectory,
-    identifierPolicy: IdentifierPolicy,
-    subTokenRegistry: com.quantipixels.ogiri.security.tokens.SubTokenRegistry,
-    maxClients: Long = 24,
-    batchGraceSeconds: Long = 5,
-    tokenLifespanDays: Long = 14,
-  ) : TokenService<TestToken>(
-      repository,
-      passwordEncoder,
-      userDirectory,
-      identifierPolicy,
-      subTokenRegistry,
-      maxClients,
-      batchGraceSeconds,
-      tokenLifespanDays,
-    ) {
+      repository: TokenRepository<TestToken>,
+      passwordEncoder: PasswordEncoder,
+      userDirectory: TokenUserDirectory,
+      identifierPolicy: IdentifierPolicy,
+      subTokenRegistry: com.quantipixels.ogiri.security.tokens.SubTokenRegistry,
+      maxClients: Long = 24,
+      batchGraceSeconds: Long = 5,
+      tokenLifespanDays: Long = 14,
+  ) :
+      TokenService<TestToken>(
+          repository,
+          passwordEncoder,
+          userDirectory,
+          identifierPolicy,
+          subTokenRegistry,
+          maxClients,
+          batchGraceSeconds,
+          tokenLifespanDays,
+      ) {
     override fun tokenFactory(
-      userId: Long,
-      client: String,
-      hashedToken: String,
-      tokenType: com.quantipixels.ogiri.security.tokens.TokenType,
-      expiry: Instant,
-      tokenSubtype: String?,
-      plainTokenValue: String,
+        userId: Long,
+        client: String,
+        hashedToken: String,
+        tokenType: com.quantipixels.ogiri.security.tokens.TokenType,
+        expiry: Instant,
+        tokenSubtype: String?,
+        plainTokenValue: String,
     ): TestToken =
-      TestToken(
-        userId = userId,
-        client = client,
-        token = hashedToken,
-        tokenType = tokenType.name,
-        expiryAt = expiry,
-        tokenSubtype = tokenSubtype,
-      ).apply { plainToken = plainTokenValue }
+        TestToken(
+                userId = userId,
+                client = client,
+                token = hashedToken,
+                tokenType = tokenType.name,
+                expiryAt = expiry,
+                tokenSubtype = tokenSubtype,
+            )
+            .apply { plainToken = plainTokenValue }
   }
 
   @AfterEach
@@ -107,13 +109,13 @@ class OgiriTokenAuthenticationFilterTest {
   @Test
   fun `filter bypasses when decider allows`() {
     val bypassRoutes =
-      RouteCatalog(
-        listOf(
-          object : RouteRegistry {
-            override fun routes() = listOf(Route.get("/public", useAuth = false))
-          },
-        ),
-      )
+        RouteCatalog(
+            listOf(
+                object : RouteRegistry {
+                  override fun routes() = listOf(Route.get("/public", useAuth = false))
+                },
+            ),
+        )
     val bypassDecider = AuthenticationBypassDecider(bypassRoutes)
     val entryPoint = RecordingEntryPoint()
     val filter = newFilter(InMemoryTokenRepository(), bypassDecider, entryPoint).filter
@@ -185,35 +187,36 @@ class OgiriTokenAuthenticationFilterTest {
   }
 
   private data class FilterFixture(
-    val repository: TokenRepository<TestToken>,
-    val tokenService: TokenService<TestToken>,
-    val entryPoint: RecordingEntryPoint,
-    val filter: OgiriTokenAuthenticationFilter,
+      val repository: TokenRepository<TestToken>,
+      val tokenService: TokenService<TestToken>,
+      val entryPoint: RecordingEntryPoint,
+      val filter: OgiriTokenAuthenticationFilter,
   )
 
   private fun newFilter(
-    repository: TokenRepository<TestToken> = InMemoryTokenRepository(),
-    bypassDecider: AuthenticationBypassDecider = AuthenticationBypassDecider(RouteCatalog(emptyList())),
-    entryPoint: RecordingEntryPoint = RecordingEntryPoint(),
+      repository: TokenRepository<TestToken> = InMemoryTokenRepository(),
+      bypassDecider: AuthenticationBypassDecider =
+          AuthenticationBypassDecider(RouteCatalog(emptyList())),
+      entryPoint: RecordingEntryPoint = RecordingEntryPoint(),
   ): FilterFixture {
     val properties = OgiriConfigurationProperties()
     val tokenService =
-      TestTokenService(
-        repository,
-        passwordEncoder,
-        userDirectory,
-        identifierPolicy,
-        DefaultSubTokenRegistry(emptyList()),
-      )
+        TestTokenService(
+            repository,
+            passwordEncoder,
+            userDirectory,
+            identifierPolicy,
+            DefaultSubTokenRegistry(emptyList()),
+        )
     val filter =
-      OgiriTokenAuthenticationFilter(
-        userDirectory,
-        tokenService,
-        entryPoint,
-        bypassDecider,
-        identifierPolicy,
-        properties,
-      )
+        OgiriTokenAuthenticationFilter(
+            userDirectory,
+            tokenService,
+            entryPoint,
+            bypassDecider,
+            identifierPolicy,
+            properties,
+        )
     return FilterFixture(repository, tokenService, entryPoint, filter)
   }
 }
@@ -222,9 +225,9 @@ private class RecordingEntryPoint : AuthenticationEntryPoint {
   var lastRequest: HttpServletRequest? = null
 
   override fun commence(
-    request: HttpServletRequest,
-    response: HttpServletResponse,
-    authException: org.springframework.security.core.AuthenticationException,
+      request: HttpServletRequest,
+      response: HttpServletResponse,
+      authException: org.springframework.security.core.AuthenticationException,
   ) {
     lastRequest = request
   }

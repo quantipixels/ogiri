@@ -12,34 +12,34 @@
  */
 package com.quantipixels.ogiri.security.core
 
+import java.util.Base64
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 import org.springframework.mock.web.MockHttpServletRequest
 import org.springframework.mock.web.MockHttpServletResponse
-import java.util.Base64
 
 class AuthHeaderTest {
   @Test
   fun `appendAuthHeaders emits authorization and sub token payload`() {
     val authHeader =
-      AuthHeader(
-        accessToken = "token-123",
-        client = "client-a",
-        uid = "user@example.com",
-        expiry = "2030-01-01T00:00:00Z",
-        kind = "APP",
-        subTokens =
-          mapOf(
-            "device" to
-              SubTokenHeader(
-                client = "client-a.device",
-                token = "sub123",
-                expiry = "2030-01-01T00:00:00Z",
-              ),
-          ),
-      )
+        AuthHeader(
+            accessToken = "token-123",
+            client = "client-a",
+            uid = "user@example.com",
+            expiry = "2030-01-01T00:00:00Z",
+            kind = "APP",
+            subTokens =
+                mapOf(
+                    "device" to
+                        SubTokenHeader(
+                            client = "client-a.device",
+                            token = "sub123",
+                            expiry = "2030-01-01T00:00:00Z",
+                        ),
+                ),
+        )
     val response = MockHttpServletResponse()
 
     response.appendAuthHeaders(authHeader)
@@ -54,13 +54,13 @@ class AuthHeaderTest {
   fun `extractAuthHeader reads primary headers`() {
     val response = MockHttpServletResponse()
     val authHeader =
-      AuthHeader(
-        accessToken = "token-abc",
-        client = "client-b",
-        uid = "user",
-        expiry = "2030-01-01T00:00:00Z",
-        kind = "APP",
-      )
+        AuthHeader(
+            accessToken = "token-abc",
+            client = "client-b",
+            uid = "user",
+            expiry = "2030-01-01T00:00:00Z",
+            kind = "APP",
+        )
     response.appendAuthHeaders(authHeader)
 
     val encoded = response.getHeader("Authorization")!!.removePrefix("Bearer ").trim()

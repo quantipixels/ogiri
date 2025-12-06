@@ -15,8 +15,8 @@ package com.quantipixels.ogiri.security.tokens
 /**
  * Token type classifier enumeration.
  *
- * Used to distinguish between primary application tokens (APP) and sub-tokens (SUB)
- * for specialized use cases (e.g., device tokens, chat tokens).
+ * Used to distinguish between primary application tokens (APP) and sub-tokens (SUB) for specialized
+ * use cases (e.g., device tokens, chat tokens).
  *
  * Implementations can persist this as:
  * - A string column (storing the label: "app" or "sub")
@@ -56,9 +56,8 @@ enum class TokenType(val label: String) {
      * @throws IllegalArgumentException if label doesn't match any type
      */
     fun of(label: String): TokenType =
-      entries.firstOrNull {
-        it.label.equals(label, ignoreCase = true)
-      } ?: throw IllegalArgumentException("Invalid token type: $label")
+        entries.firstOrNull { it.label.equals(label, ignoreCase = true) }
+            ?: throw IllegalArgumentException("Invalid token type: $label")
 
     /**
      * Parse a TokenType from a string, with fallback to APP type if invalid.
@@ -77,8 +76,7 @@ enum class TokenType(val label: String) {
      * @return The corresponding TokenType, or APP if label is null or invalid
      */
     private fun ofNullable(label: String?): TokenType =
-      label?.let { value ->
-        entries.firstOrNull { it.label.equals(value, ignoreCase = true) }
-      } ?: APP
+        label?.let { value -> entries.firstOrNull { it.label.equals(value, ignoreCase = true) } }
+            ?: APP
   }
 }

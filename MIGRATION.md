@@ -10,7 +10,7 @@ This document outlines the changes made to support full Java and Spring Boot dev
 
 **After:** Multi-module structure
 ```
-ogiri-security/
+ogiri/
 ├── ogiri-core/          # Moved from root (main library)
 ├── sample/sample-java/  # NEW: Java integration sample
 └── sample/sample-kotlin/# NEW: Kotlin integration sample
@@ -224,7 +224,7 @@ gpg --export-secret-key <KEY_ID> | base64 | tr -d '\n'
 1. **Clone and build:**
    ```bash
    git clone <repo>
-   cd ogiri-security
+   cd ogiri
    ./gradlew build
    ```
 

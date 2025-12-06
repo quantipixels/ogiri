@@ -18,7 +18,8 @@ import java.time.Instant
  * Pure interface for token persistence - database-agnostic contract.
  *
  * This interface defines the contract for token storage without imposing any database-specific
- * dependencies or assumptions. Users implement this interface with their chosen persistence mechanism:
+ * dependencies or assumptions. Users implement this interface with their chosen persistence
+ * mechanism:
  * - JPA repositories (using Spring Data JPA)
  * - JDBC data access (using JdbcTemplate)
  * - MongoDB repositories (using MongoTemplate)
@@ -53,14 +54,11 @@ import java.time.Instant
  * ```
  */
 interface TokenRepository<T : BaseToken> {
-  // ==================== CRUD OPERATIONS ====================
-  // Core persistence operations that all implementations must support
-
   /**
    * Save or update a token entity.
    *
-   * If the token has id == 0, this should insert and return token with generated ID.
-   * If the token has id > 0, this should update the existing row.
+   * If the token has id == 0, this should insert and return token with generated ID. If the token
+   * has id > 0, this should update the existing row.
    *
    * @param token The token to persist
    * @return The saved token (with ID if newly inserted)
@@ -91,9 +89,6 @@ interface TokenRepository<T : BaseToken> {
    */
   fun deleteAll(tokens: Collection<T>)
 
-  // ==================== QUERY OPERATIONS ====================
-  // Specialized queries for token management
-
   /**
    * Find all tokens for a specific user.
    *
@@ -114,8 +109,8 @@ interface TokenRepository<T : BaseToken> {
    * @return The token if found, null otherwise
    */
   fun findByUserIdAndClient(
-    userId: Long,
-    clientId: String,
+      userId: Long,
+      clientId: String,
   ): T?
 
   /**
@@ -128,9 +123,6 @@ interface TokenRepository<T : BaseToken> {
    */
   fun findByExpiryAtBefore(cutoff: Instant): List<T>
 
-  // ==================== DELETE OPERATIONS ====================
-  // Specialized deletion operations for token management
-
   /**
    * Delete the token for a specific user and client.
    *
@@ -140,8 +132,8 @@ interface TokenRepository<T : BaseToken> {
    * @param clientId The client/application identifier
    */
   fun deleteByUserIdAndClient(
-    userId: Long,
-    clientId: String,
+      userId: Long,
+      clientId: String,
   )
 
   /**
@@ -153,8 +145,8 @@ interface TokenRepository<T : BaseToken> {
    * @param clientIds Collection of client identifiers to delete
    */
   fun deleteByUserIdAndClientIn(
-    userId: Long,
-    clientIds: Collection<String>,
+      userId: Long,
+      clientIds: Collection<String>,
   )
 
   /**

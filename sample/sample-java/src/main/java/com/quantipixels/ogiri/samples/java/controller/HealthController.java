@@ -10,7 +10,6 @@
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  */
-
 package com.quantipixels.ogiri.samples.java.controller;
 
 import java.util.Map;
@@ -33,7 +32,9 @@ public class HealthController {
   public ResponseEntity<Map<String, Object>> me(Authentication authentication) {
     return ResponseEntity.ok(
         Map.of(
-            "authenticated", authentication != null && authentication.isAuthenticated(),
-            "principal", authentication != null ? authentication.getName() : "anonymous"));
+            "authenticated",
+            authentication != null && authentication.isAuthenticated(),
+            "principal",
+            authentication != null ? authentication.getName() : "anonymous"));
   }
 }

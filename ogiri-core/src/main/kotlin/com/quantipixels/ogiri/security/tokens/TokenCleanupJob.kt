@@ -12,12 +12,12 @@
  */
 package com.quantipixels.ogiri.security.tokens
 
+import java.time.Instant
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
-import java.time.Instant
 
 class TokenCleanupJob(
-  private val tokenService: TokenService<*>,
+    private val tokenService: TokenService<*>,
 ) {
   private val logger = LoggerFactory.getLogger(TokenCleanupJob::class.java)
 

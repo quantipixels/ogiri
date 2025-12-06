@@ -19,6 +19,7 @@ plugins {
   kotlin("plugin.jpa") version libs.versions.kotlin.get()
   id("io.spring.dependency-management") version libs.versions.dependencyManagement.get()
   id("org.springframework.boot") version libs.versions.springBoot.get()
+  id("com.diffplug.spotless") version libs.versions.spotless.get()
 }
 
 group = "com.quantipixels.ogiri.samples"
@@ -61,4 +62,20 @@ tasks.withType<Test> { useJUnitPlatform() }
 tasks.bootRun {
   @Suppress("UNCHECKED_CAST")
   systemProperties = System.getProperties().stringPropertyNames().associate { it to System.getProperty(it) }.toMutableMap() as MutableMap<String, Any>
+}
+
+spotless {
+  kotlin {
+    target("src/**/*.kt")
+    targetExclude("**/build/**")
+    licenseHeaderFile(rootProject.file("spotless.license.kt"))
+    ktfmt("0.43")
+    trimTrailingWhitespace()
+    endWithNewline()
+  }
+  format("misc") {
+    target("*.md", ".gitignore", "*.gradle.kts", ".gitattributes")
+    trimTrailingWhitespace()
+    endWithNewline()
+  }
 }

@@ -42,32 +42,30 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 @ConfigurationProperties(prefix = "ogiri")
 open class OgiriConfigurationProperties {
   /**
-   * Security filter configuration.
-   * Controls filter registration and general authentication behavior.
+   * Security filter configuration. Controls filter registration and general authentication
+   * behavior.
    */
   val security: SecurityProperties = SecurityProperties()
 
   /**
-   * Token authentication and rotation configuration.
-   * Controls token lifecycle, rotation policies, and grace periods.
+   * Token authentication and rotation configuration. Controls token lifecycle, rotation policies,
+   * and grace periods.
    */
   val auth: AuthProperties = AuthProperties()
 
   /**
-   * Scheduled token cleanup job configuration.
-   * Controls deletion of expired tokens from the database.
+   * Scheduled token cleanup job configuration. Controls deletion of expired tokens from the
+   * database.
    */
   val cleanup: CleanupProperties = CleanupProperties()
 
-  /**
-   * Security filter configuration properties.
-   */
+  /** Security filter configuration properties. */
   open class SecurityProperties {
     /**
      * Enable automatic registration of the ogiri SecurityFilterChain bean.
      *
-     * Set to false if you want to manually wire the filter or provide custom security
-     * configuration that doesn't use the auto-configuration.
+     * Set to false if you want to manually wire the filter or provide custom security configuration
+     * that doesn't use the auto-configuration.
      *
      * Default: true
      */
@@ -77,20 +75,18 @@ open class OgiriConfigurationProperties {
   /**
    * Token authentication and rotation configuration properties.
    *
-   * These properties control token issuance, validation, and rotation behavior.
-   * All settings are sourced from application configuration and NOT from TokenService
-   * constructor arguments.
+   * These properties control token issuance, validation, and rotation behavior. All settings are
+   * sourced from application configuration and NOT from TokenService constructor arguments.
    */
   open class AuthProperties {
     /**
      * Maximum number of active APP tokens per user.
      *
-     * When a new APP token is created and this limit is reached, the oldest token
-     * is revoked to maintain the limit. This prevents token accumulation and
-     * provides a mechanism for limiting concurrent sessions.
+     * When a new APP token is created and this limit is reached, the oldest token is revoked to
+     * maintain the limit. This prevents token accumulation and provides a mechanism for limiting
+     * concurrent sessions.
      *
-     * Default: 24
-     * Valid Range: 1 - no upper limit
+     * Default: 24 Valid Range: 1 - no upper limit
      *
      * Examples:
      * - High-security: 5 (only 5 concurrent sessions)
@@ -102,15 +98,14 @@ open class OgiriConfigurationProperties {
     /**
      * Grace period (seconds) for detecting batch requests within a request window.
      *
-     * When multiple requests arrive within this window, the TokenService only updates
-     * the lastUsedAt timestamp without issuing a new token. This prevents "token
-     * thrashing" from rapid consecutive requests (e.g., simultaneous API calls from
-     * the same client or parallel image/resource loads).
+     * When multiple requests arrive within this window, the TokenService only updates the
+     * lastUsedAt timestamp without issuing a new token. This prevents "token thrashing" from rapid
+     * consecutive requests (e.g., simultaneous API calls from the same client or parallel
+     * image/resource loads).
      *
      * Requests outside this window trigger token rotation and emit new auth headers.
      *
-     * Default: 5
-     * Valid Range: 0 - any positive integer
+     * Default: 5 Valid Range: 0 - any positive integer
      *
      * Examples:
      * - Conservative: 1 second (rotate frequently)
@@ -125,12 +120,11 @@ open class OgiriConfigurationProperties {
     /**
      * Default token lifetime in days.
      *
-     * New tokens created by TokenService.createNewAuthToken() will expire after this
-     * duration. This applies to APP tokens only; sub-tokens can override this by
-     * implementing custom expiry logic in SubTokenRegistration.expiry().
+     * New tokens created by TokenService.createNewAuthToken() will expire after this duration. This
+     * applies to APP tokens only; sub-tokens can override this by implementing custom expiry logic
+     * in SubTokenRegistration.expiry().
      *
-     * Default: 14
-     * Valid Range: 1 - any positive integer
+     * Default: 14 Valid Range: 1 - any positive integer
      *
      * Examples:
      * - Short-lived: 7 days (high security, frequent re-auth)
@@ -149,12 +143,11 @@ open class OgiriConfigurationProperties {
     /**
      * Only rotate tokens on mutating HTTP requests (POST, PUT, DELETE, PATCH).
      *
-     * When true, token rotation is triggered only for requests that modify server
-     * state. GET requests update lastUsedAt but do NOT trigger rotation, reducing
-     * rotation overhead for read-heavy workloads.
+     * When true, token rotation is triggered only for requests that modify server state. GET
+     * requests update lastUsedAt but do NOT trigger rotation, reducing rotation overhead for
+     * read-heavy workloads.
      *
-     * Default: false (rotate on all requests)
-     * Valid Values: true, false
+     * Default: false (rotate on all requests) Valid Values: true, false
      *
      * Use Cases:
      * - Read-heavy APIs: Set to true to reduce rotation overhead
@@ -167,13 +160,12 @@ open class OgiriConfigurationProperties {
     /**
      * Force token rotation if token exceeds this age (seconds).
      *
-     * Regardless of request batching, if a token has been in use for longer than
-     * this duration, it will be rotated on the next request. This provides a
-     * safeguard against indefinitely long-lived tokens and ensures periodic
-     * credential refresh.
+     * Regardless of request batching, if a token has been in use for longer than this duration, it
+     * will be rotated on the next request. This provides a safeguard against indefinitely
+     * long-lived tokens and ensures periodic credential refresh.
      *
-     * Default: 0 (disabled, no staleness-based rotation)
-     * Valid Range: 0 (disabled) or any positive integer (seconds)
+     * Default: 0 (disabled, no staleness-based rotation) Valid Range: 0 (disabled) or any positive
+     * integer (seconds)
      *
      * Examples:
      * - Disabled: 0 (rely only on batch window logic)
@@ -188,19 +180,17 @@ open class OgiriConfigurationProperties {
   /**
    * Scheduled token cleanup job configuration.
    *
-   * The [TokenCleanupJob] runs periodically to delete expired tokens from the database,
-   * preventing accumulation of stale data.
+   * The [TokenCleanupJob] runs periodically to delete expired tokens from the database, preventing
+   * accumulation of stale data.
    */
   open class CleanupProperties {
     /**
      * Enable the scheduled TokenCleanupJob.
      *
-     * When true, the cleanup job runs according to the cron schedule and deletes all
-     * tokens where expiryAt < now(). When false, the cleanup job is not registered
-     * or executed.
+     * When true, the cleanup job runs according to the cron schedule and deletes all tokens where
+     * expiryAt < now(). When false, the cleanup job is not registered or executed.
      *
-     * Default: true
-     * Valid Values: true, false
+     * Default: true Valid Values: true, false
      *
      * Use Cases:
      * - Production: true (automatic cleanup)
@@ -212,13 +202,12 @@ open class OgiriConfigurationProperties {
     /**
      * Cron expression for the cleanup job schedule.
      *
-     * Standard Spring cron format: second minute hour day-of-month month day-of-week
-     * (6 fields: second through day-of-week).
+     * Standard Spring cron format: second minute hour day-of-month month day-of-week (6 fields:
+     * second through day-of-week).
      *
      * Default: "0 0 * * * *" (daily at midnight)
      *
-     * See Spring CronTrigger documentation for complete syntax.
-     * Only used if [enabled] is true.
+     * See Spring CronTrigger documentation for complete syntax. Only used if [enabled] is true.
      */
     var cron: String = "0 0 * * * *"
   }

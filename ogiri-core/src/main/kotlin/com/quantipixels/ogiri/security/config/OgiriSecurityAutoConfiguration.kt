@@ -50,8 +50,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  * - Registers the security filter chain when enabled via properties
  * - Conditionally registers TokenCleanupJob for expired token deletion
  *
- * Configuration is loaded from application.yml/application.properties with prefix "ogiri".
- * All beans are registered with @ConditionalOnMissingBean for easy override.
+ * Configuration is loaded from application.yml/application.properties with prefix "ogiri". All
+ * beans are registered with @ConditionalOnMissingBean for easy override.
  */
 @Configuration
 @Import(TokenCleanupJob::class)
@@ -64,79 +64,81 @@ class OgiriSecurityAutoConfiguration {
   @Bean
   @ConditionalOnMissingBean
   fun routeCatalog(registries: ObjectProvider<RouteRegistry>): RouteCatalog =
-    RouteCatalog(registries.orderedStream().toList())
+      RouteCatalog(registries.orderedStream().toList())
 
   @Bean
   @ConditionalOnMissingBean
   fun authenticationBypassDecider(routeCatalog: RouteCatalog): AuthenticationBypassDecider =
-    AuthenticationBypassDecider(routeCatalog)
+      AuthenticationBypassDecider(routeCatalog)
 
   @Bean
   @ConditionalOnMissingBean
   fun subTokenRegistry(registrations: ObjectProvider<SubTokenRegistration>): SubTokenRegistry =
-    DefaultSubTokenRegistry(registrations.orderedStream().toList())
+      DefaultSubTokenRegistry(registrations.orderedStream().toList())
 
   @Bean
   @ConditionalOnMissingBean
   fun ogiriTokenService(
-    repository: TokenRepository<*>,
-    passwordEncoder: PasswordEncoder,
-    tokenUserDirectory: TokenUserDirectory,
-    identifierPolicy: IdentifierPolicy,
-    subTokenRegistry: SubTokenRegistry,
-    properties: OgiriConfigurationProperties,
+      repository: TokenRepository<*>,
+      passwordEncoder: PasswordEncoder,
+      tokenUserDirectory: TokenUserDirectory,
+      identifierPolicy: IdentifierPolicy,
+      subTokenRegistry: SubTokenRegistry,
+      properties: OgiriConfigurationProperties,
   ): TokenService<*> =
-    TokenService(
-      repository as TokenRepository<BaseToken>,
-      passwordEncoder,
-      tokenUserDirectory,
-      identifierPolicy,
-      subTokenRegistry,
-      properties.auth.maxClients,
-      properties.auth.batchGraceSeconds,
-      properties.auth.tokenLifespanDays,
-    ) as TokenService<*>
+      TokenService(
+          repository as TokenRepository<BaseToken>,
+          passwordEncoder,
+          tokenUserDirectory,
+          identifierPolicy,
+          subTokenRegistry,
+          properties.auth.maxClients,
+          properties.auth.batchGraceSeconds,
+          properties.auth.tokenLifespanDays,
+      )
+          as TokenService<*>
 
   @Bean
   @ConditionalOnMissingBean
   fun ogiriAuthenticationEntryPoint(messageSource: MessageSource): AuthenticationEntryPoint =
-    OgiriAuthenticationEntryPoint(messageSource)
+      OgiriAuthenticationEntryPoint(messageSource)
 
   @Bean
   @ConditionalOnMissingBean
   fun ogiriTokenAuthenticationFilter(
-    tokenUserDirectory: TokenUserDirectory,
-    tokenService: TokenService<*>,
-    authenticationEntryPoint: AuthenticationEntryPoint,
-    authenticationBypassDecider: AuthenticationBypassDecider,
-    identifierPolicy: IdentifierPolicy,
-    properties: OgiriConfigurationProperties,
+      tokenUserDirectory: TokenUserDirectory,
+      tokenService: TokenService<*>,
+      authenticationEntryPoint: AuthenticationEntryPoint,
+      authenticationBypassDecider: AuthenticationBypassDecider,
+      identifierPolicy: IdentifierPolicy,
+      properties: OgiriConfigurationProperties,
   ): OgiriTokenAuthenticationFilter =
-    OgiriTokenAuthenticationFilter(
-      tokenUserDirectory,
-      tokenService,
-      authenticationEntryPoint,
-      authenticationBypassDecider,
-      identifierPolicy,
-      properties,
-    )
+      OgiriTokenAuthenticationFilter(
+          tokenUserDirectory,
+          tokenService,
+          authenticationEntryPoint,
+          authenticationBypassDecider,
+          identifierPolicy,
+          properties,
+      )
 
   @Bean(name = ["ogiriSecurityFilterChain"])
   @ConditionalOnMissingBean(name = ["ogiriSecurityFilterChain"])
   @ConditionalOnProperty(
-    prefix = "ogiri.security",
-    name = ["register-filter"],
-    havingValue = "true",
-    matchIfMissing = true,
+      prefix = "ogiri.security",
+      name = ["register-filter"],
+      havingValue = "true",
+      matchIfMissing = true,
   )
   fun ogiriSecurityFilterChain(
-    http: HttpSecurity,
-    ogiriTokenAuthenticationFilter: OgiriTokenAuthenticationFilter,
-    authenticationEntryPoint: AuthenticationEntryPoint,
+      http: HttpSecurity,
+      ogiriTokenAuthenticationFilter: OgiriTokenAuthenticationFilter,
+      authenticationEntryPoint: AuthenticationEntryPoint,
   ): SecurityFilterChain =
-    http
-      .csrf { it.disable() }
-      .exceptionHandling { it.authenticationEntryPoint(authenticationEntryPoint) }
-      .addFilterBefore(ogiriTokenAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
-      .build()
+      http
+          .csrf { it.disable() }
+          .exceptionHandling { it.authenticationEntryPoint(authenticationEntryPoint) }
+          .addFilterBefore(
+              ogiriTokenAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
+          .build()
 }

@@ -24,15 +24,15 @@ import org.springframework.security.core.AuthenticationException
 import org.springframework.security.web.AuthenticationEntryPoint
 
 class OgiriAuthenticationEntryPoint(
-  private val messageSource: MessageSource,
+    private val messageSource: MessageSource,
 ) : AuthenticationEntryPoint {
   private val logger = LoggerFactory.getLogger(OgiriAuthenticationEntryPoint::class.java)
   private val mapper = jacksonObjectMapper()
 
   override fun commence(
-    request: HttpServletRequest,
-    response: HttpServletResponse,
-    authException: AuthenticationException,
+      request: HttpServletRequest,
+      response: HttpServletResponse,
+      authException: AuthenticationException,
   ) {
     logger.debug("Unauthorized request: {}", authException.message)
     response.contentType = MediaType.APPLICATION_JSON_VALUE
@@ -40,10 +40,10 @@ class OgiriAuthenticationEntryPoint(
 
     val locale = LocaleContextHolder.getLocale()
     val code =
-      when (authException) {
-        is BadCredentialsException -> "error.auth.bad_credentials"
-        else -> "error.auth.required"
-      }
+        when (authException) {
+          is BadCredentialsException -> "error.auth.bad_credentials"
+          else -> "error.auth.required"
+        }
     val message = messageSource.getMessage(code, null, locale)
     val payload = mapOf("status" to HttpServletResponse.SC_UNAUTHORIZED, "message" to message)
     mapper.writeValue(response.outputStream, payload)

@@ -13,6 +13,6 @@
 package com.quantipixels.ogiri.security.core
 
 class SecurityServiceException(
-  val code: String,
-  vararg val args: Any?,
+    val code: String,
+    vararg val args: Any?,
 ) : RuntimeException(code)

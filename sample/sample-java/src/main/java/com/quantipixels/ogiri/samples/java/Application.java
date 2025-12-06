@@ -10,7 +10,6 @@
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  */
-
 package com.quantipixels.ogiri.samples.java;
 
 import org.springframework.boot.SpringApplication;
@@ -20,16 +19,13 @@ import org.springframework.context.annotation.ComponentScan;
 /**
  * Spring Boot application demonstrating ogiri token-based authentication in Java.
  *
- * This sample shows how to:
- * - Integrate ogiri as a dependency in a Java Spring Boot application
- * - Configure required SPI implementations (TokenUserDirectory, RouteRegistry)
- * - Use the authentication filter and token service
+ * <p>This sample shows how to: - Integrate ogiri as a dependency in a Java Spring Boot application
+ * - Configure required SPI implementations (TokenUserDirectory, RouteRegistry) - Use the
+ * authentication filter and token service
  */
 @SpringBootApplication
-@ComponentScan(basePackages = {
-    "com.quantipixels.ogiri.security",
-    "com.quantipixels.ogiri.samples.java"
-})
+@ComponentScan(
+    basePackages = {"com.quantipixels.ogiri.security", "com.quantipixels.ogiri.samples.java"})
 public class Application {
 
   public static void main(String[] args) {

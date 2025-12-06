@@ -10,7 +10,6 @@
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  */
-
 package com.quantipixels.ogiri.samples.java.service;
 
 import com.quantipixels.ogiri.samples.java.entity.SampleToken;
@@ -27,53 +26,47 @@ import org.springframework.stereotype.Service;
 /**
  * Sample TokenService implementation for the Java example app.
  *
- * This service demonstrates how users should extend TokenService and override
- * the tokenFactory() method to instantiate their custom Token class.
+ * <p>This service demonstrates how users should extend TokenService and override the tokenFactory()
+ * method to instantiate their custom Token class.
  *
- * In this case, we're using SampleToken (a JPA entity) as the implementation.
- * Other users might use JdbcToken (JDBC), MongoToken (MongoDB), or any other
- * custom Token class extending BaseToken.
+ * <p>In this case, we're using SampleToken (a JPA entity) as the implementation. Other users might
+ * use JdbcToken (JDBC), MongoToken (MongoDB), or any other custom Token class extending BaseToken.
  *
- * The tokenFactory() method is called by TokenService when creating new tokens
- * during authentication, token rotation, and sub-token generation.
+ * <p>The tokenFactory() method is called by TokenService when creating new tokens during
+ * authentication, token rotation, and sub-token generation.
  */
 @Service
 public class SampleTokenService extends TokenService<SampleToken> {
 
-  /**
-   * Constructor - injects all dependencies needed by TokenService.
-   */
+  /** Constructor - injects all dependencies needed by TokenService. */
   public SampleTokenService(
-    SampleTokenRepositoryAdapter tokenRepository,
-    PasswordEncoder passwordEncoder,
-    TokenUserDirectory userDirectory,
-    IdentifierPolicy identifierPolicy,
-    SubTokenRegistry subTokenRegistry
-  ) {
+      SampleTokenRepositoryAdapter tokenRepository,
+      PasswordEncoder passwordEncoder,
+      TokenUserDirectory userDirectory,
+      IdentifierPolicy identifierPolicy,
+      SubTokenRegistry subTokenRegistry) {
     super(
-      tokenRepository,
-      passwordEncoder,
-      userDirectory,
-      identifierPolicy,
-      subTokenRegistry,
-      24L,  // maxClients - allow up to 24 concurrent clients per user
-      5L,   // batchGraceSeconds - grace period for request batches without token rotation
-      14L   // tokenLifespanDays - token expiration time in days
-    );
+        tokenRepository,
+        passwordEncoder,
+        userDirectory,
+        identifierPolicy,
+        subTokenRegistry,
+        24L, // maxClients - allow up to 24 concurrent clients per user
+        5L, // batchGraceSeconds - grace period for request batches without token rotation
+        14L // tokenLifespanDays - token expiration time in days
+        );
   }
 
   /**
    * Factory method for creating SampleToken instances.
    *
-   * This is called by TokenService whenever a new token needs to be created:
-   * - createNewAuthToken() - Creates primary APP token
-   * - createOrUpdateToken() - Creates or updates any token (APP or SUB)
-   * - issueSubTokens() - Creates sub-tokens (device, chat, etc.)
+   * <p>This is called by TokenService whenever a new token needs to be created: -
+   * createNewAuthToken() - Creates primary APP token - createOrUpdateToken() - Creates or updates
+   * any token (APP or SUB) - issueSubTokens() - Creates sub-tokens (device, chat, etc.)
    *
-   * The implementation simply constructs a SampleToken entity with all
-   * the required fields. Since SampleToken is a JPA entity, when saved to the
-   * repository, Hibernate will handle insert/update with auto-generated IDs
-   * and timestamps.
+   * <p>The implementation simply constructs a SampleToken entity with all the required fields.
+   * Since SampleToken is a JPA entity, when saved to the repository, Hibernate will handle
+   * insert/update with auto-generated IDs and timestamps.
    *
    * @param userId The user ID
    * @param client The client/application identifier
@@ -85,21 +78,15 @@ public class SampleTokenService extends TokenService<SampleToken> {
    * @return A new SampleToken configured with all parameters
    */
   protected SampleToken tokenFactory(
-    Long userId,
-    String client,
-    String hashedToken,
-    TokenType tokenType,
-    Instant expiry,
-    String tokenSubtype,
-    String plainTokenValue
-  ) {
+      Long userId,
+      String client,
+      String hashedToken,
+      TokenType tokenType,
+      Instant expiry,
+      String tokenSubtype,
+      String plainTokenValue) {
     // Create new token with all required fields
-    SampleToken token = new SampleToken(
-      userId,
-      client,
-      hashedToken,
-      expiry
-    );
+    SampleToken token = new SampleToken(userId, client, hashedToken, expiry);
 
     // Set token type (convert enum to string: "APP" or "SUB")
     token.setTokenType(tokenType.name());

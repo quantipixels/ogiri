@@ -22,7 +22,7 @@ interface RouteRegistry {
 
 /** Aggregates registered [RouteRegistry] beans for quick lookup in filters and rate limiting. */
 class RouteCatalog(
-  registries: List<RouteRegistry>,
+    registries: List<RouteRegistry>,
 ) {
   private val matcher = AntPathMatcher()
   private val configuredRoutes: List<Route> = registries.flatMap { it.routes() }
@@ -33,8 +33,8 @@ class RouteCatalog(
   fun public(): List<Route> = publicRoutes
 
   fun isPublicRoute(
-    uri: String,
-    method: HttpMethod?,
+      uri: String,
+      method: HttpMethod?,
   ): Boolean {
     if (method == null) return false
     return publicRoutes.any { route ->

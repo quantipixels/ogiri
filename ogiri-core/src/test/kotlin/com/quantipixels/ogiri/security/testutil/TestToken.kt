@@ -18,133 +18,100 @@ import java.time.Instant
 /**
  * Simple in-memory Token implementation for testing.
  *
- * This data class extends BaseToken and can be used in unit tests without
- * requiring a database or JPA. It's useful for testing TokenService and
- * TokenRepository implementations.
+ * This data class extends BaseToken and can be used in unit tests without requiring a database or
+ * JPA. It's useful for testing TokenService and TokenRepository implementations.
  *
  * All properties are mutable to allow TokenService to update them as needed.
  */
 data class TestToken(
-  /**
-   * Primary key - mutable for testing.
-   */
-  override val id: Long = 0,
-  /**
-   * User ID.
-   */
-  override val userId: Long,
-  /**
-   * Client identifier.
-   */
-  override val client: String,
-  /**
-   * Token hash.
-   */
-  override var token: String,
-  /**
-   * Token type ("APP" or "SUB").
-   */
-  override val tokenType: String = "APP",
-  /**
-   * Expiration time.
-   */
-  override var expiryAt: Instant,
-  /**
-   * Creation time.
-   */
-  override val createdAt: Instant = Instant.now(),
-  /**
-   * Last update time - mutable for testing.
-   */
-  override var updatedAt: Instant = Instant.now(),
-  /**
-   * Last token update time - mutable for testing.
-   */
-  override var tokenUpdatedAt: Instant = Instant.now(),
-  /**
-   * Sub-token type.
-   */
-  override var tokenSubtype: String? = null,
-  /**
-   * Previous token hash - mutable for testing.
-   */
-  override var lastToken: String? = null,
-  /**
-   * Token before last - mutable for testing.
-   */
-  override var previousToken: String? = null,
-  /**
-   * Last used timestamp - mutable for testing.
-   */
-  override var lastUsedAt: Instant? = null,
+    /** Primary key - mutable for testing. */
+    override val id: Long = 0,
+    /** User ID. */
+    override val userId: Long,
+    /** Client identifier. */
+    override val client: String,
+    /** Token hash. */
+    override var token: String,
+    /** Token type ("APP" or "SUB"). */
+    override val tokenType: String = "APP",
+    /** Expiration time. */
+    override var expiryAt: Instant,
+    /** Creation time. */
+    override val createdAt: Instant = Instant.now(),
+    /** Last update time - mutable for testing. */
+    override var updatedAt: Instant = Instant.now(),
+    /** Last token update time - mutable for testing. */
+    override var tokenUpdatedAt: Instant = Instant.now(),
+    /** Sub-token type. */
+    override var tokenSubtype: String? = null,
+    /** Previous token hash - mutable for testing. */
+    override var lastToken: String? = null,
+    /** Token before last - mutable for testing. */
+    override var previousToken: String? = null,
+    /** Last used timestamp - mutable for testing. */
+    override var lastUsedAt: Instant? = null,
 ) : BaseToken() {
   /**
-   * Plain (unhashed) token value - temporary for testing.
-   * Note: This uses the inherited var plainToken from BaseToken.
+   * Plain (unhashed) token value - temporary for testing. Note: This uses the inherited var
+   * plainToken from BaseToken.
    */
   companion object {
-    /**
-     * Create a test token with minimal required fields.
-     */
+    /** Create a test token with minimal required fields. */
     fun create(
-      userId: Long = 1L,
-      client: String = "test-client",
-      token: String = "hashed-token",
-      expiryAt: Instant = Instant.now().plusSeconds(3600),
+        userId: Long = 1L,
+        client: String = "test-client",
+        token: String = "hashed-token",
+        expiryAt: Instant = Instant.now().plusSeconds(3600),
     ): TestToken =
-      TestToken(
-        userId = userId,
-        client = client,
-        token = token,
-        expiryAt = expiryAt,
-      )
+        TestToken(
+            userId = userId,
+            client = client,
+            token = token,
+            expiryAt = expiryAt,
+        )
 
-    /**
-     * Create an expired test token.
-     */
+    /** Create an expired test token. */
     fun expired(
-      userId: Long = 1L,
-      client: String = "test-client",
+        userId: Long = 1L,
+        client: String = "test-client",
     ): TestToken =
-      TestToken(
-        userId = userId,
-        client = client,
-        token = "hashed-token",
-        expiryAt = Instant.now().minusSeconds(1),
-      )
+        TestToken(
+            userId = userId,
+            client = client,
+            token = "hashed-token",
+            expiryAt = Instant.now().minusSeconds(1),
+        )
 
-    /**
-     * Create a token with all fields populated.
-     */
+    /** Create a token with all fields populated. */
     fun full(
-      id: Long = 1L,
-      userId: Long = 1L,
-      client: String = "test-client",
-      token: String = "hashed-token",
-      tokenType: String = "APP",
-      expiryAt: Instant = Instant.now().plusSeconds(3600),
-      createdAt: Instant = Instant.now(),
-      updatedAt: Instant = Instant.now(),
-      tokenUpdatedAt: Instant = Instant.now(),
-      tokenSubtype: String? = null,
-      lastToken: String? = null,
-      previousToken: String? = null,
-      lastUsedAt: Instant? = null,
+        id: Long = 1L,
+        userId: Long = 1L,
+        client: String = "test-client",
+        token: String = "hashed-token",
+        tokenType: String = "APP",
+        expiryAt: Instant = Instant.now().plusSeconds(3600),
+        createdAt: Instant = Instant.now(),
+        updatedAt: Instant = Instant.now(),
+        tokenUpdatedAt: Instant = Instant.now(),
+        tokenSubtype: String? = null,
+        lastToken: String? = null,
+        previousToken: String? = null,
+        lastUsedAt: Instant? = null,
     ): TestToken =
-      TestToken(
-        id = id,
-        userId = userId,
-        client = client,
-        token = token,
-        tokenType = tokenType,
-        expiryAt = expiryAt,
-        createdAt = createdAt,
-        updatedAt = updatedAt,
-        tokenUpdatedAt = tokenUpdatedAt,
-        tokenSubtype = tokenSubtype,
-        lastToken = lastToken,
-        previousToken = previousToken,
-        lastUsedAt = lastUsedAt,
-      )
+        TestToken(
+            id = id,
+            userId = userId,
+            client = client,
+            token = token,
+            tokenType = tokenType,
+            expiryAt = expiryAt,
+            createdAt = createdAt,
+            updatedAt = updatedAt,
+            tokenUpdatedAt = tokenUpdatedAt,
+            tokenSubtype = tokenSubtype,
+            lastToken = lastToken,
+            previousToken = previousToken,
+            lastUsedAt = lastUsedAt,
+        )
   }
 }

@@ -10,7 +10,6 @@
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  */
-
 package com.quantipixels.ogiri.samples.java.security;
 
 import com.quantipixels.ogiri.security.spi.TokenUser;
@@ -25,8 +24,8 @@ import org.springframework.stereotype.Component;
 /**
  * Sample TokenUserDirectory implementation for Java.
  *
- * In a real application, this would load users from a database.
- * This sample uses an in-memory map for demonstration.
+ * <p>In a real application, this would load users from a database. This sample uses an in-memory
+ * map for demonstration.
  */
 @Component
 public class SampleTokenUserDirectory implements TokenUserDirectory {
@@ -73,7 +72,7 @@ public class SampleTokenUserDirectory implements TokenUserDirectory {
 
   /** Sample user implementation */
   public static class SampleUser implements TokenUser {
-    private final long userId;  // Property for Kotlin interface
+    private final long userId; // Property for Kotlin interface
     private final String username;
     private final String password;
     private final String email;

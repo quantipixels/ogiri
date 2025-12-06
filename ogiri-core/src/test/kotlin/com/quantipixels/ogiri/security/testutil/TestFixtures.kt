@@ -13,83 +13,67 @@
 package com.quantipixels.ogiri.security.testutil
 
 import com.quantipixels.ogiri.security.spi.TokenUser
+import java.time.Instant
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
-import java.time.Instant
 
-/**
- * Common test fixtures and builders for test data.
- */
+/** Common test fixtures and builders for test data. */
 object TestFixtures {
-  /**
-   * Create a test TokenUser with default or custom values.
-   */
+  /** Create a test TokenUser with default or custom values. */
   fun testUser(
-    userId: Long = 1L,
-    username: String = "testuser",
+      userId: Long = 1L,
+      username: String = "testuser",
   ): TokenUser =
-    object : TokenUser {
-      override val userId: Long = userId
+      object : TokenUser {
+        override val userId: Long = userId
 
-      override fun getAuthorities(): MutableCollection<out GrantedAuthority> =
-        mutableListOf(SimpleGrantedAuthority("ROLE_USER"))
+        override fun getAuthorities(): MutableCollection<out GrantedAuthority> =
+            mutableListOf(SimpleGrantedAuthority("ROLE_USER"))
 
-      override fun getPassword(): String = "password"
+        override fun getPassword(): String = "password"
 
-      override fun getUsername(): String = username
+        override fun getUsername(): String = username
 
-      override fun isAccountNonExpired(): Boolean = true
+        override fun isAccountNonExpired(): Boolean = true
 
-      override fun isAccountNonLocked(): Boolean = true
+        override fun isAccountNonLocked(): Boolean = true
 
-      override fun isCredentialsNonExpired(): Boolean = true
+        override fun isCredentialsNonExpired(): Boolean = true
 
-      override fun isEnabled(): Boolean = true
-    }
+        override fun isEnabled(): Boolean = true
+      }
 
-  /**
-   * Create a test client ID.
-   */
+  /** Create a test client ID. */
   fun testClientId(name: String = "test"): String = "$name-client"
 
-  /**
-   * Create an expiration time in the future.
-   */
+  /** Create an expiration time in the future. */
   fun futureExpiry(seconds: Long = 3600): Instant = Instant.now().plusSeconds(seconds)
 
-  /**
-   * Create an expiration time in the past.
-   */
+  /** Create an expiration time in the past. */
   fun pastExpiry(seconds: Long = 3600): Instant = Instant.now().minusSeconds(seconds)
 
-  /**
-   * Create a test Bearer token value.
-   */
+  /** Create a test Bearer token value. */
   fun testBearerToken(): String =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP7THsR8U"
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP7THsR8U"
 
-  /**
-   * Create a test hashed token.
-   */
+  /** Create a test hashed token. */
   fun testHashedToken(): String = "\$2a\$10\$abcdefghijklmnopqrstuvwxyz1234567890123456789012345"
 
-  /**
-   * Builder for creating test tokens fluently.
-   */
+  /** Builder for creating test tokens fluently. */
   class TokenBuilder(
-    var id: Long = 0,
-    var userId: Long = 1L,
-    var client: String = "test-client",
-    var token: String = testHashedToken(),
-    var tokenType: String = "APP",
-    var expiryAt: Instant = futureExpiry(),
-    var createdAt: Instant = Instant.now(),
-    var updatedAt: Instant = Instant.now(),
-    var tokenUpdatedAt: Instant = Instant.now(),
-    var tokenSubtype: String? = null,
-    var lastToken: String? = null,
-    var previousToken: String? = null,
-    var lastUsedAt: Instant? = null,
+      var id: Long = 0,
+      var userId: Long = 1L,
+      var client: String = "test-client",
+      var token: String = testHashedToken(),
+      var tokenType: String = "APP",
+      var expiryAt: Instant = futureExpiry(),
+      var createdAt: Instant = Instant.now(),
+      var updatedAt: Instant = Instant.now(),
+      var tokenUpdatedAt: Instant = Instant.now(),
+      var tokenSubtype: String? = null,
+      var lastToken: String? = null,
+      var previousToken: String? = null,
+      var lastUsedAt: Instant? = null,
   ) {
     fun withId(id: Long) = apply { this.id = id }
 
@@ -114,25 +98,23 @@ object TestFixtures {
     fun withLastUsedAt(lastUsedAt: Instant?) = apply { this.lastUsedAt = lastUsedAt }
 
     fun build(): TestToken =
-      TestToken(
-        id = id,
-        userId = userId,
-        client = client,
-        token = token,
-        tokenType = tokenType,
-        expiryAt = expiryAt,
-        createdAt = createdAt,
-        updatedAt = updatedAt,
-        tokenUpdatedAt = tokenUpdatedAt,
-        tokenSubtype = tokenSubtype,
-        lastToken = lastToken,
-        previousToken = previousToken,
-        lastUsedAt = lastUsedAt,
-      )
+        TestToken(
+            id = id,
+            userId = userId,
+            client = client,
+            token = token,
+            tokenType = tokenType,
+            expiryAt = expiryAt,
+            createdAt = createdAt,
+            updatedAt = updatedAt,
+            tokenUpdatedAt = tokenUpdatedAt,
+            tokenSubtype = tokenSubtype,
+            lastToken = lastToken,
+            previousToken = previousToken,
+            lastUsedAt = lastUsedAt,
+        )
   }
 
-  /**
-   * Create a token builder.
-   */
+  /** Create a token builder. */
   fun token(): TokenBuilder = TokenBuilder()
 }

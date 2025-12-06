@@ -18,17 +18,14 @@ package com.quantipixels.ogiri.security.tokens
  * @param type The token type to filter by
  * @return List of tokens matching the given type
  */
-fun <T : BaseToken> Collection<T>.filterByTokenType(type: TokenType): List<T> =
-  filter { TokenType.of(it.tokenType) == type }
+fun <T : BaseToken> Collection<T>.filterByTokenType(type: TokenType): List<T> = filter {
+  TokenType.of(it.tokenType) == type
+}
 
-/**
- * Filter tokens to return only APP tokens.
- */
+/** Filter tokens to return only APP tokens. */
 fun <T : BaseToken> Collection<T>.appTokens(): List<T> = filterByTokenType(TokenType.APP)
 
-/**
- * Filter tokens to return only SUB tokens.
- */
+/** Filter tokens to return only SUB tokens. */
 fun <T : BaseToken> Collection<T>.subTokens(): List<T> = filterByTokenType(TokenType.SUB)
 
 /**
@@ -44,7 +41,9 @@ fun <T : BaseToken> Collection<T>.clientIds(): Set<String> = map { it.client }.t
  * @param clientIds The client IDs to filter by
  * @return List of tokens with clients in the given set
  */
-fun <T : BaseToken> Collection<T>.filterByClientIds(clientIds: Set<String>): List<T> = filter { it.client in clientIds }
+fun <T : BaseToken> Collection<T>.filterByClientIds(clientIds: Set<String>): List<T> = filter {
+  it.client in clientIds
+}
 
 /**
  * Invert filter - find tokens NOT in the given client IDs.
@@ -52,5 +51,6 @@ fun <T : BaseToken> Collection<T>.filterByClientIds(clientIds: Set<String>): Lis
  * @param clientIds The client IDs to exclude
  * @return List of tokens with clients NOT in the given set
  */
-fun <T : BaseToken> Collection<T>.filterOutClientIds(clientIds: Set<String>): List<T> =
-  filter { it.client !in clientIds }
+fun <T : BaseToken> Collection<T>.filterOutClientIds(clientIds: Set<String>): List<T> = filter {
+  it.client !in clientIds
+}

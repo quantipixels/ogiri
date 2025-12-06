@@ -31,7 +31,7 @@ This guide is for contributors and developers working on the ogiri codebase itse
 The project is a multi-module Gradle build with the following organization:
 
 ```
-ogiri-security/
+ogiri/
 ├── ogiri-core/                      # Main security library (published to Maven Central)
 │   ├── src/main/kotlin/             # Kotlin source code for authentication components
 │   ├── src/test/kotlin/             # JUnit 5 tests covering token service, filters, etc.

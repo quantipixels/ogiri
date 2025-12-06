@@ -12,17 +12,17 @@
  */
 package com.quantipixels.ogiri.security.routes
 
-import org.springframework.http.HttpMethod
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
+import org.springframework.http.HttpMethod
 
 /** Describes an HTTP route for public/auth and rate-limit configuration. */
 class Route(
-  val method: HttpMethod,
-  val path: String,
-  val rateLimit: Boolean = true,
-  val useAuth: Boolean = true,
-  val rateLimitPermitsPerMinute: Long? = null,
+    val method: HttpMethod,
+    val path: String,
+    val rateLimit: Boolean = true,
+    val useAuth: Boolean = true,
+    val rateLimitPermitsPerMinute: Long? = null,
 ) {
   init {
     require(path.startsWith('/')) { "Path must start with '/'" }
@@ -31,7 +31,8 @@ class Route(
   private val braceVarRegex = Regex("\\{([a-zA-Z0-9_\\-]+)\\}")
   private val colonVarRegex = Regex(":([a-zA-Z0-9_\\-]+)")
 
-  private fun encode(value: Any): String = URLEncoder.encode(value.toString(), StandardCharsets.UTF_8.toString())
+  private fun encode(value: Any): String =
+      URLEncoder.encode(value.toString(), StandardCharsets.UTF_8.toString())
 
   fun apply(params: Map<String, Any>): String {
     var result = path
@@ -59,38 +60,38 @@ class Route(
 
   companion object {
     fun get(
-      path: String,
-      rateLimit: Boolean = true,
-      useAuth: Boolean = true,
-      rateLimitPermitsPerMinute: Long? = null,
+        path: String,
+        rateLimit: Boolean = true,
+        useAuth: Boolean = true,
+        rateLimitPermitsPerMinute: Long? = null,
     ) = Route(HttpMethod.GET, path, rateLimit, useAuth, rateLimitPermitsPerMinute)
 
     fun post(
-      path: String,
-      rateLimit: Boolean = true,
-      useAuth: Boolean = true,
-      rateLimitPermitsPerMinute: Long? = null,
+        path: String,
+        rateLimit: Boolean = true,
+        useAuth: Boolean = true,
+        rateLimitPermitsPerMinute: Long? = null,
     ) = Route(HttpMethod.POST, path, rateLimit, useAuth, rateLimitPermitsPerMinute)
 
     fun put(
-      path: String,
-      rateLimit: Boolean = true,
-      useAuth: Boolean = true,
-      rateLimitPermitsPerMinute: Long? = null,
+        path: String,
+        rateLimit: Boolean = true,
+        useAuth: Boolean = true,
+        rateLimitPermitsPerMinute: Long? = null,
     ) = Route(HttpMethod.PUT, path, rateLimit, useAuth, rateLimitPermitsPerMinute)
 
     fun patch(
-      path: String,
-      rateLimit: Boolean = true,
-      useAuth: Boolean = true,
-      rateLimitPermitsPerMinute: Long? = null,
+        path: String,
+        rateLimit: Boolean = true,
+        useAuth: Boolean = true,
+        rateLimitPermitsPerMinute: Long? = null,
     ) = Route(HttpMethod.PATCH, path, rateLimit, useAuth, rateLimitPermitsPerMinute)
 
     fun delete(
-      path: String,
-      rateLimit: Boolean = true,
-      useAuth: Boolean = true,
-      rateLimitPermitsPerMinute: Long? = null,
+        path: String,
+        rateLimit: Boolean = true,
+        useAuth: Boolean = true,
+        rateLimitPermitsPerMinute: Long? = null,
     ) = Route(HttpMethod.DELETE, path, rateLimit, useAuth, rateLimitPermitsPerMinute)
   }
 }

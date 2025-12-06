@@ -25,6 +25,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 - Security-related changes in development
 
+## [1.0.2] - 2025-12-06
+
+### Fixed
+- **Test Infrastructure:** Fixed `InMemoryTokenRepository.save()` losing transient `plainToken` property during data class copy operations
+  - Issue: Kotlin data class `.copy()` only preserves constructor properties, causing `plainToken` to reset to null
+  - Solution: Explicitly restore `plainToken` after copying token instance
+  - Impact: Resolved 12 NullPointerException failures in TokenServiceSubTokenTest
+- **Test Assertions:** Fixed type mismatch in token type comparisons
+  - Issue: Tests compared String tokenType directly to TokenType enum values
+  - Solution: Convert string to enum using `TokenType.of()` before assertion
+  - Impact: All 20 tests now passing
+
+### Changed
+- Updated GitHub Actions badge URLs to use correct repository name (`mosobande/ogiri`)
+- Updated POM metadata URLs to point to correct GitHub repository
+- Updated contributor documentation with correct git clone URLs
+- Configured JitPack support with `.jitpack.yml` for alternative Maven dependency access
+- Added Yoruba tone marks to project name in README (Òǵìrì)
+
+### Security
+- Verified GitHub Actions credentials are properly scoped (OSSRH_USERNAME, OSSRH_PASSWORD, GPG keys)
+- Confirmed no hardcoded secrets in workflow configuration files
+
+### Enhancement
+- Configure spotless formatter across all modules
+- Centralise version management in `.ogiri-version`
+
 ## [1.0.1] - 2025-12-05
 
 ### Added

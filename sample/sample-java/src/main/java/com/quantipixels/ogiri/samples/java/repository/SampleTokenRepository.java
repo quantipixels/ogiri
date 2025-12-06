@@ -10,7 +10,6 @@
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  */
-
 package com.quantipixels.ogiri.samples.java.repository;
 
 import com.quantipixels.ogiri.samples.java.entity.SampleToken;
@@ -27,11 +26,11 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * JPA repository interface for SampleToken persistence.
  *
- * Extends Spring Data JPA's JpaRepository to provide standard CRUD operations
- * and custom query methods for token management.
+ * <p>Extends Spring Data JPA's JpaRepository to provide standard CRUD operations and custom query
+ * methods for token management.
  *
- * All query methods use explicit @Query annotations to avoid Spring Data's
- * method name parsing which can be error-prone with complex property names.
+ * <p>All query methods use explicit @Query annotations to avoid Spring Data's method name parsing
+ * which can be error-prone with complex property names.
  */
 @Repository
 public interface SampleTokenRepository extends JpaRepository<SampleToken, Long> {
@@ -95,9 +94,6 @@ public interface SampleTokenRepository extends JpaRepository<SampleToken, Long> 
   @Modifying
   @Query("DELETE FROM SampleToken t WHERE t.userId = ?1")
   void deleteByUserIdJpa(Long userId);
-
-  // ==================== CONVENIENCE METHODS ====================
-  // Boxed Long overloads for test compatibility
 
   default List<SampleToken> findAllByUserId(Long userId) {
     return findByUserIdOrderByUpdatedAtDesc(userId);

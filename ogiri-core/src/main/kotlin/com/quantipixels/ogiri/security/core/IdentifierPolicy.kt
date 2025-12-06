@@ -21,18 +21,16 @@ interface IdentifierPolicy {
 }
 
 class DefaultIdentifierPolicy(
-  private val length: Int = 16,
+    private val length: Int = 16,
 ) : IdentifierPolicy {
   private val random = SecureRandom()
   private val alphabet =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-".toCharArray()
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-".toCharArray()
   private val validator = Regex("^[A-Za-z0-9._-]{1,64}$")
 
   override fun generate(): String {
     val builder = StringBuilder(length)
-    repeat(length) {
-      builder.append(alphabet[random.nextInt(alphabet.size)])
-    }
+    repeat(length) { builder.append(alphabet[random.nextInt(alphabet.size)]) }
     return builder.toString()
   }
 

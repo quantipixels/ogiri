@@ -10,7 +10,6 @@
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  */
-
 package com.quantipixels.ogiri.samples.kotlin.security
 
 import com.quantipixels.ogiri.security.spi.TokenUser
@@ -22,12 +21,11 @@ import org.springframework.stereotype.Component
 /**
  * Sample TokenUserDirectory implementation for Kotlin.
  *
- * In a real application, this would load users from a database.
- * This sample uses an in-memory map for demonstration.
+ * In a real application, this would load users from a database. This sample uses an in-memory map
+ * for demonstration.
  */
 @Component
 class SampleTokenUserDirectory : TokenUserDirectory {
-
   private val usersByUsername = mutableMapOf<String, SampleUser>()
   private val usersById = mutableMapOf<Long, SampleUser>()
 
@@ -41,11 +39,12 @@ class SampleTokenUserDirectory : TokenUserDirectory {
   }
 
   override fun loadUserByUsername(username: String): TokenUser =
-    usersByUsername[username] ?: throw IllegalArgumentException("User not found: $username")
+      usersByUsername[username] ?: throw IllegalArgumentException("User not found: $username")
 
   override fun findById(id: Long): TokenUser? = usersById[id]
 
-  override fun findByEmail(email: String): TokenUser? = usersById.values.firstOrNull { it.email == email }
+  override fun findByEmail(email: String): TokenUser? =
+      usersById.values.firstOrNull { it.email == email }
 
   override fun findByUsername(username: String): TokenUser? = usersByUsername[username]
 
@@ -55,14 +54,15 @@ class SampleTokenUserDirectory : TokenUserDirectory {
 
   /** Sample user implementation for Kotlin */
   private data class SampleUser(
-    private val id: Long,
-    private val username: String,
-    private val password: String,
-    val email: String,
+      private val id: Long,
+      private val username: String,
+      private val password: String,
+      val email: String,
   ) : TokenUser {
     override val userId: Long = id
 
-    override fun getAuthorities(): Collection<GrantedAuthority> = listOf(SimpleGrantedAuthority("ROLE_USER"))
+    override fun getAuthorities(): Collection<GrantedAuthority> =
+        listOf(SimpleGrantedAuthority("ROLE_USER"))
 
     override fun getPassword(): String = password
 

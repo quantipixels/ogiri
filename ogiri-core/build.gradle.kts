@@ -141,14 +141,14 @@ configure<SpotlessExtension> {
     target("src/**/*.kt", "src/**/*.kts")
     targetExclude("**/build.gradle.kts", "**/settings.gradle.kts", "**/spotless.license.kt")
     licenseHeaderFile(rootProject.file("spotless.license.kt"))
-    ktlint("1.2.1")
+    ktfmt("0.43")
     trimTrailingWhitespace()
     endWithNewline()
   }
   kotlinGradle {
     target("*.gradle.kts")
     licenseHeaderFile(rootProject.file("spotless.license.kt"), "")
-    ktlint("1.2.1")
+    ktfmt("0.43")
     trimTrailingWhitespace()
     endWithNewline()
   }

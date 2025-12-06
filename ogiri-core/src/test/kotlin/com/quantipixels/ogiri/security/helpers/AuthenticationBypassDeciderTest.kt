@@ -34,7 +34,7 @@ class AuthenticationBypassDeciderTest {
   @Test
   fun `bypasses authenticated requests`() {
     SecurityContextHolder.getContext().authentication =
-      UsernamePasswordAuthenticationToken("user", "pw", listOf(SimpleGrantedAuthority("USER")))
+        UsernamePasswordAuthenticationToken("user", "pw", listOf(SimpleGrantedAuthority("USER")))
 
     val catalog = RouteCatalog(emptyList())
     val decider = AuthenticationBypassDecider(catalog)
@@ -64,10 +64,10 @@ class AuthenticationBypassDeciderTest {
   @Test
   fun `bypasses public route from catalog`() {
     val registry =
-      object : RouteRegistry {
-        override fun routes(): List<Route> =
-          listOf(Route.get("/public", useAuth = false), Route.get("/private", useAuth = true))
-      }
+        object : RouteRegistry {
+          override fun routes(): List<Route> =
+              listOf(Route.get("/public", useAuth = false), Route.get("/private", useAuth = true))
+        }
     val catalog = RouteCatalog(listOf(registry))
     val decider = AuthenticationBypassDecider(catalog)
 
@@ -81,9 +81,9 @@ class AuthenticationBypassDeciderTest {
   @Test
   fun `route catalog matches templated paths`() {
     val registry =
-      object : RouteRegistry {
-        override fun routes(): List<Route> = listOf(Route.get("/users/{id}", useAuth = false))
-      }
+        object : RouteRegistry {
+          override fun routes(): List<Route> = listOf(Route.get("/users/{id}", useAuth = false))
+        }
     val catalog = RouteCatalog(listOf(registry))
 
     assertTrue(catalog.isPublicRoute("/users/123", HttpMethod.GET))

@@ -15,21 +15,24 @@ rootProject.name = "ogiri"
 /*
  * Centralized version management.
  *
- * This is the single source of truth for the project version.
- * Version determination order:
- *   1. Git tag (v1.0.1, v1.0.2, etc.)
- *   2. Environment variable RELEASE_VERSION
- *   3. Default version below
+ * Version is read from .ogiri-version file (primary source of truth).
+ * Version determination order (highest to lowest precedence):
+ *   1. Environment variable RELEASE_VERSION (CI/CD overrides)
+ *   2. Gradle property -PRELEASE_VERSION (local overrides)
+ *   3. .ogiri-version file (main version)
+ *   4. Default fallback: 1.0.2
  *
- * To set version:
- *   - Tag: git tag v1.0.1 && git push origin v1.0.1
- *   - Env:  export RELEASE_VERSION=1.0.1
- *   - Or:   gradle -PRELEASE_VERSION=1.0.1 build
+ * To update version:
+ *   - Edit .ogiri-version file
+ *   - Or override: RELEASE_VERSION=1.0.X gradle build
+ *   - Or use: scripts/release.sh (creates tag and pushes to GitHub)
  */
+val versionFile = File(settingsDir, ".ogiri-version")
 val projectVersion = System.getenv("RELEASE_VERSION")
   ?.takeIf { it.isNotBlank() }
   ?: (System.getProperty("RELEASE_VERSION")?.takeIf { it.isNotBlank() })
-  ?: "1.0.1"
+  ?: (if (versionFile.exists()) versionFile.readText().trim() else null)
+  ?: "0.0.0-SNAPSHOT"
 
 include(":ogiri-core")
 include(":sample:sample-java")

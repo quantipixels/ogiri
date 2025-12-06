@@ -26,29 +26,30 @@ const val ACCESS_TOKEN_KIND = "access-token-kind"
 private val mapper = JsonCodec.mapper
 
 data class AuthHeader(
-  var accessToken: String? = null,
-  var client: String? = null,
-  var uid: String? = null,
-  var expiry: String? = null,
-  var kind: String? = null,
-  var subTokens: Map<String, SubTokenHeader>? = null,
+    var accessToken: String? = null,
+    var client: String? = null,
+    var uid: String? = null,
+    var expiry: String? = null,
+    var kind: String? = null,
+    var subTokens: Map<String, SubTokenHeader>? = null,
 ) {
   /** Simple validity check to prevent running verification against empty headers. */
   fun isValid(): Boolean =
-    !accessToken.isNullOrBlank() &&
-      !client.isNullOrBlank() &&
-      !uid.isNullOrBlank() &&
-      !expiry.isNullOrBlank()
+      !accessToken.isNullOrBlank() &&
+          !client.isNullOrBlank() &&
+          !uid.isNullOrBlank() &&
+          !expiry.isNullOrBlank()
 }
 
 /** Sub-token header payload for arbitrary token types (see [SubTokenRegistration]). */
 data class SubTokenHeader(
-  val client: String? = null,
-  val token: String? = null,
-  val expiry: String? = null,
+    val client: String? = null,
+    val token: String? = null,
+    val expiry: String? = null,
 )
 
-private fun HttpServletRequest.cookieValue(name: String): String? = cookies?.firstOrNull { it.name == name }?.value
+private fun HttpServletRequest.cookieValue(name: String): String? =
+    cookies?.firstOrNull { it.name == name }?.value
 
 fun HttpServletRequest.extractAuthHeader(): AuthHeader {
   var accessToken = getHeader(ACCESS_TOKEN)
@@ -71,8 +72,8 @@ fun HttpServletResponse.appendAuthHeaders(authHeaders: AuthHeader?) {
   if (authHeaders == null) return
 
   fun setIfNotBlank(
-    name: String,
-    value: String?,
+      name: String,
+      value: String?,
   ) {
     if (!value.isNullOrBlank()) {
       setHeader(name, value)
@@ -86,29 +87,31 @@ fun HttpServletResponse.appendAuthHeaders(authHeaders: AuthHeader?) {
   setIfNotBlank(ACCESS_TOKEN_KIND, authHeaders.kind)
   setIfNotBlank(EXPIRY, authHeaders.expiry)
 
-  authHeaders.subTokens?.takeIf { it.isNotEmpty() }?.let { subs ->
-    val payload =
-      subs.mapValues { (_, token) ->
-        mapOf(
-          "client" to token.client,
-          "token" to token.token,
-          "expiry" to token.expiry,
-        )
+  authHeaders.subTokens
+      ?.takeIf { it.isNotEmpty() }
+      ?.let { subs ->
+        val payload =
+            subs.mapValues { (_, token) ->
+              mapOf(
+                  "client" to token.client,
+                  "token" to token.token,
+                  "expiry" to token.expiry,
+              )
+            }
+        val json = mapper.writeValueAsString(payload)
+        val encoded = Base64.getEncoder().encodeToString(json.toByteArray(Charsets.UTF_8))
+        setHeader("sub-tokens", encoded)
       }
-    val json = mapper.writeValueAsString(payload)
-    val encoded = Base64.getEncoder().encodeToString(json.toByteArray(Charsets.UTF_8))
-    setHeader("sub-tokens", encoded)
-  }
 
   if (!authHeaders.accessToken.isNullOrBlank()) {
     val payload =
-      mapOf(
-        ACCESS_TOKEN to authHeaders.accessToken,
-        CLIENT to authHeaders.client,
-        UID to authHeaders.uid,
-        TOKEN_TYPE to "Bearer",
-        EXPIRY to authHeaders.expiry,
-      )
+        mapOf(
+            ACCESS_TOKEN to authHeaders.accessToken,
+            CLIENT to authHeaders.client,
+            UID to authHeaders.uid,
+            TOKEN_TYPE to "Bearer",
+            EXPIRY to authHeaders.expiry,
+        )
     val json = mapper.writeValueAsString(payload)
     val encoded = Base64.getEncoder().encodeToString(json.toByteArray(Charsets.UTF_8))
     setHeader("Authorization", "Bearer $encoded")

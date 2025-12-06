@@ -10,7 +10,6 @@
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  */
-
 package com.quantipixels.ogiri.samples.kotlin
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -26,10 +25,13 @@ import org.springframework.context.annotation.ComponentScan
  * - Use the authentication filter and token service
  */
 @SpringBootApplication
-@ComponentScan(basePackages = [
-  "com.quantipixels.ogiri.security",
-  "com.quantipixels.ogiri.samples.kotlin"
-])
+@ComponentScan(
+    basePackages =
+        [
+            "com.quantipixels.ogiri.security",
+            "com.quantipixels.ogiri.samples.kotlin",
+        ],
+)
 class Application
 
 fun main(args: Array<String>) {

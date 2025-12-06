@@ -10,7 +10,6 @@
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  */
-
 package com.quantipixels.ogiri.samples.kotlin.repository
 
 import com.quantipixels.ogiri.samples.kotlin.entity.SampleToken
@@ -25,9 +24,9 @@ import org.springframework.transaction.annotation.Transactional
 /**
  * Sample JPA implementation of TokenRepository.
  *
- * This demonstrates how to implement TokenRepository using Spring Data JPA.
- * It extends both JpaRepository (for JPA persistence) and TokenRepository
- * (for the ogiri abstraction), providing implementations for all required methods.
+ * This demonstrates how to implement TokenRepository using Spring Data JPA. It extends both
+ * JpaRepository (for JPA persistence) and TokenRepository (for the ogiri abstraction), providing
+ * implementations for all required methods.
  *
  * The default JPA query methods derive queries from method names:
  * - findByUserIdAndClientEquals -> SELECT where user_id = ? AND client_id = ?
@@ -37,30 +36,37 @@ import org.springframework.transaction.annotation.Transactional
  */
 @Repository
 interface SampleTokenRepository : JpaRepository<SampleToken, Long>, TokenRepository<SampleToken> {
-
   override fun findAllByUserId(userId: Long): List<SampleToken> =
-    findByUserIdOrderByUpdatedAtDesc(userId)
+      findByUserIdOrderByUpdatedAtDesc(userId)
 
-  override fun findByUserIdAndClient(userId: Long, clientId: String): SampleToken? =
-    findByUserIdAndClientJpa(userId, clientId).orElse(null)
+  override fun findByUserIdAndClient(
+      userId: Long,
+      clientId: String,
+  ): SampleToken? = findByUserIdAndClientJpa(userId, clientId).orElse(null)
 
   override fun findByExpiryAtBefore(cutoff: Instant): List<SampleToken> =
-    findByExpiryAtBeforeCutoff(cutoff)
+      findByExpiryAtBeforeCutoff(cutoff)
 
-  override fun deleteByUserIdAndClient(userId: Long, clientId: String) =
-    deleteByUserIdAndClientJpa(userId, clientId)
+  override fun deleteByUserIdAndClient(
+      userId: Long,
+      clientId: String,
+  ) = deleteByUserIdAndClientJpa(userId, clientId)
 
-  override fun deleteByUserIdAndClientIn(userId: Long, clientIds: Collection<String>) =
-    deleteByUserIdAndClientJpaIn(userId, clientIds)
+  override fun deleteByUserIdAndClientIn(
+      userId: Long,
+      clientIds: Collection<String>,
+  ) = deleteByUserIdAndClientJpaIn(userId, clientIds)
 
-  override fun deleteByUserId(userId: Long) =
-    deleteByUserIdJpa(userId)
+  override fun deleteByUserId(userId: Long) = deleteByUserIdJpa(userId)
 
   @Query("SELECT t FROM SampleToken t WHERE t.userId = ?1 ORDER BY t.updatedAt DESC, t.id DESC")
   fun findByUserIdOrderByUpdatedAtDesc(userId: Long): List<SampleToken>
 
   @Query("SELECT t FROM SampleToken t WHERE t.userId = ?1 AND t.client = ?2")
-  fun findByUserIdAndClientJpa(userId: Long, client: String): java.util.Optional<SampleToken>
+  fun findByUserIdAndClientJpa(
+      userId: Long,
+      client: String,
+  ): java.util.Optional<SampleToken>
 
   @Query("SELECT t FROM SampleToken t WHERE t.expiryAt < ?1")
   fun findByExpiryAtBeforeCutoff(expiryAt: Instant): List<SampleToken>
@@ -68,21 +74,25 @@ interface SampleTokenRepository : JpaRepository<SampleToken, Long>, TokenReposit
   @Transactional
   @Modifying
   @Query("DELETE FROM SampleToken t WHERE t.userId = ?1 AND t.client = ?2")
-  fun deleteByUserIdAndClientJpa(userId: Long, client: String)
+  fun deleteByUserIdAndClientJpa(
+      userId: Long,
+      client: String,
+  )
 
   @Transactional
   @Modifying
   @Query("DELETE FROM SampleToken t WHERE t.userId = ?1 AND t.client IN ?2")
-  fun deleteByUserIdAndClientJpaIn(userId: Long, clients: Collection<String>)
+  fun deleteByUserIdAndClientJpaIn(
+      userId: Long,
+      clients: Collection<String>,
+  )
 
   @Transactional
   @Modifying
   @Query("DELETE FROM SampleToken t WHERE t.userId = ?1")
   fun deleteByUserIdJpa(userId: Long)
 
-  /**
-   * Delete all tokens in a collection.
-   */
+  /** Delete all tokens in a collection. */
   @Transactional
   @Modifying
   @Query("DELETE FROM SampleToken t WHERE t IN ?1")
