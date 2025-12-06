@@ -46,7 +46,7 @@ dependencies {
   // - Other persistence mechanism of choice
   implementation("org.springframework.boot:spring-boot-autoconfigure")
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-  implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
+  implementation("com.github.ben-manes.caffeine:caffeine:3.2.3")
 
   testImplementation("org.springframework.boot:spring-boot-starter-test") {
     exclude(module = "mockito-core")
