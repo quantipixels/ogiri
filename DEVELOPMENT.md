@@ -26,6 +26,33 @@ This guide is for contributors and developers working on the ogiri codebase itse
 - `./gradlew bumpVersion` – Bump patch version in all build files
 - `./gradlew bumpVersion -PnewVersion=X.Y.Z` – Bump to specific version
 
+### Development Workflow & Git Hooks
+
+Git hooks are used to enforce code quality and prevent broken code from being committed or pushed:
+
+- `./gradlew setupDev` – Install git hooks for development workflow (pre-commit and pre-push)
+- `./gradlew installGitHooks` – Install git hooks (used by setupDev)
+
+**Pre-commit Hook:**
+- Runs `spotlessCheck` to ensure code formatting standards
+- Prevents commits if formatting issues are found
+- Fix with: `./gradlew spotlessApply`
+
+**Pre-push Hook:**
+- Runs `./gradlew build` to verify tests pass and build is healthy
+- Prevents pushing if tests fail or build breaks
+- Fix issues locally and try pushing again
+
+**Manual Hook Installation:**
+```bash
+./scripts/install.sh
+```
+
+**Uninstall Hooks:**
+```bash
+rm .git/hooks/pre-commit .git/hooks/pre-push
+```
+
 ## Project Structure
 
 The project is a multi-module Gradle build with the following organization:
@@ -45,6 +72,11 @@ ogiri/
 │   │   ├── src/main/kotlin/         # Kotlin classes (same components as Java sample)
 │   │   └── src/main/resources/      # application.yml with ogiri configuration
 │   └── README.md                    # Sample app setup and usage guide
+├── scripts/
+│   ├── git-hooks/                   # Git hooks for development workflow
+│   │   ├── pre-commit               # Enforces code formatting before commits
+│   │   └── pre-push                 # Runs tests before allowing push
+│   └── install.sh                   # Installs git hooks for development
 ├── gradle/
 │   └── version.gradle.kts           # Centralized version management (git tags, env vars)
 ├── .github/workflows/               # GitHub Actions CI/CD pipelines

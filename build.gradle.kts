@@ -19,3 +19,43 @@ subprojects {
     mavenCentral()
   }
 }
+
+// Task to install git hooks for development workflow
+tasks.register("installGitHooks") {
+  description = "Install git pre-commit and pre-push hooks for code quality checks"
+  group = "Development"
+
+  doLast {
+    val installScript = file("scripts/install.sh")
+    if (!installScript.exists()) {
+      throw GradleException("install.sh script not found at scripts/install.sh")
+    }
+
+    val process = ProcessBuilder("bash", installScript.absolutePath).start()
+    val exitCode = process.waitFor()
+
+    if (exitCode != 0) {
+      val errorOutput = process.errorStream.bufferedReader().readText()
+      throw GradleException("Failed to install git hooks:\n$errorOutput")
+    }
+
+    println(process.inputStream.bufferedReader().readText())
+  }
+}
+
+// Automatically install hooks when setting up the project
+tasks.register("setupDev") {
+  description = "Set up development environment (installs git hooks)"
+  group = "Development"
+  dependsOn("installGitHooks")
+
+  doLast {
+    println("")
+    println("✅ Development environment setup complete!")
+    println("")
+    println("Your git hooks are installed. They will:")
+    println("  • pre-commit:  Check code formatting before allowing commits")
+    println("  • pre-push:    Verify tests pass before allowing pushes")
+  }
+}
+
