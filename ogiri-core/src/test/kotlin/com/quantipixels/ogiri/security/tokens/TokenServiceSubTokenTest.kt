@@ -34,6 +34,7 @@ import org.springframework.security.crypto.password.PasswordEncoder
 class TokenServiceSubTokenTest {
   private lateinit var repository: InMemoryTokenRepository
   private lateinit var tokenService: TokenService<TestToken>
+  @Suppress("DEPRECATION")
   private val passwordEncoder: PasswordEncoder = NoOpPasswordEncoder.getInstance()
   private val identifierPolicy =
       object : IdentifierPolicy {

@@ -2,8 +2,8 @@ import com.diffplug.gradle.spotless.SpotlessExtension
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-  kotlin("jvm") version libs.versions.kotlin.get()
-  kotlin("plugin.spring") version libs.versions.kotlin.get()
+  kotlin("jvm")
+  kotlin("plugin.spring")
   // JPA plugin removed - library is now database-agnostic
   // allopen plugin removed - not needed without JPA
   id("io.spring.dependency-management") version libs.versions.dependencyManagement.get()

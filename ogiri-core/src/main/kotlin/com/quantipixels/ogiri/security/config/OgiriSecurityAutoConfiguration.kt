@@ -86,6 +86,7 @@ class OgiriSecurityAutoConfiguration {
       subTokenRegistry: SubTokenRegistry,
       properties: OgiriConfigurationProperties,
   ): TokenService<*> =
+      @Suppress("UNCHECKED_CAST")
       TokenService(
           repository as TokenRepository<BaseToken>,
           passwordEncoder,

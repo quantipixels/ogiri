@@ -43,6 +43,7 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.AuthenticationEntryPoint
 
 class OgiriTokenAuthenticationFilterTest {
+  @Suppress("DEPRECATION")
   private val passwordEncoder: PasswordEncoder = NoOpPasswordEncoder.getInstance()
   private val identifierPolicy = DefaultIdentifierPolicy()
 

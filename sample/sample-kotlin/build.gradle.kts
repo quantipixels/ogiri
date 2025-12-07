@@ -14,9 +14,9 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-  kotlin("jvm") version libs.versions.kotlin.get()
-  kotlin("plugin.spring") version libs.versions.kotlin.get()
-  kotlin("plugin.jpa") version libs.versions.kotlin.get()
+  kotlin("jvm")
+  kotlin("plugin.spring")
+  kotlin("plugin.jpa")
   id("io.spring.dependency-management") version libs.versions.dependencyManagement.get()
   id("org.springframework.boot") version libs.versions.springBoot.get()
   id("com.diffplug.spotless") version libs.versions.spotless.get()

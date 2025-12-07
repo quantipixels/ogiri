@@ -678,6 +678,5 @@ ogiri adds **zero** database-specific dependencies to your classpath. Your appli
 ## Questions?
 
 - See `README.md` for project overview
-- Check `CLAUDE.md` for development guidelines
 - Review `sample/sample-java/` or `sample/sample-kotlin/` for working examples
 - Read `docs/AUTHENTICATION.md` for token flow details

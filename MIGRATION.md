@@ -102,13 +102,6 @@ Centralized version management supporting:
 - Testing and integration guide
 - Troubleshooting tips
 
-**Updated:** `CLAUDE.md`
-- Added project structure explanation
-- Added CI/CD pipeline documentation
-- Added release workflow guide
-- Updated development commands
-- Added configuration for Maven Central publishing
-
 ## Migration for Existing Users
 
 If you're using ogiri in your project, no changes are required. The core library functionality remains the same.
@@ -202,7 +195,6 @@ export GPG_PASSPHRASE=...
 ### Updated Files
 - `README.md` – Added project structure and release sections
 - `settings.gradle.kts` – Added module includes
-- `CLAUDE.md` – Added project structure and CI/CD documentation
 
 ## Environment Variables for CI/CD
 
@@ -269,6 +261,5 @@ gpg --export-secret-key <KEY_ID> | base64 | tr -d '\n'
 ## Support
 
 For questions or issues:
-1. Check `CLAUDE.md` for development guidelines
-2. Review `sample/README.md` for integration examples
-3. See `docs/AUTHENTICATION.md` for token flow details
+1. Review `sample/README.md` for integration examples
+2. See `docs/AUTHENTICATION.md` for token flow details

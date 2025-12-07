@@ -74,9 +74,6 @@ Have an idea for improvement? We'd love to hear it!
    git checkout -b fix/your-bug-fix
    ```
 
-3. **Read the development guide**
-   See [CLAUDE.md](./CLAUDE.md) for architecture, project structure, and development workflow.
-
 ### Development Setup
 
 ```bash
@@ -249,7 +246,6 @@ ogiri/
 │   ├── AUTHENTICATION.md    # Token flow and rotation
 │   └── DATABASE.md  # Database setup patterns
 ├── .github/workflows/       # GitHub Actions CI/CD
-├── CLAUDE.md                # Development guidelines
 ├── SECURITY.md              # Security policy
 ├── CHANGELOG.md             # Release notes
 └── README.md                # Main documentation
@@ -285,7 +281,6 @@ ogiri/
 - [Spring Boot Documentation](https://spring.io/projects/spring-boot)
 - [Kotlin Documentation](https://kotlinlang.org/docs/)
 - [Project README](./README.md) - Overview and quick start
-- [Development Guide](./CLAUDE.md) - Architecture and workflows
 
 ## Getting Help
 

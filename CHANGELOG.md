@@ -104,7 +104,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Authentication flow and token rotation documentation
 - Sample applications in both Java and Kotlin
 - Database-specific setup guides (PostgreSQL, MySQL, H2, MongoDB)
-- Development guidelines (CLAUDE.md)
 
 ### CI/CD
 - GitHub Actions workflows for build, test, lint, and release
