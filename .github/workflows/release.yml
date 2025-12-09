@@ -52,11 +52,11 @@ jobs:
             ## Release ${{ steps.version.outputs.VERSION }}
 
             ### Artifacts
-            Published to Maven Central: `com.quantipixels.ogiri:ogiri:${{ steps.version.outputs.VERSION }}`
+            Published to Maven Central: `com.quantipixels.ogiri:ogiri-core:${{ steps.version.outputs.VERSION }}`
 
             ### Installation
             ```gradle
-            implementation 'com.quantipixels.ogiri:ogiri:${{ steps.version.outputs.VERSION }}'
+            implementation 'com.quantipixels.ogiri:ogiri-core:${{ steps.version.outputs.VERSION }}'
             ```
 
             For details, see [CHANGELOG](./CHANGELOG.md) and [README](./README.md).
@@ -68,6 +68,6 @@ jobs:
       - name: Verify published artifact
         run: |
           sleep 30  # Wait for Maven Central to sync
-          curl -f https://repo1.maven.org/maven2/com/quantipixels/ogiri/ogiri/${{ steps.version.outputs.VERSION }}/ogiri-${{ steps.version.outputs.VERSION }}.jar \
+          curl -f https://repo1.maven.org/maven2/com/quantipixels/ogiri/ogiri-core/${{ steps.version.outputs.VERSION }}/ogiri-core-${{ steps.version.outputs.VERSION }}.jar \
             && echo "✓ Artifact verified on Maven Central" \
             || echo "⚠ Artifact not yet available on Maven Central (may take a few minutes)"
