@@ -55,10 +55,9 @@ dependencies {
 }
 
 /**
- * Test configuration with JaCoCo code coverage reporting.
- * Run tests: ./gradlew test
- * Generate coverage report: ./gradlew jacocoTestReport
- * View coverage: open build/reports/jacoco/test/html/index.html
+ * Test configuration with JaCoCo code coverage reporting. Run tests: ./gradlew test Generate
+ * coverage report: ./gradlew jacocoTestReport View coverage: open
+ * build/reports/jacoco/test/html/index.html
  */
 tasks.withType<Test> {
   useJUnitPlatform()
@@ -76,12 +75,10 @@ tasks.jacocoTestReport {
 }
 
 /**
- * JaCoCo code coverage configuration.
- * Enforces minimum 50% coverage for critical token functionality.
+ * JaCoCo code coverage configuration. Enforces minimum 50% coverage for critical token
+ * functionality.
  */
-jacoco {
-  toolVersion = "0.8.11"
-}
+jacoco { toolVersion = "0.8.11" }
 
 publishing {
   publications {
@@ -89,7 +86,8 @@ publishing {
       from(components["java"])
       pom {
         name.set("ogiri")
-        description.set("Spring Boot token security components with auth headers, filters, and sub-token support.")
+        description.set(
+            "Spring Boot token security components with auth headers, filters, and sub-token support.")
         url.set("https://github.com/quantipixels/ogiri")
         licenses {
           license {
@@ -115,10 +113,8 @@ publishing {
   repositories {
     maven {
       name = "OSSRH"
-      val releasesUrl =
-        uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
-      val snapshotsUrl =
-        uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
+      val releasesUrl = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
+      val snapshotsUrl = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
       url = if (version.toString().endsWith("SNAPSHOT")) snapshotsUrl else releasesUrl
       credentials {
         username = (findProperty("ossrhUsername") ?: System.getenv("OSSRH_USERNAME"))?.toString()
@@ -150,7 +146,6 @@ configure<SpotlessExtension> {
   }
   kotlinGradle {
     target("*.gradle.kts")
-    licenseHeaderFile(rootProject.file("spotless.license.kt"), "")
     ktfmt("0.43")
     trimTrailingWhitespace()
     endWithNewline()
