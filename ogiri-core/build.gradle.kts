@@ -129,9 +129,12 @@ publishing {
 }
 
 signing {
-  val pub = publishing.publications.findByName("mavenJava")
-  if (pub != null) {
-    sign(pub)
+  val hasGpgKey = findProperty("signing.keyId") != null || System.getenv("GPG_KEY_ID") != null
+  if (hasGpgKey) {
+    val pub = publishing.publications.findByName("mavenJava")
+    if (pub != null) {
+      sign(pub)
+    }
   }
 }
 

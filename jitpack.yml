@@ -1,0 +1,5 @@
+jdk:
+  - openjdk17
+
+install:
+  - RELEASE_VERSION=$(cat .ogiri-version) ./gradlew build publishToMavenLocal --no-daemon
