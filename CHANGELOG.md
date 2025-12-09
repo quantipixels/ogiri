@@ -25,6 +25,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 - Security-related changes in development
 
+## [1.0.4] - 2025-12-08
+
+### Fixed
+- Remove conflicting *jitpack.yml* configuration
+
 ## [1.0.3] - 2025-12-08
 
 ### Fixed
