@@ -77,4 +77,9 @@ public class SampleTokenRepositoryAdapter implements TokenRepository<SampleToken
   public void deleteByUserId(long userId) {
     jpaRepository.deleteByUserIdJpa(userId);
   }
+
+  @Override
+  public void delete(SampleToken token) {
+    jpaRepository.delete(token);
+  }
 }

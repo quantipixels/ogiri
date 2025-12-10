@@ -92,9 +92,9 @@ interface SampleTokenRepository : JpaRepository<SampleToken, Long>, TokenReposit
   @Query("DELETE FROM SampleToken t WHERE t.userId = ?1")
   fun deleteByUserIdJpa(userId: Long)
 
-  /** Delete all tokens in a collection. */
+  /** Delete token. */
   @Transactional
   @Modifying
-  @Query("DELETE FROM SampleToken t WHERE t IN ?1")
-  override fun deleteAll(entities: Collection<SampleToken>)
+  @Query("DELETE FROM SampleToken t WHERE t = ?1")
+  override fun delete(token: SampleToken)
 }
