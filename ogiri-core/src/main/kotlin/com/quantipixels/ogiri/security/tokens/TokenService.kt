@@ -174,7 +174,7 @@ open class TokenService<T : BaseToken>(
   @Transactional
   fun cleanupExpiredTokens(now: Instant = Instant.now()): Int {
     val expired = repository.findByExpiryAtBefore(now)
-    repository.deleteAll(expired)
+    expired.forEach { repository.delete(it) }
     return expired.size
   }
 
@@ -379,8 +379,7 @@ open class TokenService<T : BaseToken>(
     // Remove orphaned sub-tokens (sub-tokens without corresponding app token)
     val appClients = appTokens.clientIds()
     val expectedSubClients = expectedSubClientsFor(appClients, registrations)
-    val orphanSubs = subTokens.filterOutClientIds(expectedSubClients)
-    if (orphanSubs.isNotEmpty()) repository.deleteAll(orphanSubs)
+    subTokens.filterOutClientIds(expectedSubClients).forEach { repository.delete(it) }
 
     // Enforce max clients limit on app tokens
     if (appTokens.size > maxClients) {
@@ -390,7 +389,7 @@ open class TokenService<T : BaseToken>(
               compareBy<BaseToken> { it.lastUsedAt ?: it.updatedAt }.thenBy { it.updatedAt },
           )
       val remove = sorted.take(toRemoveCount)
-      repository.deleteAll(remove)
+      remove.forEach { repository.delete(it) }
       val removeSubClients = generateSubClientIds(remove.clientIds(), registrations)
       deleteToken(user.userId, removeSubClients)
     }

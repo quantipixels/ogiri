@@ -81,15 +81,6 @@ interface TokenRepository<T : BaseToken> {
   fun deleteById(id: Long)
 
   /**
-   * Delete all tokens in the provided collection.
-   *
-   * Safe to call with empty collection (should do nothing).
-   *
-   * @param tokens Collection of tokens to delete
-   */
-  fun deleteAll(tokens: Collection<T>)
-
-  /**
    * Find all tokens for a specific user.
    *
    * Typically ordered by updated_at DESC to get most recent first.
@@ -157,4 +148,66 @@ interface TokenRepository<T : BaseToken> {
    * @param userId The user ID
    */
   fun deleteByUserId(userId: Long)
+
+  /**
+   * Delete a token by primary key (generic helper).
+   *
+   * @param token The token to delete
+   */
+  fun delete(token: T) {
+    token.id.takeIf { it > 0 }?.let { deleteById(it) }
+  }
+
+  /**
+   * Find all sub-tokens of a specific type for a user.
+   *
+   * This is an optional optimization method. Implementations may override this to use
+   * database-level filtering if they have a tokenSubtype column. The default implementation fetches
+   * all tokens and filters in-memory.
+   *
+   * Usage:
+   * ```
+   * val xmppTokens = repository.findAllByUserIdAndTokenSubtype(userId, "xmpp")
+   * ```
+   *
+   * **JPA Optimization Example:**
+   *
+   * ```kotlin
+   * override fun findAllByUserIdAndTokenSubtype(
+   *   userId: Long,
+   *   subtypeName: String,
+   * ): List<MyToken> =
+   *   findAllByUserIdAndTokenSubtype(userId, subtypeName)  // Custom query
+   *
+   * @Query("SELECT t FROM MyToken t WHERE t.userId = :userId AND t.tokenSubtype = :subtypeName")
+   * fun findAllByUserIdAndTokenSubtype(
+   *   @Param("userId") userId: Long,
+   *   @Param("subtypeName") subtypeName: String,
+   * ): List<MyToken>
+   * ```
+   *
+   * **JDBC Optimization Example:**
+   *
+   * ```kotlin
+   * override fun findAllByUserIdAndTokenSubtype(
+   *   userId: Long,
+   *   subtypeName: String,
+   * ): List<MyToken> {
+   *   val sql = "SELECT * FROM tokens WHERE user_id = ? AND token_subtype = ?"
+   *   return jdbcTemplate.query(sql, arrayOf(userId, subtypeName)) { rs, _ ->
+   *     MyToken.fromRow(rs)
+   *   }
+   * }
+   * ```
+   *
+   * @param userId The user ID
+   * @param subtypeName The sub-token type name (e.g., "device", "chat", "xmpp")
+   * @return List of matching sub-tokens (empty if none found)
+   */
+  fun findAllByUserIdAndTokenSubtype(
+      userId: Long,
+      subtypeName: String,
+  ): List<T> {
+    return findAllByUserId(userId).filter { it.tokenSubtype == subtypeName }
+  }
 }

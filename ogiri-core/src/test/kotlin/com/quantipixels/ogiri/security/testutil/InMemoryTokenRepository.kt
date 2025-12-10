@@ -81,13 +81,6 @@ class InMemoryTokenRepository : TokenRepository<TestToken> {
     synchronized(tokens) { tokens.removeIf { it.id == id } }
   }
 
-  /** Delete all tokens in a collection. */
-  override fun deleteAll(tokens: Collection<TestToken>) {
-    synchronized(this.tokens) {
-      tokens.forEach { token -> this.tokens.removeIf { it.id == token.id } }
-    }
-  }
-
   /** Find all tokens for a user. */
   override fun findAllByUserId(userId: Long): List<TestToken> {
     synchronized(tokens) {
