@@ -151,13 +151,13 @@ The library uses Spring Boot's `@ConditionalOnMissingBean` to allow customizatio
 @Bean
 fun tokenService(
   tokenRepository: TokenRepository<Token>,
-  tokenUserDirectory: TokenUserDirectory,
+  ogiriUserDirectory: OgiriUserDirectory,
   @Value("\${ogiri.auth.max-clients:24}") maxClients: Long,
   @Value("\${ogiri.auth.batch-grace-seconds:5}") batchGraceSeconds: Long,
   @Value("\${ogiri.auth.token-lifespan-days:14}") tokenLifespanDays: Long
 ): TokenService<Token> = TokenService(
   tokenRepository,
-  tokenUserDirectory,
+  ogiriUserDirectory,
   maxClients,
   batchGraceSeconds,
   tokenLifespanDays
@@ -174,10 +174,10 @@ class CustomSecurityConfig {
   @Bean
   fun tokenService(
     tokenRepository: TokenRepository<MyToken>,
-    tokenUserDirectory: TokenUserDirectory
+    ogiriUserDirectory: OgiriUserDirectory
   ): TokenService<MyToken> = MyCustomTokenService(
     tokenRepository,
-    tokenUserDirectory,
+    ogiriUserDirectory,
     maxClients = 10,
     batchGraceSeconds = 30,
     tokenLifespanDays = 7

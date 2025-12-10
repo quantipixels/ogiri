@@ -15,7 +15,7 @@ package com.quantipixels.ogiri.samples.kotlin.service
 import com.quantipixels.ogiri.samples.kotlin.entity.SampleToken
 import com.quantipixels.ogiri.samples.kotlin.repository.SampleTokenRepository
 import com.quantipixels.ogiri.security.core.IdentifierPolicy
-import com.quantipixels.ogiri.security.spi.TokenUserDirectory
+import com.quantipixels.ogiri.security.spi.OgiriUserDirectory
 import com.quantipixels.ogiri.security.tokens.SubTokenRegistry
 import com.quantipixels.ogiri.security.tokens.TokenService
 import com.quantipixels.ogiri.security.tokens.TokenType
@@ -39,7 +39,7 @@ import org.springframework.stereotype.Service
 class SampleTokenService(
     private val sampleTokenRepository: SampleTokenRepository,
     passwordEncoder: PasswordEncoder,
-    userDirectory: TokenUserDirectory,
+    userDirectory: OgiriUserDirectory,
     identifierPolicy: IdentifierPolicy,
     subTokenRegistry: SubTokenRegistry,
 ) :

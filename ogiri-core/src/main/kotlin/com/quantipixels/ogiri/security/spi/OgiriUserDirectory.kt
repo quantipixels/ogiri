@@ -14,12 +14,12 @@ package com.quantipixels.ogiri.security.spi
 
 import org.springframework.security.core.userdetails.UserDetailsService
 
-interface TokenUserDirectory : UserDetailsService {
-  fun findById(id: Long): TokenUser?
+interface OgiriUserDirectory : UserDetailsService {
+  fun findById(id: Long): OgiriUser?
 
-  fun findByEmail(email: String): TokenUser?
+  fun findByEmail(email: String): OgiriUser?
 
-  fun findByUsername(username: String): TokenUser?
+  fun findByUsername(username: String): OgiriUser?
 
   fun recordSuccessfulLogin(userId: Long)
 }

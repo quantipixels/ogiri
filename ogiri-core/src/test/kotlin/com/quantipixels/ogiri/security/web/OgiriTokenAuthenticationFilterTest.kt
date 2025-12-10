@@ -20,7 +20,7 @@ import com.quantipixels.ogiri.security.helpers.AuthenticationBypassDecider
 import com.quantipixels.ogiri.security.routes.Route
 import com.quantipixels.ogiri.security.routes.RouteCatalog
 import com.quantipixels.ogiri.security.routes.RouteRegistry
-import com.quantipixels.ogiri.security.spi.TokenUserDirectory
+import com.quantipixels.ogiri.security.spi.OgiriUserDirectory
 import com.quantipixels.ogiri.security.testutil.InMemoryTokenRepository
 import com.quantipixels.ogiri.security.testutil.TestFixtures
 import com.quantipixels.ogiri.security.testutil.TestToken
@@ -38,21 +38,26 @@ import org.springframework.mock.web.MockFilterChain
 import org.springframework.mock.web.MockHttpServletRequest
 import org.springframework.mock.web.MockHttpServletResponse
 import org.springframework.security.core.context.SecurityContextHolder
-import org.springframework.security.crypto.password.NoOpPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.AuthenticationEntryPoint
 
 class OgiriTokenAuthenticationFilterTest {
   @Suppress("DEPRECATION")
-  private val passwordEncoder: PasswordEncoder = NoOpPasswordEncoder.getInstance()
+  private val passwordEncoder: PasswordEncoder =
+      object : PasswordEncoder {
+        override fun encode(rawPassword: CharSequence): String = rawPassword.toString()
+
+        override fun matches(rawPassword: CharSequence, encodedPassword: String): Boolean =
+            rawPassword.toString() == encodedPassword
+      }
   private val identifierPolicy = DefaultIdentifierPolicy()
 
   private val user = TestFixtures.testUser(userId = 1L, username = "user")
   private val userDirectory =
-      object : TokenUserDirectory {
+      object : OgiriUserDirectory {
         override fun loadUserByUsername(username: String) = user
 
-        override fun findById(id: Long) = user.takeIf { it.userId == id }
+        override fun findById(id: Long) = user.takeIf { it.getOgiriUserId() == id }
 
         override fun findByEmail(email: String) = null
 
@@ -65,7 +70,7 @@ class OgiriTokenAuthenticationFilterTest {
   private inner class TestTokenService(
       repository: TokenRepository<TestToken>,
       passwordEncoder: PasswordEncoder,
-      userDirectory: TokenUserDirectory,
+      userDirectory: OgiriUserDirectory,
       identifierPolicy: IdentifierPolicy,
       subTokenRegistry: com.quantipixels.ogiri.security.tokens.SubTokenRegistry,
       maxClients: Long = 24,
@@ -137,8 +142,9 @@ class OgiriTokenAuthenticationFilterTest {
     val fixture = newFilter()
 
     // Issue a token using the same TokenService used by the filter
-    val headers: AuthHeader = fixture.tokenService.createNewAuthToken(user.userId, "clientA")
-    val issuedToken = fixture.repository.findByUserIdAndClient(user.userId, "clientA")!!
+    val headers: AuthHeader =
+        fixture.tokenService.createNewAuthToken(user.getOgiriUserId(), "clientA")
+    val issuedToken = fixture.repository.findByUserIdAndClient(user.getOgiriUserId(), "clientA")!!
 
     val request = MockHttpServletRequest("GET", "/api/secure")
     request.addHeader("access-token", headers.accessToken!!)
@@ -165,8 +171,9 @@ class OgiriTokenAuthenticationFilterTest {
   fun `filter rotates tokens outside batch window`() {
     val fixture = newFilter()
 
-    val headers: AuthHeader = fixture.tokenService.createNewAuthToken(user.userId, "clientA")
-    val stored = fixture.repository.findByUserIdAndClient(user.userId, "clientA")!!
+    val headers: AuthHeader =
+        fixture.tokenService.createNewAuthToken(user.getOgiriUserId(), "clientA")
+    val stored = fixture.repository.findByUserIdAndClient(user.getOgiriUserId(), "clientA")!!
     // Simulate a stale request outside the batch grace window
     stored.updatedAt = Instant.now().minusSeconds(10)
 

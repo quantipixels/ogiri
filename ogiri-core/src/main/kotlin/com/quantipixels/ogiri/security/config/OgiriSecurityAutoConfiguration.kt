@@ -17,7 +17,7 @@ import com.quantipixels.ogiri.security.core.IdentifierPolicy
 import com.quantipixels.ogiri.security.helpers.AuthenticationBypassDecider
 import com.quantipixels.ogiri.security.routes.RouteCatalog
 import com.quantipixels.ogiri.security.routes.RouteRegistry
-import com.quantipixels.ogiri.security.spi.TokenUserDirectory
+import com.quantipixels.ogiri.security.spi.OgiriUserDirectory
 import com.quantipixels.ogiri.security.tokens.BaseToken
 import com.quantipixels.ogiri.security.tokens.DefaultSubTokenRegistry
 import com.quantipixels.ogiri.security.tokens.SubTokenRegistration
@@ -82,7 +82,7 @@ class OgiriSecurityAutoConfiguration {
   fun ogiriTokenService(
       repository: TokenRepository<*>,
       passwordEncoder: PasswordEncoder,
-      tokenUserDirectory: TokenUserDirectory,
+      ogiriUserDirectory: OgiriUserDirectory,
       identifierPolicy: IdentifierPolicy,
       subTokenRegistry: SubTokenRegistry,
       properties: OgiriConfigurationProperties,
@@ -91,7 +91,7 @@ class OgiriSecurityAutoConfiguration {
       TokenService(
           repository as TokenRepository<BaseToken>,
           passwordEncoder,
-          tokenUserDirectory,
+          ogiriUserDirectory,
           identifierPolicy,
           subTokenRegistry,
           properties.auth.maxClients,
@@ -108,7 +108,7 @@ class OgiriSecurityAutoConfiguration {
   @Bean
   @ConditionalOnMissingBean
   fun ogiriTokenAuthenticationFilter(
-      tokenUserDirectory: TokenUserDirectory,
+      ogiriUserDirectory: OgiriUserDirectory,
       tokenService: TokenService<*>,
       authenticationEntryPoint: AuthenticationEntryPoint,
       authenticationBypassDecider: AuthenticationBypassDecider,
@@ -116,7 +116,7 @@ class OgiriSecurityAutoConfiguration {
       properties: OgiriConfigurationProperties,
   ): OgiriTokenAuthenticationFilter =
       OgiriTokenAuthenticationFilter(
-          tokenUserDirectory,
+          ogiriUserDirectory,
           tokenService,
           authenticationEntryPoint,
           authenticationBypassDecider,

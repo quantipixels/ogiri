@@ -47,6 +47,11 @@ interface SampleTokenRepository : JpaRepository<SampleToken, Long>, TokenReposit
   override fun findByExpiryAtBefore(cutoff: Instant): List<SampleToken> =
       findByExpiryAtBeforeCutoff(cutoff)
 
+  override fun findAllByUserIdAndTokenSubtype(
+      userId: Long,
+      tokenSubtype: String,
+  ): List<SampleToken> = findByUserIdAndTokenSubtypeOrderByUpdatedAtDesc(userId, tokenSubtype)
+
   override fun deleteByUserIdAndClient(
       userId: Long,
       clientId: String,
@@ -70,6 +75,13 @@ interface SampleTokenRepository : JpaRepository<SampleToken, Long>, TokenReposit
 
   @Query("SELECT t FROM SampleToken t WHERE t.expiryAt < ?1")
   fun findByExpiryAtBeforeCutoff(expiryAt: Instant): List<SampleToken>
+
+  @Query(
+      "SELECT t FROM SampleToken t WHERE t.userId = ?1 AND t.tokenSubtype = ?2 ORDER BY t.updatedAt DESC, t.id DESC")
+  fun findByUserIdAndTokenSubtypeOrderByUpdatedAtDesc(
+      userId: Long,
+      tokenSubtype: String,
+  ): List<SampleToken>
 
   @Transactional
   @Modifying

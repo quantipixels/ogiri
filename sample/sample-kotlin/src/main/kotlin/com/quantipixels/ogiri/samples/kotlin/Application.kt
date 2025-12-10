@@ -21,7 +21,7 @@ import org.springframework.context.annotation.ComponentScan
  *
  * This sample shows how to:
  * - Integrate ogiri as a dependency in a Kotlin Spring Boot application
- * - Configure required SPI implementations (TokenUserDirectory, RouteRegistry)
+ * - Configure required SPI implementations (OgiriUserDirectory, RouteRegistry)
  * - Use the authentication filter and token service
  */
 @SpringBootApplication

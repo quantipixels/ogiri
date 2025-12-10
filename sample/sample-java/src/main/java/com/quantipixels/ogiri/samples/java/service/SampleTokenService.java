@@ -15,7 +15,7 @@ package com.quantipixels.ogiri.samples.java.service;
 import com.quantipixels.ogiri.samples.java.entity.SampleToken;
 import com.quantipixels.ogiri.samples.java.repository.SampleTokenRepositoryAdapter;
 import com.quantipixels.ogiri.security.core.IdentifierPolicy;
-import com.quantipixels.ogiri.security.spi.TokenUserDirectory;
+import com.quantipixels.ogiri.security.spi.OgiriUserDirectory;
 import com.quantipixels.ogiri.security.tokens.SubTokenRegistry;
 import com.quantipixels.ogiri.security.tokens.TokenService;
 import com.quantipixels.ogiri.security.tokens.TokenType;
@@ -42,7 +42,7 @@ public class SampleTokenService extends TokenService<SampleToken> {
   public SampleTokenService(
       SampleTokenRepositoryAdapter tokenRepository,
       PasswordEncoder passwordEncoder,
-      TokenUserDirectory userDirectory,
+      OgiriUserDirectory userDirectory,
       IdentifierPolicy identifierPolicy,
       SubTokenRegistry subTokenRegistry) {
     super(

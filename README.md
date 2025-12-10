@@ -83,12 +83,12 @@ dependencies {
 
 ### 1. Implement Required Adapters
 
-**TokenUserDirectory** – Load users from your user store:
+**OgiriUserDirectory** – Load users from your user store:
 
 *Kotlin*
 ```kotlin
 @Component
-class MyTokenUserDirectory(private val userService: UserService) : TokenUserDirectory {
+class MyOgiriUserDirectory(private val userService: UserService) : OgiriUserDirectory {
   override fun findById(id: Long) = userService.getById(id)
   override fun findByUsername(username: String) = userService.getByUsername(username)
   override fun findByEmail(email: String) = userService.getByEmail(email)
@@ -100,10 +100,10 @@ class MyTokenUserDirectory(private val userService: UserService) : TokenUserDire
 *Java*
 ```java
 @Component
-public class MyTokenUserDirectory implements TokenUserDirectory {
+public class MyOgiriUserDirectory implements OgiriUserDirectory {
   private final UserService userService;
 
-  public MyTokenUserDirectory(UserService userService) {
+  public MyOgiriUserDirectory(UserService userService) {
     this.userService = userService;
   }
 

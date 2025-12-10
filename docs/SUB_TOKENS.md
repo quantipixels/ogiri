@@ -185,8 +185,9 @@ fun refreshDeviceToken(
   @RequestHeader("uid") userId: Long,
   response: HttpServletResponse
 ) {
-  val authHeader = tokenService.renewSubToken(userId, "app", "device")
-  response.appendAuthHeaders(authHeader)  // Only device token is updated
+  tokenService
+      .renewSubToken(userId, "app", "device")
+      ?.let { response.appendAuthHeaders(it) }  // Only device token is updated
   return mapOf("message" to "Device token renewed")
 }
 ```
@@ -274,11 +275,12 @@ fun switchTenant(
   response: HttpServletResponse
 ) {
   // Verify user has access to tenant
-  tokenService.renewSubToken(
-    userId = userId,
-    parentClientId = "app",
-    subTokenName = "tenant"  // Routed to tenantSubToken bean
-  )
+  val authHeader =
+      tokenService.renewSubToken(
+          userId = userId,
+          parentClient = "app",
+          subtypeName = "tenant"  // Routed to tenantSubToken bean
+      ) ?: throw IllegalStateException("tenant token renewal failed")
   response.appendAuthHeaders(authHeader)
 }
 ```

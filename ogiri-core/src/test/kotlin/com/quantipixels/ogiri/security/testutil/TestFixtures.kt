@@ -12,19 +12,19 @@
  */
 package com.quantipixels.ogiri.security.testutil
 
-import com.quantipixels.ogiri.security.spi.TokenUser
+import com.quantipixels.ogiri.security.spi.OgiriUser
 import java.time.Instant
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 
 /** Common test fixtures and builders for test data. */
 object TestFixtures {
-  /** Create a test TokenUser with default or custom values. */
+  /** Create a test OgiriUser with default or custom values. */
   fun testUser(
       userId: Long = 1L,
       username: String = "testuser",
-  ): TokenUser =
-      object : TokenUser {
+  ): OgiriUser =
+      object : OgiriUser {
         override val userId: Long = userId
 
         override fun getAuthorities(): MutableCollection<out GrantedAuthority> =

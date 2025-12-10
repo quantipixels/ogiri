@@ -91,6 +91,25 @@ interface TokenRepository<T : BaseToken> {
   fun findAllByUserId(userId: Long): List<T>
 
   /**
+   * Find all tokens for a user with a specific subtype.
+   *
+   * This is required by the core helpers when querying for sub-tokens, but feels optional to the
+   * persistence layer because implementations may want to define their own optimized query (e.g., a
+   * Spring Data JPA derived method). Examples:
+   * - `List<MyToken> findAllByUserIdAndTokenSubtypeOrderByUpdatedAtDesc(Long userId, String
+   *   subtype)`
+   * - `SELECT * FROM tokens WHERE user_id = ? AND token_subtype = ? ORDER BY updated_at DESC`
+   *
+   * @param userId The user ID
+   * @param tokenSubtype The sub-token type identifier (e.g., "device", "chat")
+   * @return List of tokens for that subtype (empty when none exist)
+   */
+  fun findAllByUserIdAndTokenSubtype(
+      userId: Long,
+      tokenSubtype: String,
+  ): List<T>
+
+  /**
    * Find the token for a specific user and client combination.
    *
    * This is the primary lookup for validating incoming requests. Users have one token per client.

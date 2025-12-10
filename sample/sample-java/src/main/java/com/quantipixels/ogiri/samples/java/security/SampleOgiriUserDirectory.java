@@ -12,8 +12,8 @@
  */
 package com.quantipixels.ogiri.samples.java.security;
 
-import com.quantipixels.ogiri.security.spi.TokenUser;
-import com.quantipixels.ogiri.security.spi.TokenUserDirectory;
+import com.quantipixels.ogiri.security.spi.OgiriUser;
+import com.quantipixels.ogiri.security.spi.OgiriUserDirectory;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -22,13 +22,13 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
 /**
- * Sample TokenUserDirectory implementation for Java.
+ * Sample OgiriUserDirectory implementation for Java.
  *
  * <p>In a real application, this would load users from a database. This sample uses an in-memory
  * map for demonstration.
  */
 @Component
-public class SampleTokenUserDirectory implements TokenUserDirectory {
+public class SampleOgiriUserDirectory implements OgiriUserDirectory {
 
   private static final Map<Long, SampleUser> USERS_BY_ID = new HashMap<>();
   private static final Map<String, SampleUser> USERS_BY_USERNAME = new HashMap<>();
@@ -43,26 +43,26 @@ public class SampleTokenUserDirectory implements TokenUserDirectory {
   }
 
   @Override
-  public TokenUser loadUserByUsername(String username) {
-    TokenUser user = USERS_BY_USERNAME.get(username);
+  public OgiriUser loadUserByUsername(String username) {
+    OgiriUser user = USERS_BY_USERNAME.get(username);
     if (user == null) {
       throw new IllegalArgumentException("User not found: " + username);
     }
     return user;
   }
 
-  public TokenUser findById(long id) {
+  public OgiriUser findById(long id) {
     return USERS_BY_ID.get(id);
   }
 
-  public TokenUser findByEmail(String email) {
+  public OgiriUser findByEmail(String email) {
     return USERS_BY_ID.values().stream()
         .filter(u -> u.getEmail().equals(email))
         .findFirst()
         .orElse(null);
   }
 
-  public TokenUser findByUsername(String username) {
+  public OgiriUser findByUsername(String username) {
     return USERS_BY_USERNAME.get(username);
   }
 
@@ -71,7 +71,7 @@ public class SampleTokenUserDirectory implements TokenUserDirectory {
   }
 
   /** Sample user implementation */
-  public static class SampleUser implements TokenUser {
+  public static class SampleUser implements OgiriUser {
     private final long userId; // Property for Kotlin interface
     private final String username;
     private final String password;
@@ -84,7 +84,7 @@ public class SampleTokenUserDirectory implements TokenUserDirectory {
       this.email = email;
     }
 
-    // Kotlin property getter for TokenUser interface
+    // Kotlin property getter for OgiriUser interface
     public long getUserId() {
       return userId;
     }
@@ -126,6 +126,11 @@ public class SampleTokenUserDirectory implements TokenUserDirectory {
     @Override
     public boolean isEnabled() {
       return true;
+    }
+
+    @Override
+    public long getOgiriUserId() {
+      return userId;
     }
   }
 }

@@ -28,7 +28,7 @@ The project now supports Java-only applications without requiring Kotlin on the 
 **Sample Java App:** `sample/sample-java/`
 - Pure Java source code (no Kotlin dependencies)
 - Same SPI implementations as Kotlin version
-- TokenUserDirectory, RouteRegistry, TokenRepository examples
+- OgiriUserDirectory, RouteRegistry, TokenRepository examples
 - Can be used as a template for Java Spring Boot projects
 
 **Build Configuration:**
@@ -41,7 +41,7 @@ The project now supports Java-only applications without requiring Kotlin on the 
 **Purpose:** Demonstrate how to integrate ogiri in real Spring Boot applications
 
 **Java Sample** (`sample/sample-java/`)
-- TokenUserDirectory: In-memory user directory
+- OgiriUserDirectory: In-memory user directory
 - RouteRegistry: Declares public routes
 - TokenRepository: JPA interface for token persistence
 - Controllers: Health check and authenticated endpoints
@@ -106,6 +106,16 @@ Centralized version management supporting:
 
 If you're using ogiri in your project, no changes are required. The core library functionality remains the same.
 
+### Upgrading from 1.0.4 to 1.1.0
+
+1**Adopt the new `OgiriUser` getter.** Kotlin users already expose `val userId: Long`; Java implementations of `OgiriUser` must add `long getOgiriUserId()` (see `SampleOgiriUserDirectory.SampleUser`). Update any call sites or SPI wiring that assumed a different property name so they now invoke this stable getter.
+2**Implement `findAllByUserIdAndTokenSubtype(...)` in your `TokenRepository`.** Sub-token rotation relies on this method; see the Java sample repository and adapter for guidance on delegating from Spring Data or your custom store.
+3**Adjust authentication filter overrides.** If you were exposing your own `OgiriTokenAuthenticationFilter`, continue to register it as a bean. The auto-configuration will automatically prefer your bean, so no manual security chain edits are needed.
+4**Replace deprecated test helpers.** Any duplicated test fixtures should follow the new inline `PasswordEncoder` stub instead of `NoOpPasswordEncoder` to avoid future Java/Kotlin deprecation noise.
+5**Kotlin samples continue to work unchanged.** The Kotlin `SampleUser` already exposes `override val userId: Long`, so no additional changes are required; Kotlin consumers still rely on that property while Java consumers use the new `getOgiriUserId()` getter.
+
+For a concrete example, compare `ogiri-core/src/main/kotlin/com/quantipixels/ogiri/security/spi/OgiriUser.kt`, `ogiri-core/src/main/kotlin/com/quantipixels/ogiri/security/tokens/TokenService.kt`, and `sample/sample-java/src/main/java/com/quantipixels/ogiri/samples/java/repository/SampleTokenRepository.java`.
+
 ### For New Users
 
 To integrate ogiri in your Spring Boot application:
@@ -116,7 +126,7 @@ To integrate ogiri in your Spring Boot application:
    ```
 
 2. **Implement Required Interfaces:**
-   - `TokenUserDirectory` – Load users and record logins
+   - `OgiriUserDirectory` – Load users and record logins
    - `RouteRegistry` – Declare public routes
    - `TokenRepository<Token>` – Persist tokens to database
 

@@ -25,6 +25,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 - Security-related changes in development
 
+## [1.1.0] - 2025-12-09
+
+### Added
+- Added `TokenUser.getOgiriUserId()` so host applications can expose a conflict-free Java getter while retaining Kotlin property access.
+- Documented how to override the auto-configured `OgiriTokenAuthenticationFilter` with a custom bean/subclass so teams can adjust rotation, logging, or bypass logic without touching auto-configuration.
+- Extended the Java sample repository and adapter with `findAllByUserIdAndTokenSubtype(...)` so sub-token queries compile out of the box.
+- Added `parseBearerToken()` plus a fallback in the auth filter so Base64/JSON bearer payloads unwind into `AuthHeader` when the explicit headers are missing.
+- Introduced `SubTokenRegistration.validate()` plus `TokenService` helpers (`getSubToken`, `revokeSubToken`, `renewSubTokenAndGetHeaders`) to ease per-sub-token verification and rotation.
+
+### Changed
+- Swapped deprecated `NoOpPasswordEncoder` usages in tests for a tiny inline `PasswordEncoder` stub to avoid future Java deprecations.
+- JWT/user ID references inside the token service and filters now consistently call `user.getOgiriUserId()` so host implementations only need to supply one stable getter.
+- `scripts/release.sh` now supports `-f/--force` so releases can reuse or overwrite existing tags when necessary.
+
+### Fixed
+- Ensured the Java sample `SampleTokenUserDirectory.SampleUser` now implements `getOgiriUserId()` and keeps the SPI contract satisfied for Kotlin/Java consumers.
+
 ## [1.0.4] - 2025-12-08
 
 ### Fixed
@@ -129,7 +146,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Pure Java sample application (zero Kotlin required)
 - Kotlin Spring Boot sample application
 - Both demonstrate required SPI implementations:
-  - `TokenUserDirectory` interface
+  - `OgiriUserDirectory` interface
   - `RouteRegistry` interface
   - `TokenRepository<T>` interface
 

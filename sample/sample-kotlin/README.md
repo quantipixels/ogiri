@@ -135,7 +135,7 @@ Include these headers with authenticated requests:
 - **SampleTokenRepository** - Spring Data JPA + ogiri `TokenRepository` interface
 
 ### Security
-- **SampleTokenUserDirectory** - Implements `TokenUserDirectory` for user lookup
+- **SampleOgiriUserDirectory** - Implements `OgiriUserDirectory` for user lookup
 - **SampleRouteRegistry** - Declares public routes via `RouteRegistry`
 - **SecurityConfig** - Spring Security configuration
 
@@ -184,7 +184,7 @@ sample-kotlin/
 │   ├── repository/SampleTokenRepository.kt      # Data access
 │   ├── security/                                # ogiri integration
 │   │   ├── SampleRouteRegistry.kt
-│   │   ├── SampleTokenUserDirectory.kt
+│   │   ├── SampleOgiriUserDirectory.kt
 │   │   └── ...
 │   └── service/SampleTokenService.kt            # Token service
 ├── src/main/resources/
@@ -268,7 +268,7 @@ fun deviceToken(): SubTokenRegistration = object : SubTokenRegistration {
 ### Authentication Failures
 - Confirm token headers are sent with each request (access-token, client, uid, expiry)
 - Verify token hasn't expired using the expiry header
-- Check that user credentials match values in `SampleTokenUserDirectory`
+- Check that user credentials match values in `SampleOgiriUserDirectory`
 
 ### Token Rotation Issues
 - Token rotation only occurs outside the batch grace window

@@ -117,3 +117,29 @@ fun HttpServletResponse.appendAuthHeaders(authHeaders: AuthHeader?) {
     setHeader("Authorization", "Bearer $encoded")
   }
 }
+
+/**
+ * Parse an Authorization Bearer token into a map of fields.
+ *
+ * Expects format: `Bearer <base64-encoded-json>` where JSON contains: `{"access-token": "...",
+ * "client": "...", "uid": "...", "expiry": "...", ...}`
+ *
+ * @param bearer The bearer token string (with or without "Bearer " prefix)
+ * @return Map of parsed fields, or null if parsing fails
+ *
+ * Example:
+ * ```
+ * val bearer = "Bearer eyJhY2Nlc3MtdG9rZW4iOiJ4eXoiLCAiY2xpZW50IjogIndlYiJ9"
+ * val fields = parseBearerToken(bearer)
+ * // fields = {"access-token" -> "xyz", "client" -> "web", ...}
+ * ```
+ */
+fun parseBearerToken(bearer: String): Map<String, String>? =
+    try {
+      val token = bearer.trim().removePrefix("Bearer ").trim()
+      val json = String(Base64.getDecoder().decode(token), Charsets.UTF_8)
+      @Suppress("UNCHECKED_CAST")
+      mapper.readValue(json, Map::class.java) as? Map<String, String>
+    } catch (e: Exception) {
+      null
+    }

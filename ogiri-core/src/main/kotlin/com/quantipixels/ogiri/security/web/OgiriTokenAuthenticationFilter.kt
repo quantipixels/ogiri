@@ -17,9 +17,10 @@ import com.quantipixels.ogiri.security.core.AuthHeader
 import com.quantipixels.ogiri.security.core.IdentifierPolicy
 import com.quantipixels.ogiri.security.core.appendAuthHeaders
 import com.quantipixels.ogiri.security.core.extractAuthHeader
+import com.quantipixels.ogiri.security.core.parseBearerToken
 import com.quantipixels.ogiri.security.helpers.AuthenticationBypassDecider
-import com.quantipixels.ogiri.security.spi.TokenUser
-import com.quantipixels.ogiri.security.spi.TokenUserDirectory
+import com.quantipixels.ogiri.security.spi.OgiriUser
+import com.quantipixels.ogiri.security.spi.OgiriUserDirectory
 import com.quantipixels.ogiri.security.tokens.TokenService
 import com.quantipixels.ogiri.security.tokens.TokenType
 import jakarta.servlet.FilterChain
@@ -41,14 +42,14 @@ import org.springframework.web.filter.OncePerRequestFilter
  * - Skips auth for whitelisted/public/preflight requests via [AuthenticationBypassDecider]
  * - Validates APP tokens and rotates on configurable policies from [OgiriConfigurationProperties]
  * - Emits refreshed headers (including sub-tokens) when rotation occurs
- * - Populates the SecurityContext with the authenticated [TokenUser]
+ * - Populates the SecurityContext with the authenticated [OgiriUser]
  *
  * Configuration properties (from application.yml):
  * - `ogiri.auth.rotate-on-write-only`: Only rotate on mutating requests (POST/PUT/DELETE)
  * - `ogiri.auth.rotate-stale-seconds`: Force rotation if token exceeds this age
  */
 open class OgiriTokenAuthenticationFilter(
-    private val userDirectory: TokenUserDirectory,
+    private val userDirectory: OgiriUserDirectory,
     private val tokenService: TokenService<*>,
     private val authenticationEntryPoint: AuthenticationEntryPoint,
     private val bypassDecider: AuthenticationBypassDecider,
@@ -124,7 +125,7 @@ open class OgiriTokenAuthenticationFilter(
       authResult: AuthResult?,
   ) {}
 
-  protected data class AuthResult(val user: TokenUser, val authHeader: AuthHeader?)
+  protected data class AuthResult(val user: OgiriUser, val authHeader: AuthHeader?)
 
   /**
    * Authenticate a single HTTP request using token headers.
@@ -134,7 +135,7 @@ open class OgiriTokenAuthenticationFilter(
    * 2. Validate header presence and format
    * 3. Validate client and uid identifiers using [IdentifierPolicy]
    * 4. Verify token is APP token (not sub-token)
-   * 5. Load user from [TokenUserDirectory], throw if not found
+   * 5. Load user from [OgiriUserDirectory], throw if not found
    * 6. Validate token hash matches stored token via [TokenService.validToken]
    * 7. Detect batch requests and decide token rotation
    *
@@ -152,10 +153,38 @@ open class OgiriTokenAuthenticationFilter(
    * @throws BadCredentialsException if user not found or token invalid
    * @throws BadCredentialsException if client/uid fails identifier validation
    */
+  /**
+   * Extract authentication headers with fallback to Bearer token parsing.
+   *
+   * Attempts to extract authentication in the following order:
+   * 1. Individual headers: access-token, client, uid, expiry, access-token-kind
+   * 2. Cookies: access-token, client, uid, expiry
+   * 3. Authorization Bearer header: Base64-encoded JSON with same fields
+   *
+   * @param request HTTP request
+   * @return AuthHeader with parsed values, or empty if no auth found
+   */
+  protected open fun extractAuthHeaderWithBearer(request: HttpServletRequest): AuthHeader {
+    val headerToken = request.extractAuthHeader()
+    if (headerToken.isValid()) return headerToken
+
+    // Try Bearer token as fallback
+    val authHeader = request.getHeader("Authorization") ?: return headerToken
+    val fields = parseBearerToken(authHeader) ?: return headerToken
+
+    return AuthHeader(
+        accessToken = fields["access-token"],
+        client = fields["client"],
+        uid = fields["uid"],
+        expiry = fields["expiry"],
+        kind = fields["token-type"],
+    )
+  }
+
   @Throws(AuthenticationException::class)
   protected open fun authenticateRequest(request: HttpServletRequest): AuthResult? {
     beforeAuth(request)
-    val headerToken = request.extractAuthHeader()
+    val headerToken = extractAuthHeaderWithBearer(request)
     if (!headerToken.isValid()) return null
 
     val requestStartedAt = Instant.now()
@@ -164,7 +193,7 @@ open class OgiriTokenAuthenticationFilter(
     ensureAppToken(headerToken.kind)
 
     val user =
-        userDirectory.loadUserByUsername(uid) as? TokenUser
+        userDirectory.loadUserByUsername(uid) as? OgiriUser
             ?: throw BadCredentialsException("error.auth.bad_credentials")
     val token = headerToken.accessToken!!
     if (!tokenService.validToken(token, user, client)) {
@@ -205,7 +234,7 @@ open class OgiriTokenAuthenticationFilter(
    * - PUT /api/data: Rotation (returns new AuthHeader)
    */
   private fun rotateTokensIfNeeded(
-      user: TokenUser,
+      user: OgiriUser,
       client: String,
       method: String,
   ): AuthHeader? {
@@ -216,7 +245,8 @@ open class OgiriTokenAuthenticationFilter(
         } else {
           true
         }
-    return if (shouldRotate) tokenService.createNewAuthToken(user.userId, client) else null
+    return if (shouldRotate) tokenService.createNewAuthToken(user.getOgiriUserId(), client)
+    else null
   }
 
   private fun isSafeMethod(method: String): Boolean =
@@ -237,7 +267,7 @@ open class OgiriTokenAuthenticationFilter(
   }
 
   private fun buildAuthentication(
-      user: TokenUser,
+      user: OgiriUser,
       request: HttpServletRequest,
   ) =
       UsernamePasswordAuthenticationToken(user, "[PROTECTED_PASSWORD]", user.authorities).apply {

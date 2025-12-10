@@ -8,7 +8,7 @@ This directory contains minimal sample Spring Boot applications demonstrating ho
 
 A minimal Spring Boot application written in pure Java demonstrating:
 - Java-only integration without Kotlin
-- TokenUserDirectory implementation
+- OgiriUserDirectory implementation
 - RouteRegistry configuration
 - TokenRepository setup
 - Basic REST endpoints with authentication
@@ -16,7 +16,7 @@ A minimal Spring Boot application written in pure Java demonstrating:
 **Key Files:**
 - `Application.java` – Spring Boot entry point
 - `config/SecurityConfig.java` – Password encoder configuration
-- `security/SampleTokenUserDirectory.java` – User directory implementation
+- `security/SampleOgiriUserDirectory.java` – User directory implementation
 - `security/SampleRouteRegistry.java` – Route registry
 - `repository/SampleTokenRepository.java` – Token persistence
 - `controller/HealthController.java` – Sample endpoints
@@ -30,7 +30,7 @@ A minimal Spring Boot application written in pure Java demonstrating:
 
 A minimal Spring Boot application written in Kotlin demonstrating:
 - Kotlin integration with Spring Boot
-- TokenUserDirectory implementation in Kotlin
+- OgiriUserDirectory implementation in Kotlin
 - RouteRegistry configuration
 - TokenRepository setup
 - Basic REST endpoints with authentication
@@ -38,7 +38,7 @@ A minimal Spring Boot application written in Kotlin demonstrating:
 **Key Files:**
 - `Application.kt` – Spring Boot entry point
 - `config/SecurityConfig.kt` – Password encoder configuration
-- `security/SampleTokenUserDirectory.kt` – User directory implementation
+- `security/SampleOgiriUserDirectory.kt` – User directory implementation
 - `security/SampleRouteRegistry.kt` – Route registry
 - `repository/SampleTokenRepository.kt` – Token persistence
 - `controller/HealthController.kt` – Sample endpoints
@@ -243,7 +243,7 @@ curl -H "access-token: YOUR_TOKEN" http://localhost:8080/api/me
 To use these samples as a basis for your own Spring Boot application:
 
 1. **Copy the structure**: Use the sample directory layout as a template
-2. **Implement TokenUserDirectory**: Replace the in-memory implementation with database lookups
+2. **Implement OgiriUserDirectory**: Replace the in-memory implementation with database lookups
 3. **Implement TokenRepository**: Create a real JPA repository
 4. **Configure RouteRegistry**: Add your actual application routes
 5. **Add business logic**: Implement your domain-specific endpoints
@@ -257,18 +257,18 @@ Add a new method to `HealthController`:
 ```kotlin
 @PostMapping("/api/protected")
 fun protectedEndpoint(authentication: Authentication): ResponseEntity<Map<String, String>> {
-  val user = authentication.principal as TokenUser
+  val user = authentication.principal as OgiriUser
   return ResponseEntity.ok(mapOf("message" to "Hello, ${user.username}!"))
 }
 ```
 
 ### Customizing User Loading
 
-In `SampleTokenUserDirectory`, replace the in-memory map with database queries:
+In `SampleOgiriUserDirectory`, replace the in-memory map with database queries:
 
 ```kotlin
 @Component
-class SampleTokenUserDirectory(private val userService: UserService) : TokenUserDirectory {
+class SampleOgiriUserDirectory(private val userService: UserService) : OgiriUserDirectory {
   override fun loadUserByUsername(username: String) = userService.findByUsername(username)
   // ...
 }

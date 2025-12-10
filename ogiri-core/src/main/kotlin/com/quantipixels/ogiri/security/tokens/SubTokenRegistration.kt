@@ -20,6 +20,9 @@ import java.time.Instant
  * Implementations can plug into [SubTokenRegistry] to declare additional token kinds (e.g.,
  * device-scoped tokens, chat credentials). The contract is intentionally small: name, client id
  * mapping, expiry policy, and whether creation should be forced on every issuance.
+ *
+ * Implementations may also provide custom validation logic via [validate] for format-specific
+ * checks (e.g., XMPP token signature verification, device fingerprint validation).
  */
 interface SubTokenRegistration {
   /** Unique name for the sub-token (e.g., "device", "chat"). */
@@ -41,6 +44,24 @@ interface SubTokenRegistration {
   /** Whether issuing this sub-token should always rotate (overwrite). */
   val forceNew: Boolean
     get() = false
+
+  /**
+   * Validate the sub-token after hash comparison succeeds.
+   *
+   * This method is called after the token hash has been verified against the stored hash. Use this
+   * for custom format-specific validation that the generic token service cannot perform.
+   *
+   * Examples:
+   * - XMPP: Verify JID format, SASL mechanism, or signature
+   * - Device: Verify device fingerprint against request headers
+   * - Chat: Verify chat server connectivity or message digest
+   *
+   * Default implementation accepts all tokens; override to add custom validation.
+   *
+   * @param plainToken The raw token value (plain, not hashed)
+   * @return true if token passes custom validation, false to reject
+   */
+  fun validate(plainToken: String): Boolean = true
 }
 
 interface SubTokenRegistry {

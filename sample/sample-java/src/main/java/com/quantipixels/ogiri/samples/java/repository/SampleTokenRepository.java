@@ -54,6 +54,13 @@ public interface SampleTokenRepository extends JpaRepository<SampleToken, Long> 
   @Query("SELECT t FROM SampleToken t WHERE t.userId = ?1 AND t.client = ?2")
   Optional<SampleToken> findByUserIdAndClientEquals(Long userId, String client);
 
+  /** Find all tokens for a user with a specific subtype. */
+  @Query(
+      "SELECT t FROM SampleToken t WHERE t.userId = ?1 AND t.tokenSubtype = ?2 "
+          + "ORDER BY t.updatedAt DESC, t.id DESC")
+  List<SampleToken> findByUserIdAndTokenSubtypeOrderByUpdatedAtDesc(
+      Long userId, String tokenSubtype);
+
   /**
    * Find all tokens that expired before a specific cutoff time.
    *
@@ -113,6 +120,10 @@ public interface SampleTokenRepository extends JpaRepository<SampleToken, Long> 
 
   default void deleteByUserId(Long userId) {
     deleteByUserIdJpa(userId);
+  }
+
+  default List<SampleToken> findAllByUserIdAndTokenSubtype(Long userId, String tokenSubtype) {
+    return findByUserIdAndTokenSubtypeOrderByUpdatedAtDesc(userId, tokenSubtype);
   }
 
   default List<SampleToken> findByExpiryAtBefore(Instant cutoff) {

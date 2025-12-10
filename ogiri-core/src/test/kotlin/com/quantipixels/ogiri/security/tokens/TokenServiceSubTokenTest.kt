@@ -14,7 +14,7 @@ package com.quantipixels.ogiri.security.tokens
 
 import com.quantipixels.ogiri.security.core.AuthHeader
 import com.quantipixels.ogiri.security.core.IdentifierPolicy
-import com.quantipixels.ogiri.security.spi.TokenUserDirectory
+import com.quantipixels.ogiri.security.spi.OgiriUserDirectory
 import com.quantipixels.ogiri.security.testutil.InMemoryTokenRepository
 import com.quantipixels.ogiri.security.testutil.TestFixtures
 import com.quantipixels.ogiri.security.testutil.TestToken
@@ -28,14 +28,18 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.mock.web.MockHttpServletRequest
 import org.springframework.mock.web.MockHttpServletResponse
-import org.springframework.security.crypto.password.NoOpPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 
 class TokenServiceSubTokenTest {
   private lateinit var repository: InMemoryTokenRepository
   private lateinit var tokenService: TokenService<TestToken>
-  @Suppress("DEPRECATION")
-  private val passwordEncoder: PasswordEncoder = NoOpPasswordEncoder.getInstance()
+  private val passwordEncoder: PasswordEncoder =
+      object : PasswordEncoder {
+        override fun encode(rawPassword: CharSequence): String = rawPassword.toString()
+
+        override fun matches(rawPassword: CharSequence, encodedPassword: String): Boolean =
+            rawPassword.toString() == encodedPassword
+      }
   private val identifierPolicy =
       object : IdentifierPolicy {
         private val counter = AtomicLong(0)
@@ -47,10 +51,10 @@ class TokenServiceSubTokenTest {
 
   private val user = TestFixtures.testUser(userId = 1L, username = "user")
   private val userDirectory =
-      object : TokenUserDirectory {
+      object : OgiriUserDirectory {
         override fun loadUserByUsername(username: String) = user
 
-        override fun findById(id: Long) = user.takeIf { it.userId == id }
+        override fun findById(id: Long) = user.takeIf { it.getOgiriUserId() == id }
 
         override fun findByEmail(email: String) = null
 
@@ -63,7 +67,7 @@ class TokenServiceSubTokenTest {
   private inner class TestTokenService(
       repository: TokenRepository<TestToken>,
       passwordEncoder: PasswordEncoder,
-      userDirectory: TokenUserDirectory,
+      userDirectory: OgiriUserDirectory,
       identifierPolicy: IdentifierPolicy,
       subTokenRegistry: SubTokenRegistry,
       maxClients: Long = 24,
@@ -111,9 +115,9 @@ class TokenServiceSubTokenTest {
     tokenService =
         TestTokenService(repository, passwordEncoder, userDirectory, identifierPolicy, registry)
 
-    val headers: AuthHeader = tokenService.createNewAuthToken(user.userId, "clientA")
+    val headers: AuthHeader = tokenService.createNewAuthToken(user.getOgiriUserId(), "clientA")
 
-    val chatToken = repository.findByUserIdAndClient(user.userId, "clientA.chat")
+    val chatToken = repository.findByUserIdAndClient(user.getOgiriUserId(), "clientA.chat")
     assertNotNull(chatToken)
     assertEquals(TokenType.SUB, TokenType.of(chatToken!!.tokenType))
     assertEquals("chat", chatToken.tokenSubtype)
@@ -128,8 +132,8 @@ class TokenServiceSubTokenTest {
     tokenService =
         TestTokenService(repository, passwordEncoder, userDirectory, identifierPolicy, registry)
 
-    val headers = tokenService.createNewAuthToken(user.userId, "web")
-    assertNull(repository.findByUserIdAndClient(user.userId, "web.device"))
+    val headers = tokenService.createNewAuthToken(user.getOgiriUserId(), "web")
+    assertNull(repository.findByUserIdAndClient(user.getOgiriUserId(), "web.device"))
 
     val req =
         MockHttpServletRequest().apply {
@@ -140,9 +144,9 @@ class TokenServiceSubTokenTest {
         }
     val res = MockHttpServletResponse()
 
-    tokenService.renewSubToken(user.userId, req, res, "device")
+    tokenService.renewSubToken(user.getOgiriUserId(), req, res, "device")
 
-    assertNotNull(repository.findByUserIdAndClient(user.userId, "web.device"))
+    assertNotNull(repository.findByUserIdAndClient(user.getOgiriUserId(), "web.device"))
     assertNotNull(res.getHeader("sub-tokens"))
   }
 
@@ -152,8 +156,8 @@ class TokenServiceSubTokenTest {
     tokenService =
         TestTokenService(repository, passwordEncoder, userDirectory, identifierPolicy, registry)
 
-    tokenService.createNewAuthToken(user.userId, "clientZ")
-    val chat = repository.findByUserIdAndClient(user.userId, "clientZ.chat")!!
+    tokenService.createNewAuthToken(user.getOgiriUserId(), "clientZ")
+    val chat = repository.findByUserIdAndClient(user.getOgiriUserId(), "clientZ.chat")!!
     val bearerPayload =
         mapOf(
             "client" to requireNotNull(chat.client),
@@ -178,10 +182,10 @@ class TokenServiceSubTokenTest {
     tokenService =
         TestTokenService(repository, passwordEncoder, userDirectory, identifierPolicy, registry)
 
-    val headers = tokenService.createNewAuthToken(user.userId, null)
+    val headers = tokenService.createNewAuthToken(user.getOgiriUserId(), null)
 
     assertNotNull(headers.client)
-    val appToken = repository.findByUserIdAndClient(user.userId, headers.client!!)
+    val appToken = repository.findByUserIdAndClient(user.getOgiriUserId(), headers.client!!)
     assertNotNull(appToken)
     assertEquals(TokenType.APP, TokenType.of(appToken!!.tokenType))
   }
@@ -192,9 +196,9 @@ class TokenServiceSubTokenTest {
     tokenService =
         TestTokenService(repository, passwordEncoder, userDirectory, identifierPolicy, registry)
 
-    val headers = tokenService.createNewAuthToken(user.userId, "primary")
+    val headers = tokenService.createNewAuthToken(user.getOgiriUserId(), "primary")
 
-    val appToken = repository.findByUserIdAndClient(user.userId, "primary")
+    val appToken = repository.findByUserIdAndClient(user.getOgiriUserId(), "primary")
     assertNotNull(appToken)
     assertNotNull(appToken!!.plainToken)
   }
@@ -205,12 +209,12 @@ class TokenServiceSubTokenTest {
     tokenService =
         TestTokenService(repository, passwordEncoder, userDirectory, identifierPolicy, registry)
 
-    val headers1 = tokenService.createNewAuthToken(user.userId, "rotation-test")
-    val token1 = repository.findByUserIdAndClient(user.userId, "rotation-test")!!
+    val headers1 = tokenService.createNewAuthToken(user.getOgiriUserId(), "rotation-test")
+    val token1 = repository.findByUserIdAndClient(user.getOgiriUserId(), "rotation-test")!!
     val originalToken = token1.plainToken
 
-    val headers2 = tokenService.createNewAuthToken(user.userId, "rotation-test")
-    val token2 = repository.findByUserIdAndClient(user.userId, "rotation-test")!!
+    val headers2 = tokenService.createNewAuthToken(user.getOgiriUserId(), "rotation-test")
+    val token2 = repository.findByUserIdAndClient(user.getOgiriUserId(), "rotation-test")!!
 
     assertEquals(originalToken, token2.lastToken)
   }
@@ -224,11 +228,11 @@ class TokenServiceSubTokenTest {
     // Create multiple tokens for the same user (simulating max-clients scenario)
     // First, create a few tokens to reach near the limit
     for (i in 1..3) {
-      tokenService.createNewAuthToken(user.userId, "client-$i")
+      tokenService.createNewAuthToken(user.getOgiriUserId(), "client-$i")
     }
 
     // Verify all tokens exist
-    val tokensBefore = repository.findAllByUserId(user.userId)
+    val tokensBefore = repository.findAllByUserId(user.getOgiriUserId())
     assertEquals(3, tokensBefore.size)
   }
 
@@ -238,9 +242,9 @@ class TokenServiceSubTokenTest {
     tokenService =
         TestTokenService(repository, passwordEncoder, userDirectory, identifierPolicy, registry)
 
-    val headers = tokenService.createNewAuthToken(user.userId, "parent")
-    val appToken = repository.findByUserIdAndClient(user.userId, "parent")!!
-    val chatToken = repository.findByUserIdAndClient(user.userId, "parent.chat")!!
+    val headers = tokenService.createNewAuthToken(user.getOgiriUserId(), "parent")
+    val appToken = repository.findByUserIdAndClient(user.getOgiriUserId(), "parent")!!
+    val chatToken = repository.findByUserIdAndClient(user.getOgiriUserId(), "parent.chat")!!
 
     assertEquals(appToken.expiryAt, chatToken.expiryAt)
   }
@@ -251,9 +255,9 @@ class TokenServiceSubTokenTest {
     tokenService =
         TestTokenService(repository, passwordEncoder, userDirectory, identifierPolicy, registry)
 
-    val headers = tokenService.createNewAuthToken(user.userId, "custom-expiry")
-    val appToken = repository.findByUserIdAndClient(user.userId, "custom-expiry")!!
-    val chatToken = repository.findByUserIdAndClient(user.userId, "custom-expiry.chat")!!
+    val headers = tokenService.createNewAuthToken(user.getOgiriUserId(), "custom-expiry")
+    val appToken = repository.findByUserIdAndClient(user.getOgiriUserId(), "custom-expiry")!!
+    val chatToken = repository.findByUserIdAndClient(user.getOgiriUserId(), "custom-expiry.chat")!!
 
     // Chat should expire earlier than app token
     assertTrue(chatToken.expiryAt.isBefore(appToken.expiryAt))
@@ -265,8 +269,8 @@ class TokenServiceSubTokenTest {
     tokenService =
         TestTokenService(repository, passwordEncoder, userDirectory, identifierPolicy, registry)
 
-    val headers = tokenService.createNewAuthToken(user.userId, "expired-test")
-    val chat = repository.findByUserIdAndClient(user.userId, "expired-test.chat")!!
+    val headers = tokenService.createNewAuthToken(user.getOgiriUserId(), "expired-test")
+    val chat = repository.findByUserIdAndClient(user.getOgiriUserId(), "expired-test.chat")!!
 
     // Manually expire the token
     chat.expiryAt = java.time.Instant.now().minusSeconds(1)
@@ -274,6 +278,32 @@ class TokenServiceSubTokenTest {
 
     val isValid = tokenService.validateSubToken(user.username, "chat", chat.plainToken!!)
     assertEquals(false, isValid)
+  }
+
+  @Test
+  fun `renewSubToken helper returns single sub-token header`() {
+    val registry = DefaultSubTokenRegistry(listOf(deviceRegistration(includeByDefault = true)))
+    tokenService =
+        TestTokenService(repository, passwordEncoder, userDirectory, identifierPolicy, registry)
+
+    val headers = tokenService.createNewAuthToken(user.getOgiriUserId(), "renewal")
+    val renewed = tokenService.renewSubToken(user.getOgiriUserId(), headers.client!!, "device")
+
+    assertNotNull(renewed?.subTokens?.get("device"))
+    assertEquals("renewal.device", renewed?.subTokens?.get("device")?.client)
+  }
+
+  @Test
+  fun `getSubToken returns stored base token`() {
+    val registry = DefaultSubTokenRegistry(listOf(chatRegistration()))
+    tokenService =
+        TestTokenService(repository, passwordEncoder, userDirectory, identifierPolicy, registry)
+
+    tokenService.createNewAuthToken(user.getOgiriUserId(), "base-client")
+    val stored = tokenService.getSubToken(user.getOgiriUserId(), "chat")
+
+    assertNotNull(stored)
+    assertEquals("base-client.chat", stored!!.client)
   }
 
   private fun chatRegistration(): SubTokenRegistration =

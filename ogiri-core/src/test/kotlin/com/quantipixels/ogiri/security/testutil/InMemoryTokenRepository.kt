@@ -88,6 +88,16 @@ class InMemoryTokenRepository : TokenRepository<TestToken> {
     }
   }
 
+  /** Find all tokens for a user with the given subtype. */
+  override fun findAllByUserIdAndTokenSubtype(
+      userId: Long,
+      tokenSubtype: String,
+  ): List<TestToken> {
+    synchronized(tokens) {
+      return tokens.filter { it.userId == userId && it.tokenSubtype == tokenSubtype }
+    }
+  }
+
   /** Find the token for a user and client. */
   override fun findByUserIdAndClient(
       userId: Long,

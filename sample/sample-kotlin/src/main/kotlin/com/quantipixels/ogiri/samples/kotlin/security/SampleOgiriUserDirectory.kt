@@ -12,20 +12,20 @@
  */
 package com.quantipixels.ogiri.samples.kotlin.security
 
-import com.quantipixels.ogiri.security.spi.TokenUser
-import com.quantipixels.ogiri.security.spi.TokenUserDirectory
+import com.quantipixels.ogiri.security.spi.OgiriUser
+import com.quantipixels.ogiri.security.spi.OgiriUserDirectory
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.stereotype.Component
 
 /**
- * Sample TokenUserDirectory implementation for Kotlin.
+ * Sample OgiriUserDirectory implementation for Kotlin.
  *
  * In a real application, this would load users from a database. This sample uses an in-memory map
  * for demonstration.
  */
 @Component
-class SampleTokenUserDirectory : TokenUserDirectory {
+class SampleOgiriUserDirectory : OgiriUserDirectory {
   private val usersByUsername = mutableMapOf<String, SampleUser>()
   private val usersById = mutableMapOf<Long, SampleUser>()
 
@@ -38,15 +38,15 @@ class SampleTokenUserDirectory : TokenUserDirectory {
     usersById[2L] = user2
   }
 
-  override fun loadUserByUsername(username: String): TokenUser =
+  override fun loadUserByUsername(username: String): OgiriUser =
       usersByUsername[username] ?: throw IllegalArgumentException("User not found: $username")
 
-  override fun findById(id: Long): TokenUser? = usersById[id]
+  override fun findById(id: Long): OgiriUser? = usersById[id]
 
-  override fun findByEmail(email: String): TokenUser? =
+  override fun findByEmail(email: String): OgiriUser? =
       usersById.values.firstOrNull { it.email == email }
 
-  override fun findByUsername(username: String): TokenUser? = usersByUsername[username]
+  override fun findByUsername(username: String): OgiriUser? = usersByUsername[username]
 
   override fun recordSuccessfulLogin(userId: Long) {
     // In a real application, update user last_login_at timestamp
@@ -58,7 +58,7 @@ class SampleTokenUserDirectory : TokenUserDirectory {
       private val username: String,
       private val password: String,
       val email: String,
-  ) : TokenUser {
+  ) : OgiriUser {
     override val userId: Long = id
 
     override fun getAuthorities(): Collection<GrantedAuthority> =

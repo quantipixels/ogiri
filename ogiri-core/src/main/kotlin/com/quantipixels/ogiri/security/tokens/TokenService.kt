@@ -20,8 +20,8 @@ import com.quantipixels.ogiri.security.core.SecurityServiceException
 import com.quantipixels.ogiri.security.core.SubTokenHeader
 import com.quantipixels.ogiri.security.core.appendAuthHeaders
 import com.quantipixels.ogiri.security.core.extractAuthHeader
-import com.quantipixels.ogiri.security.spi.TokenUser
-import com.quantipixels.ogiri.security.spi.TokenUserDirectory
+import com.quantipixels.ogiri.security.spi.OgiriUser
+import com.quantipixels.ogiri.security.spi.OgiriUserDirectory
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import java.time.Instant
@@ -73,7 +73,7 @@ data class GeneratedTokens<T : BaseToken>(
 open class TokenService<T : BaseToken>(
     private val repository: TokenRepository<T>,
     private val passwordEncoder: PasswordEncoder,
-    private val userDirectory: TokenUserDirectory,
+    private val userDirectory: OgiriUserDirectory,
     private val identifierPolicy: IdentifierPolicy,
     private val subTokenRegistry: SubTokenRegistry,
     val maxClients: Long = 24,
@@ -180,11 +180,11 @@ open class TokenService<T : BaseToken>(
 
   @Transactional(readOnly = true)
   fun isBatchRequest(
-      user: TokenUser,
+      user: OgiriUser,
       client: String,
       requestStartedAt: Instant,
   ): Boolean =
-      getByUserIdAndClient(user.userId, client)
+      getByUserIdAndClient(user.getOgiriUserId(), client)
           ?.takeIf { !it.isExpired() }
           ?.updatedAt
           ?.isAfter(requestStartedAt.minusSeconds(batchGraceSeconds))
@@ -192,11 +192,11 @@ open class TokenService<T : BaseToken>(
 
   @Transactional
   fun extendBatchBuffer(
-      user: TokenUser,
+      user: OgiriUser,
       token: String,
       client: String,
   ): AuthHeader? {
-    val clientToken = getByUserIdAndClient(user.userId, client) ?: return null
+    val clientToken = getByUserIdAndClient(user.getOgiriUserId(), client) ?: return null
     clientToken.lastUsedAt = Instant.now()
     repository.save(clientToken)
     return updateAuthHeader(user, token, client)
@@ -210,7 +210,7 @@ open class TokenService<T : BaseToken>(
   @Transactional
   @JvmOverloads
   fun createOrUpdateToken(
-      user: TokenUser,
+      user: OgiriUser,
       client: String?,
       expiry: Instant,
       tokenType: TokenType = TokenType.APP,
@@ -219,11 +219,11 @@ open class TokenService<T : BaseToken>(
     val tokenClient = client ?: identifierPolicy.generate()
     val generatedToken = identifierPolicy.generate()
     val hashedToken = passwordEncoder.encode(generatedToken)
-    var token = client?.let { getByUserIdAndClient(user.userId, it) }
+    var token = client?.let { getByUserIdAndClient(user.getOgiriUserId(), it) }
     if (token == null) {
       token =
           tokenFactory(
-              userId = user.userId,
+              userId = user.getOgiriUserId(),
               client = tokenClient,
               hashedToken = hashedToken,
               tokenType = tokenType,
@@ -255,7 +255,7 @@ open class TokenService<T : BaseToken>(
 
   @Transactional
   fun createToken(
-      user: TokenUser,
+      user: OgiriUser,
       client: String?,
   ): GeneratedTokens<T> {
     val expiry = Instant.now().plus(tokenLifespanDays, ChronoUnit.DAYS)
@@ -274,7 +274,7 @@ open class TokenService<T : BaseToken>(
    */
   @Transactional
   fun issueSubTokens(
-      user: TokenUser,
+      user: OgiriUser,
       parentClient: String,
       requestedNames: Collection<String>?,
       forceNew: Boolean,
@@ -284,14 +284,15 @@ open class TokenService<T : BaseToken>(
           requestedNames?.let { names -> it.name in names } ?: it.includeByDefault
         }
     val results = mutableMapOf<String, T>()
-    val parentToken = getByUserIdAndClient(user.userId, parentClient)
+    val parentToken = getByUserIdAndClient(user.getOgiriUserId(), parentClient)
     val parentExpiry =
         parentToken?.expiryAt ?: Instant.now().plus(tokenLifespanDays, ChronoUnit.DAYS)
     registrations.forEach { reg ->
       val subClient = clientForSubToken(reg, parentClient)
       val expiry = reg.expiry(parentExpiry)
       val existing =
-          if (!forceNew && !reg.forceNew) getByUserIdAndClient(user.userId, subClient) else null
+          if (!forceNew && !reg.forceNew) getByUserIdAndClient(user.getOgiriUserId(), subClient)
+          else null
       val token =
           existing
               ?: createOrUpdateToken(
@@ -310,7 +311,7 @@ open class TokenService<T : BaseToken>(
    * Create a new authentication token for a user and client.
    *
    * This is the primary public API for token issuance. It performs the following:
-   * 1. Loads the user from TokenUserDirectory, throws SecurityServiceException if not found
+   * 1. Loads the user from OgiriUserDirectory, throws SecurityServiceException if not found
    * 2. Generates a new APP token with expiry based on [tokenLifespanDays]
    * 3. Issues all sub-tokens marked with includeByDefault=true
    * 4. Enforces [maxClients] limit by removing oldest tokens if exceeded
@@ -369,8 +370,8 @@ open class TokenService<T : BaseToken>(
    * their device/chat/api sub-tokens.
    */
   @Transactional
-  fun cleanOldTokens(user: TokenUser) {
-    val tokens = repository.findAllByUserId(user.userId)
+  fun cleanOldTokens(user: OgiriUser) {
+    val tokens = repository.findAllByUserId(user.getOgiriUserId())
     if (tokens.isEmpty()) return
 
     val registrations = subTokenRegistry.registrations()
@@ -391,7 +392,7 @@ open class TokenService<T : BaseToken>(
       val remove = sorted.take(toRemoveCount)
       remove.forEach { repository.delete(it) }
       val removeSubClients = generateSubClientIds(remove.clientIds(), registrations)
-      deleteToken(user.userId, removeSubClients)
+      deleteToken(user.getOgiriUserId(), removeSubClients)
     }
   }
 
@@ -417,10 +418,10 @@ open class TokenService<T : BaseToken>(
   @Transactional(readOnly = true)
   fun validToken(
       plainToken: String,
-      user: TokenUser,
+      user: OgiriUser,
       client: String,
   ): Boolean {
-    val token = getByUserIdAndClient(user.userId, client) ?: return false
+    val token = getByUserIdAndClient(user.getOgiriUserId(), client) ?: return false
     if (tokenIsCurrent(plainToken, token)) return true
     return tokenCanBeReused(plainToken, token)
   }
@@ -455,17 +456,17 @@ open class TokenService<T : BaseToken>(
 
   @Transactional(readOnly = true)
   fun buildAuthHeader(
-      user: TokenUser,
+      user: OgiriUser,
       token: String,
       client: String,
       issuedSubTokens: Map<String, T>? = null,
   ): AuthHeader {
-    val appToken = getByUserIdAndClient(user.userId, client)
+    val appToken = getByUserIdAndClient(user.getOgiriUserId(), client)
     val subHeaders = mutableMapOf<String, SubTokenHeader>()
     subTokenRegistry.registrations().forEach { reg ->
       val subClient = reg.clientIdFor(client)
       val provided = issuedSubTokens?.get(reg.name)
-      val stored = getByUserIdAndClient(user.userId, subClient)
+      val stored = getByUserIdAndClient(user.getOgiriUserId(), subClient)
       val chosen = provided ?: stored
       val plain = provided?.plainToken ?: chosen?.plainToken
       val expiry = chosen?.expiryAt?.toString()
@@ -490,7 +491,7 @@ open class TokenService<T : BaseToken>(
 
   @Transactional
   fun updateAuthHeader(
-      user: TokenUser,
+      user: OgiriUser,
       token: String,
       client: String,
       issuedSubTokens: Map<String, T>? = null,
@@ -502,12 +503,12 @@ open class TokenService<T : BaseToken>(
 
   @Transactional(readOnly = true)
   fun shouldRotate(
-      user: TokenUser,
+      user: OgiriUser,
       client: String,
       thresholdSeconds: Long,
   ): Boolean {
     if (thresholdSeconds <= 0) return true
-    val token = getByUserIdAndClient(user.userId, client) ?: return true
+    val token = getByUserIdAndClient(user.getOgiriUserId(), client) ?: return true
     val cutoff = Instant.now().minusSeconds(thresholdSeconds)
     return token.tokenUpdatedAt.isBefore(cutoff)
   }
@@ -530,9 +531,9 @@ open class TokenService<T : BaseToken>(
     authentication.details = WebAuthenticationDetailsSource().buildDetails(request)
     SecurityContextHolder.getContext().authentication = authentication
 
-    val authHeaders = createNewAuthToken(user.userId, null)
+    val authHeaders = createNewAuthToken(user.getOgiriUserId(), null)
     response.appendAuthHeaders(authHeaders)
-    userDirectory.recordSuccessfulLogin(user.userId)
+    userDirectory.recordSuccessfulLogin(user.getOgiriUserId())
   }
 
   @Transactional
@@ -544,16 +545,16 @@ open class TokenService<T : BaseToken>(
     val user = userDirectory.findById(userId) ?: return
     val authHeader = request.extractAuthHeader()
     val clientId = authHeader.client ?: return
-    val token = getByUserIdAndClient(user.userId, clientId)
+    val token = getByUserIdAndClient(user.getOgiriUserId(), clientId)
     val isTokenValid = token?.let { doesTokenMatch(it.token, authHeader.accessToken) } ?: false
 
     if (isTokenValid) {
-      deleteToken(user.userId, clientId)
+      deleteToken(user.getOgiriUserId(), clientId)
       val subClients =
           subTokenRegistry.registrations().map { registration ->
             registration.clientIdFor(clientId)
           }
-      deleteToken(user.userId, subClients)
+      deleteToken(user.getOgiriUserId(), subClients)
       val authHeaders = buildAuthHeader(user, authHeader.accessToken!!, clientId, null)
       response.appendAuthHeaders(authHeaders)
     }
@@ -573,7 +574,7 @@ open class TokenService<T : BaseToken>(
 
     val clientId = authHeader.client ?: throw SecurityServiceException("error.auth.missing_token")
     val parent =
-        getByUserIdAndClient(currentUser.userId, clientId)
+        getByUserIdAndClient(currentUser.getOgiriUserId(), clientId)
             ?: throw SecurityServiceException("error.auth.missing_token")
     if (parent.isExpired()) throw SecurityServiceException("error.auth.bad_credentials")
 
@@ -628,6 +629,8 @@ open class TokenService<T : BaseToken>(
       rawOrBearer: String,
   ): Boolean {
     val user = userDirectory.findByUsername(username) ?: return false
+    val registration =
+        subTokenRegistry.registrations().find { it.name == subTokenName } ?: return false
     val tokenField = rawOrBearer.trim()
     val authHeader = tryDecodeSubBearer(tokenField.removePrefix("Bearer ").trim())
 
@@ -635,18 +638,106 @@ open class TokenService<T : BaseToken>(
         !authHeader.token.isNullOrBlank() &&
         !authHeader.client.isNullOrBlank()) {
       val token =
-          getByUserIdAndClient(user.userId, authHeader.client)?.takeIf {
+          getByUserIdAndClient(user.getOgiriUserId(), authHeader.client)?.takeIf {
             TokenType.of(it.tokenType) == TokenType.SUB && it.tokenSubtype == subTokenName
           }
               ?: return false
-      return tokenMatches(token, authHeader.token)
+      return tokenMatches(token, authHeader.token) && registration.validate(authHeader.token)
     }
 
     val all =
-        repository.findAllByUserId(user.userId).filter {
-          TokenType.of(it.tokenType) == TokenType.SUB && it.tokenSubtype == subTokenName
+        repository.findAllByUserIdAndTokenSubtype(user.getOgiriUserId(), subTokenName).filter {
+          TokenType.of(it.tokenType) == TokenType.SUB
         }
-    return all.any { tokenMatches(it, tokenField) }
+    return all.any { tokenMatches(it, tokenField) && registration.validate(tokenField) }
+  }
+
+  /**
+   * Retrieve a sub-token for a user by name.
+   *
+   * Returns the raw [BaseToken] so consumers that only know the generic contract can inspect the
+   * stored hash, expiry, or client identifiers without depending on a concrete token class.
+   *
+   * @param userId User ID
+   * @param subtype Sub-token identifier (e.g., "device", "chat", "xmpp")
+   * @return The sub-token entity, or null if not found, expired, or not registered
+   */
+  @Transactional(readOnly = true)
+  fun getSubToken(
+      userId: Long,
+      subtype: String,
+  ): BaseToken? {
+    val registration = subTokenRegistry.registrations().find { it.name == subtype } ?: return null
+
+    return repository.findAllByUserIdAndTokenSubtype(userId, subtype).firstOrNull { token ->
+      TokenType.of(token.tokenType) == TokenType.SUB
+    }
+  }
+
+  /**
+   * Revoke all sub-tokens of a specific type for a user.
+   *
+   * This removes all tokens where tokenSubtype matches the given name, regardless of parent client.
+   * Useful for revoking device sessions, chat credentials, etc.
+   *
+   * @param userId User ID
+   * @param subtypeName Sub-token type to revoke (e.g., "device", "chat")
+   * @return true if at least one token was revoked, false if none existed
+   */
+  @Transactional
+  fun revokeSubToken(
+      userId: Long,
+      subtypeName: String,
+  ): Boolean {
+    val tokens =
+        repository.findAllByUserIdAndTokenSubtype(userId, subtypeName).filter {
+          TokenType.of(it.tokenType) == TokenType.SUB
+        }
+
+    if (tokens.isEmpty()) return false
+
+    tokens.forEach { repository.delete(it) }
+    return true
+  }
+
+  /**
+   * Renew a specific sub-token and return new headers containing only that sub-token.
+   *
+   * The returned [AuthHeader] omits the APP token so consumers can append the new sub-token to
+   * downstream protocols without rotating the parent client. Returns null when the user/client is
+   * missing, the parent token is expired, or the subtype is not registered.
+   */
+  @Transactional
+  fun renewSubToken(
+      userId: Long,
+      parentClient: String,
+      subtypeName: String,
+  ): AuthHeader? {
+    val user = userDirectory.findById(userId) ?: return null
+    val parentToken = getByUserIdAndClient(userId, parentClient) ?: return null
+    if (parentToken.isExpired()) return null
+
+    val registration =
+        subTokenRegistry.registrations().find { it.name == subtypeName } ?: return null
+    val subClient = registration.clientIdFor(parentClient)
+
+    val newSubToken =
+        createOrUpdateToken(
+            user = user,
+            client = subClient,
+            expiry = registration.expiry(parentToken.expiryAt),
+            tokenType = TokenType.SUB,
+            tokenSubtype = subtypeName,
+        )
+
+    val plain = newSubToken.plainToken ?: return null
+    val subHeader =
+        SubTokenHeader(
+            client = subClient,
+            token = plain,
+            expiry = newSubToken.expiryAt.toString(),
+        )
+    return AuthHeader(subTokens = mapOf(subtypeName to subHeader))
   }
 
   /**

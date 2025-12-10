@@ -66,7 +66,7 @@ ogiri/
 │   └── build.gradle.kts             # Library-specific build config (JPA, publishing)
 ├── sample/
 │   ├── sample-java/                 # Pure Java Spring Boot application example
-│   │   ├── src/main/java/           # Java classes (TokenUserDirectory, TokenRepository, etc.)
+│   │   ├── src/main/java/           # Java classes (OgiriUserDirectory, TokenRepository, etc.)
 │   │   └── src/main/resources/      # application.yml with ogiri configuration
 │   ├── sample-kotlin/               # Kotlin Spring Boot application example
 │   │   ├── src/main/kotlin/         # Kotlin classes (same components as Java sample)
@@ -112,7 +112,7 @@ The library is organized into layers around token-based authentication:
 
 - **BaseToken / Token**: JPA entity representing a stored token with hash, expiry, and rotation history
 - **TokenService**: Core business logic for token issuance, validation, rotation, and sub-token management
-- **TokenRepository**: Data access interface (TokenUserDirectory implementations must provide)
+- **TokenRepository**: Data access interface (OgiriUserDirectory implementations must provide)
 - **SubTokenRegistration**: SPI for plugins to register custom sub-tokens (e.g., chat, device) with custom expiry/client logic
 - **TokenCleanupJob**: Scheduled job to delete expired tokens
 
@@ -123,8 +123,8 @@ The library is organized into layers around token-based authentication:
 
 ### SPI Package (`security/spi/`)
 
-- **TokenUserDirectory**: Host app must implement to load users by id/email/username and record logins
-- **TokenUser**: Data class representing an authenticated user
+- **OgiriUserDirectory**: Host app must implement to load users by id/email/username and record logins
+- **OgiriUser**: Data class representing an authenticated user
 - **RouteRegistry**: Host app implements to declare public/unauthenticated routes
 
 ### Helpers Package (`security/helpers/`)
@@ -183,7 +183,7 @@ Keep classes small and cohesive:
 ## Security Considerations
 
 1. **Logging**: Never log raw token values. Use helpers in `SecurityHelpers` when parsing/validating identifiers.
-2. **TokenUserDirectory**: Fetch users securely and record successful logins; wrap errors with `SecurityServiceException` to avoid leaking sensitive details.
+2. **OgiriUserDirectory**: Fetch users securely and record successful logins; wrap errors with `SecurityServiceException` to avoid leaking sensitive details.
 3. **RouteRegistry**: Always register unauthenticated endpoints to prevent accidental lockouts.
 4. **Header Stability**: Token header keys and database column names are contracts with host apps—changes require coordination and migration notes.
 5. **Identifier Validation**: Use `IdentifierPolicy` for all user/client ID validation before database queries.

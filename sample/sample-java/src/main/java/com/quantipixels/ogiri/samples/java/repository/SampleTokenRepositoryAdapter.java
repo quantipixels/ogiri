@@ -62,6 +62,11 @@ public class SampleTokenRepositoryAdapter implements TokenRepository<SampleToken
     return jpaRepository.findByUserIdAndClientEquals(userId, clientId).orElse(null);
   }
 
+  @Override
+  public List<SampleToken> findAllByUserIdAndTokenSubtype(long userId, String tokenSubtype) {
+    return jpaRepository.findByUserIdAndTokenSubtypeOrderByUpdatedAtDesc(userId, tokenSubtype);
+  }
+
   public List<SampleToken> findByExpiryAtBefore(Instant cutoff) {
     return jpaRepository.findByExpiryAtBeforeCutoff(cutoff);
   }
