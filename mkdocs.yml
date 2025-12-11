@@ -3,6 +3,7 @@ site_description: Token-based authentication for Spring Boot with pluggable sub-
 site_url: https://mosobande.github.io/ogiri
 repo_url: https://github.com/mosobande/ogiri
 repo_name: mosobande/ogiri
+docs_dir: docs
 
 theme:
   name: material
