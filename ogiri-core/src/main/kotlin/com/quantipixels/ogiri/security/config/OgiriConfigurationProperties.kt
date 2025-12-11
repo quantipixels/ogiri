@@ -14,7 +14,6 @@ package com.quantipixels.ogiri.security.config
 
 import jakarta.validation.Valid
 import jakarta.validation.constraints.Min
-import jakarta.validation.constraints.NotNull
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.validation.annotation.Validated
 
@@ -95,10 +94,10 @@ open class OgiriConfigurationProperties {
      *
      * Examples:
      * - High-security: 5 (only 5 concurrent sessions)
-     * - Default: 24 (reasonable for multi-device users)
+     * - Default: 10 (reasonable for multi-device users)
      * - Relaxed: 50 (for testing or high-concurrency scenarios)
      */
-    @field:NotNull @field:Min(1) var maxClients: Long? = null
+    @field:Min(1) var maxClients: Long = 10
 
     /**
      * Grace period (seconds) for detecting batch requests within a request window.
@@ -120,7 +119,7 @@ open class OgiriConfigurationProperties {
      *
      * See [OgiriTokenAuthenticationFilter.doFilterInternal] for batch window logic.
      */
-    @field:NotNull @field:Min(0) var batchGraceSeconds: Long? = null
+    @field:Min(0) var batchGraceSeconds: Long = 5
 
     /**
      * Default token lifetime in days.
@@ -143,7 +142,7 @@ open class OgiriConfigurationProperties {
      *     token-lifespan-days: 7
      * ```
      */
-    @field:NotNull @field:Min(1) var tokenLifespanDays: Long? = null
+    @field:Min(1) var tokenLifespanDays: Long = 14
 
     /**
      * Only rotate tokens on mutating HTTP requests (POST, PUT, DELETE, PATCH).

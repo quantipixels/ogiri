@@ -67,10 +67,12 @@ class OgiriTokenAuthenticationFilterTest {
       }
 
   private fun defaultAuthProperties() =
-      OgiriConfigurationProperties.AuthProperties().apply {
-        maxClients = 24
-        batchGraceSeconds = 5
-        tokenLifespanDays = 14
+      OgiriConfigurationProperties().apply {
+        auth.apply {
+          maxClients = 24
+          batchGraceSeconds = 5
+          tokenLifespanDays = 14
+        }
       }
 
   // Custom TokenService that implements tokenFactory for TestToken
@@ -80,7 +82,7 @@ class OgiriTokenAuthenticationFilterTest {
       userDirectory: OgiriUserDirectory,
       identifierPolicy: IdentifierPolicy,
       subTokenRegistry: com.quantipixels.ogiri.security.tokens.SubTokenRegistry,
-      authProperties: OgiriConfigurationProperties.AuthProperties,
+      properties: OgiriConfigurationProperties,
   ) :
       TokenService<TestToken>(
           repository,
@@ -88,7 +90,7 @@ class OgiriTokenAuthenticationFilterTest {
           userDirectory,
           identifierPolicy,
           subTokenRegistry,
-          authProperties,
+          properties,
       ) {
     override fun tokenFactory(
         userId: Long,

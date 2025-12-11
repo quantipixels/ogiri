@@ -38,7 +38,7 @@ import org.springframework.transaction.annotation.Transactional
 
 private val tokenEqualityCache =
     Caffeine.newBuilder().maximumSize(10000).expireAfterWrite(1, TimeUnit.HOURS).build<
-        String, Boolean> { key ->
+        String, Boolean> { _ ->
       false
     }
 
@@ -77,17 +77,11 @@ open class TokenService<T : BaseToken>(
     private val userDirectory: OgiriUserDirectory,
     private val identifierPolicy: IdentifierPolicy,
     private val subTokenRegistry: SubTokenRegistry,
-    protected val authProperties: OgiriConfigurationProperties.AuthProperties,
+    protected val properties: OgiriConfigurationProperties,
 ) {
-  private val maxClients: Long =
-      authProperties.maxClients
-          ?: error("ogiri.auth.max-clients must be defined in application properties")
-  private val batchGraceSeconds: Long =
-      authProperties.batchGraceSeconds
-          ?: error("ogiri.auth.batch-grace-seconds must be defined in application properties")
-  private val tokenLifespanDays: Long =
-      authProperties.tokenLifespanDays
-          ?: error("ogiri.auth.token-lifespan-days must be defined in application properties")
+  private val maxClients: Long = properties.auth.maxClients
+  private val batchGraceSeconds: Long = properties.auth.batchGraceSeconds
+  private val tokenLifespanDays: Long = properties.auth.tokenLifespanDays
   /**
    * Factory function for creating new token instances.
    *

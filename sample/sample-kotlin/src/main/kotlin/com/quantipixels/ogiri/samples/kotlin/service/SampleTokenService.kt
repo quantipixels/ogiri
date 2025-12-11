@@ -51,7 +51,7 @@ class SampleTokenService(
         userDirectory,
         identifierPolicy,
         subTokenRegistry,
-        properties.auth,
+        properties,
     ) {
   /**
    * Factory method for creating SampleToken instances.

@@ -53,7 +53,7 @@ public class SampleTokenService extends TokenService<SampleToken> {
         userDirectory,
         identifierPolicy,
         subTokenRegistry,
-        properties.getAuth());
+        properties);
   }
 
   /**

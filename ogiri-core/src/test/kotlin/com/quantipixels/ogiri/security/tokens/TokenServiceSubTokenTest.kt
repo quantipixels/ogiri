@@ -65,10 +65,12 @@ class TokenServiceSubTokenTest {
       }
 
   private fun defaultAuthProperties() =
-      OgiriConfigurationProperties.AuthProperties().apply {
-        maxClients = 24
-        batchGraceSeconds = 5
-        tokenLifespanDays = 14
+      OgiriConfigurationProperties().apply {
+        auth.apply {
+          maxClients = 24
+          batchGraceSeconds = 5
+          tokenLifespanDays = 14
+        }
       }
 
   // Custom TokenService that implements tokenFactory for TestToken
@@ -78,7 +80,7 @@ class TokenServiceSubTokenTest {
       userDirectory: OgiriUserDirectory,
       identifierPolicy: IdentifierPolicy,
       subTokenRegistry: SubTokenRegistry,
-      authProperties: OgiriConfigurationProperties.AuthProperties,
+      properties: OgiriConfigurationProperties,
   ) :
       TokenService<TestToken>(
           repository,
@@ -86,7 +88,7 @@ class TokenServiceSubTokenTest {
           userDirectory,
           identifierPolicy,
           subTokenRegistry,
-          authProperties,
+          properties,
       ) {
     override fun tokenFactory(
         userId: Long,

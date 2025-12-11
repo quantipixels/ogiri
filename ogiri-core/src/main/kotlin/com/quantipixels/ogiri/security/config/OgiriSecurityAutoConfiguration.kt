@@ -94,7 +94,7 @@ class OgiriSecurityAutoConfiguration {
           ogiriUserDirectory,
           identifierPolicy,
           subTokenRegistry,
-          properties.auth,
+          properties,
       )
           as TokenService<*>
 
