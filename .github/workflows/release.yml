@@ -24,6 +24,11 @@ jobs:
 
       - name: Update version file
         run: |
+          # Fetch the ori branch
+          git fetch origin ori
+          # Switch to ori branch
+          git checkout -B ori origin/ori
+          # Update version
           echo "${{ steps.version.outputs.VERSION }}" > .ogiri-version
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
