@@ -1,4 +1,4 @@
-# Ogiri Security Java Sample Application
+# Ògiri Security Java Sample Application
 
 A complete example demonstrating how to integrate the **ogiri** token-based authentication library into a Spring Boot application using pure Java.
 

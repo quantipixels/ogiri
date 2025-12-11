@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ##
-# Release script for Ogiri
+# Release script for Ògiri
 #
 # Creates a git tag and pushes it to GitHub to trigger automated release workflow.
 #

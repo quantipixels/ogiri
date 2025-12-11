@@ -1,0 +1,108 @@
+name: Deploy Documentation
+
+on:
+  push:
+    branches:
+      - ori
+    paths:
+      - 'docs/**'
+      - 'mkdocs.yml'
+      - '.github/workflows/docs.yml'
+  pull_request:
+    paths:
+      - 'docs/**'
+      - 'mkdocs.yml'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install mkdocs-material mkdocs-mike
+
+      - name: Get version
+        id: version
+        run: |
+          VERSION=$(cat .ogiri-version)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building docs for version: $VERSION"
+
+      - name: Build documentation
+        run: mkdocs build
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: 'site'
+
+  deploy:
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/ori')
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
+
+  version:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [build, deploy]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install mkdocs-material mkdocs-mike
+
+      - name: Configure git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Deploy versioned docs
+        run: |
+          VERSION=$(cat .ogiri-version)
+          echo "Deploying documentation for version: $VERSION"
+          mike deploy --push --update-aliases "$VERSION" latest
+
+      - name: Verify deployment
+        run: |
+          echo "✓ Documentation deployed successfully"
+          echo "Available at: https://mosobande.github.io/ogiri"

@@ -1,35 +1,166 @@
 # Authentication Flow
 
-This page summarizes how `ogiri` authenticates requests and can be used to generate web documentation.
+How ogiri authenticates requests, rotates tokens, and manages headers.
 
-## Request lifecycle
-- `OgiriTokenAuthenticationFilter` runs once per request and skips authentication when `AuthenticationBypassDecider.canSkip` returns true (already authenticated, whitelisted paths, CORS preflight, or public routes in `RouteCatalog`).
-- If not skipped, the filter extracts headers via `AuthHeader.extractAuthHeader`, validates identifiers, and ensures an APP token type.
-- `TokenService.validToken` verifies the hashed token (supports previous/last tokens for grace periods).
-- Depending on the batch grace window, the filter either:
-  - Calls `extendBatchBuffer` to record activity without rotating tokens, or
-  - Calls `createNewAuthToken` to rotate and emit refreshed headers.
-- Successful auth populates `SecurityContextHolder` with a `UsernamePasswordAuthenticationToken` and appends refreshed headers (when rotation occurs).
-- Authentication failures clear the context and delegate to the configured `AuthenticationEntryPoint`.
+## Request Lifecycle
 
-## Token rotation and batch window
-- `TokenService.isBatchRequest` detects requests within `ogiri.auth.batch-grace-seconds`; these calls only extend `lastUsedAt` and do **not** emit new headers.
-- Outside the grace window, `rotateTokensIfNeeded` may issue new APP + sub-tokens and append headers.
-- `ogiri.auth.rotate-on-write-only=true` restricts rotation to mutating methods; `ogiri.auth.rotate-stale-seconds` enforces rotation when tokens exceed the staleness threshold.
+```
+Request → Filter → Bypass Check → Header Extraction → Token Validation → Rotation → Response
+```
+
+### 1. Filter Entry
+
+`OgiriTokenAuthenticationFilter.doFilterInternal()` intercepts every request.
+
+### 2. Bypass Check
+
+`AuthenticationBypassDecider.canSkip()` returns `true` for:
+
+- Already authenticated users (SecurityContext populated)
+- Public routes declared in `RouteRegistry`
+- CORS preflight requests (OPTIONS method)
+- Health and docs paths (`/health`, `/actuator/**`, `/swagger-ui/**`)
+
+### 3. Header Extraction
+
+`AuthHeader.extractAuthHeader()` parses authentication from:
+
+**Individual headers (preferred):**
+```
+access-token: <token-hash>
+client: web
+uid: 123
+expiry: 2025-12-25T00:00:00Z
+```
+
+**Bearer token (fallback):**
+```
+Authorization: Bearer eyJhY2Nlc3MtdG9rZW4iOiJ4eXoiLCJjbGllbnQiOiJ3ZWIiLCJ1aWQiOiIxMjMiLCJleHBpcnkiOiIyMDI1LTEyLTI1In0=
+```
+
+The Bearer token decodes to:
+```json
+{
+  "access-token": "xyz",
+  "client": "web",
+  "uid": "123",
+  "expiry": "2025-12-25"
+}
+```
+
+### 4. Token Validation
+
+`TokenService.validToken()` verifies:
+
+1. Token hash matches database record
+2. Token is not expired
+3. Grace period tokens (`lastToken`, `previousToken`) are accepted during rotation
+
+### 5. Token Rotation
+
+Based on configuration:
+
+| Condition | Action |
+|-----------|--------|
+| Within batch grace window | Update `lastUsedAt` only, no new headers |
+| Outside batch window | Rotate token, emit new headers |
+| `rotate-on-write-only=true` | Only rotate on POST/PUT/DELETE |
+| Token exceeds `rotate-stale-seconds` | Force rotation |
+
+### 6. Response
+
+On success:
+- `SecurityContext` populated with authenticated user
+- New auth headers appended (if rotated)
+
+On failure:
+- `SecurityContext` cleared
+- `AuthenticationEntryPoint` returns error response
+
+## Token Rotation
+
+### Batch Window
+
+Prevents token thrashing from rapid requests:
+
+```yaml
+ogiri:
+  auth:
+    batch-grace-seconds: 5  # Requests within 5s share same token
+```
+
+Within the window, only `lastUsedAt` is updated.
+
+### Staleness Rotation
+
+Force rotation after a time period:
+
+```yaml
+ogiri:
+  auth:
+    rotate-stale-seconds: 3600  # Rotate tokens older than 1 hour
+```
+
+### Write-Only Rotation
+
+Only rotate on mutating requests:
+
+```yaml
+ogiri:
+  auth:
+    rotate-on-write-only: true  # GET requests don't rotate
+```
 
 ## Headers
-- Core headers: `access-token`, `client`, `uid`, `access-token-kind`, `expiry`, and `Authorization: Bearer <Base64 JSON>`.
-- Sub-tokens (optional): `sub-tokens` header encodes a JSON map `{name: {client, token, expiry}}`.
-- `AuthHeader.appendAuthHeaders` only writes non-blank values to avoid leaking partial tokens.
 
-## Routes and bypass rules
-- Public routes are described via `RouteRegistry.routes()` and aggregated by `RouteCatalog`.
-- `SecurityHelpers` whitelists health checks and docs paths; preflight requests (`OPTIONS`) are also skipped.
-- Keep unauthenticated endpoints registered in `RouteCatalog` to avoid accidental lockouts.
+### Request Headers
 
-**Example - Custom Route Registry:**
+Clients send these on authenticated requests:
 
-*Kotlin*
+| Header | Description |
+|--------|-------------|
+| `access-token` | Token hash |
+| `client` | Client identifier (e.g., "web", "mobile") |
+| `uid` | User identifier |
+| `expiry` | Token expiration (ISO-8601) |
+
+Or use a single Bearer header containing Base64-encoded JSON.
+
+### Response Headers
+
+After login or rotation:
+
+| Header | Description |
+|--------|-------------|
+| `access-token` | New token hash |
+| `client` | Client identifier |
+| `uid` | User identifier |
+| `expiry` | New expiration |
+| `sub-tokens` | Base64-encoded sub-token map (optional) |
+
+### Sub-Token Header
+
+When sub-tokens are issued:
+
+```
+sub-tokens: eyJkZXZpY2UiOnsiY2xpZW50IjoiYXBwLmRldmljZSIsInRva2VuIjoiYWJjMTIzIiwiZXhwaXJ5IjoiMjAyNS0xMi0yNVQwMDowMDowMFoifX0=
+```
+
+Decodes to:
+```json
+{
+  "device": {
+    "client": "app.device",
+    "token": "abc123",
+    "expiry": "2025-12-25T00:00:00Z"
+  }
+}
+```
+
+## Route Registry
+
+Declare unauthenticated routes:
+
 ```kotlin
 @Component
 class MyRouteRegistry : RouteRegistry {
@@ -43,170 +174,60 @@ class MyRouteRegistry : RouteRegistry {
 }
 ```
 
-*Java*
-```java
-@Component
-public class MyRouteRegistry implements RouteRegistry {
-  @Override
-  public List<Route> registrations() {
-    return List.of(
-      Route.get("/public/**"),
-      Route.post("/api/auth/login"),
-      Route.post("/api/auth/register"),
-      Route.get("/health"),
-      Route.get("/api/docs/**")
-    );
-  }
-}
-```
+Routes support wildcards:
+- `*` matches single path segment
+- `**` matches multiple path segments
 
-## Sub-tokens
-- Register `SubTokenRegistration` beans to mint protocol-specific tokens alongside APP tokens.
-- `TokenService.issueSubTokens` respects `includeByDefault`; `renewSubToken` forces rotation for a specific sub-token and appends updated headers.
-- Sub-token bearer decoding uses Base64 JSON payloads (`client`, `token`, `expiry`); server-side expiry is always enforced.
+## Error Handling
 
-**Example - Custom Sub-token Registration:**
+Use `SecurityServiceException` for auth errors:
 
-*Kotlin*
 ```kotlin
-@Configuration
-class SubTokenConfig {
-  @Bean
-  fun deviceSubToken(): SubTokenRegistration = object : SubTokenRegistration {
-    override val name = "device"
-    override val includeByDefault = false  // Only on explicit request
-    override fun clientIdFor(parent: String) = "$parent.device"
-    override fun expiry(parentExpiry: Instant) = parentExpiry.plus(30, ChronoUnit.DAYS)
-  }
-
-  @Bean
-  fun apiSubToken(): SubTokenRegistration = object : SubTokenRegistration {
-    override val name = "api"
-    override val includeByDefault = true  // Always included
-    override fun clientIdFor(parent: String) = "$parent.api"
-    override fun expiry(parentExpiry: Instant) = parentExpiry  // Same as parent
-  }
-}
+throw SecurityServiceException("error.auth.invalid_token", "Token is invalid")
 ```
 
-*Java*
-```java
-@Configuration
-public class SubTokenConfig {
-  @Bean
-  public SubTokenRegistration deviceSubToken() {
-    return new SubTokenRegistration() {
-      @Override public String getName() { return "device"; }
-      @Override public boolean isIncludeByDefault() { return false; }  // Only on explicit request
-      @Override public String clientIdFor(String parent) { return parent + ".device"; }
-      @Override public Instant expiry(Instant parentExpiry) {
-        return parentExpiry.plus(30, ChronoUnit.DAYS);
-      }
-    };
-  }
+Recommended error codes:
+- `error.auth.invalid_token`
+- `error.auth.expired_token`
+- `error.auth.missing_headers`
+- `error.auth.user_not_found`
 
-  @Bean
-  public SubTokenRegistration apiSubToken() {
-    return new SubTokenRegistration() {
-      @Override public String getName() { return "api"; }
-      @Override public boolean isIncludeByDefault() { return true; }  // Always included
-      @Override public String clientIdFor(String parent) { return parent + ".api"; }
-      @Override public Instant expiry(Instant parentExpiry) {
-        return parentExpiry;  // Same as parent
-      }
-    };
-  }
-}
-```
+Handle in `@ControllerAdvice`:
 
-## Error handling considerations
-- Prefer `SecurityServiceException` for user-facing auth failures (`error.auth.*` codes).
-- Never log raw token values; use the helpers in `SecurityHelpers` when parsing or validating identifiers.
-
-**Example - Custom Exception Handling:**
-
-*Kotlin*
 ```kotlin
-@ControllerAdvice
-class SecurityExceptionHandler {
-  @ExceptionHandler(SecurityServiceException::class)
-  fun handleSecurityException(ex: SecurityServiceException): ResponseEntity<ErrorResponse> {
-    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-      .body(ErrorResponse(ex.code, ex.message))
-  }
-
-  @ExceptionHandler(TokenExpiredException::class)
-  fun handleTokenExpired(ex: TokenExpiredException): ResponseEntity<ErrorResponse> {
-    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-      .body(ErrorResponse("error.auth.token_expired", "Token has expired. Please login again."))
-  }
+@ExceptionHandler(SecurityServiceException::class)
+fun handleAuthError(ex: SecurityServiceException): ResponseEntity<*> {
+  return ResponseEntity
+    .status(HttpStatus.UNAUTHORIZED)
+    .body(mapOf("error" to ex.code, "message" to ex.message))
 }
 ```
 
-*Java*
-```java
-@ControllerAdvice
-public class SecurityExceptionHandler {
-  @ExceptionHandler(SecurityServiceException.class)
-  public ResponseEntity<ErrorResponse> handleSecurityException(SecurityServiceException ex) {
-    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-      .body(new ErrorResponse(ex.getCode(), ex.getMessage()));
-  }
+## Security Best Practices
 
-  @ExceptionHandler(TokenExpiredException.class)
-  public ResponseEntity<ErrorResponse> handleTokenExpired(TokenExpiredException ex) {
-    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-      .body(new ErrorResponse("error.auth.token_expired", "Token has expired. Please login again."));
-  }
-}
-```
+1. **Never log raw tokens** - Use `SecurityHelpers` for parsing
+2. **Register public routes** - Prevent accidental lockouts
+3. **Use SecurityServiceException** - Avoid leaking internal errors
+4. **Validate identifiers** - Use `IdentifierPolicy` before database queries
 
-## Testing hooks
-- In-memory fake repositories (`InMemoryTokenRepository` in tests) allow exercising rotation without a database.
-- Batch window behavior is covered in `OgiriTokenAuthenticationFilterTest`; extend these cases when changing rotation or bypass logic.
+## Testing
 
-**Example - Testing with In-Memory Repository:**
+Use in-memory fixtures for testing:
 
-*Kotlin*
 ```kotlin
-@SpringBootTest
-class AuthenticationFlowTest {
-  @Autowired
-  private lateinit var tokenService: TokenService<TestToken>
+@Test
+fun `should authenticate valid token`() {
+  val token = tokenService.createNewAuthToken(userId, "test-client")
 
-  @MockBean
-  private lateinit var tokenRepository: TokenRepository<TestToken>
-
-  @Test
-  fun testTokenRotation() {
-    // Mock repository behavior
-    every { tokenRepository.save(any()) } answers { firstArg() }
-    every { tokenRepository.findByUserIdAndClient(any(), any()) } returns null
-
-    val token = tokenService.createNewAuthToken(1L, "web-app")
-    assertNotNull(token)
+  mockMvc.get("/api/protected") {
+    header("access-token", token.accessToken)
+    header("client", token.client)
+    header("uid", userId.toString())
+    header("expiry", token.expiry.toString())
+  }.andExpect {
+    status { isOk() }
   }
 }
 ```
 
-*Java*
-```java
-@SpringBootTest
-public class AuthenticationFlowTest {
-  @Autowired
-  private TokenService<TestToken> tokenService;
-
-  @MockBean
-  private TokenRepository<TestToken> tokenRepository;
-
-  @Test
-  public void testTokenRotation() {
-    // Mock repository behavior
-    when(tokenRepository.save(any())).thenAnswer(i -> i.getArgument(0));
-    when(tokenRepository.findByUserIdAndClient(anyLong(), anyString())).thenReturn(null);
-
-    TestToken token = tokenService.createNewAuthToken(1L, "web-app");
-    assertNotNull(token);
-  }
-}
-```
+See `OgiriTokenAuthenticationFilterTest` for comprehensive examples.

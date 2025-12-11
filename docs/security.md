@@ -206,7 +206,7 @@ None reported yet.
 
 For security questions or concerns, contact: oluwaseyi@quantipixels.com
 
-For general support: See [contributing.md](./docs/contributing.md)
+For general support: See [contributing.md](./contributing.md) (coming soon)
 
 ---
 

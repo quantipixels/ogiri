@@ -1,4 +1,4 @@
-# Ogiri Security Kotlin Sample Application
+# Ògiri Security Kotlin Sample Application
 
 A complete example demonstrating how to integrate the **ogiri** token-based authentication library into a Spring Boot application using Kotlin.
 
