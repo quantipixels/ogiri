@@ -65,7 +65,7 @@ jobs:
           path: "site"
 
   deploy:
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/ori')
+    if: (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/ori')) || github.event_name == 'release'
     needs: build
     environment:
       name: github-pages
@@ -107,6 +107,7 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" == "release" ]; then
             VERSION=${{ github.event.release.tag_name }}
+            VERSION=${VERSION#v}
             echo "Deploying documentation for release: $VERSION"
             mike deploy --push "$VERSION"
           else
