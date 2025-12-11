@@ -12,6 +12,8 @@ on:
     paths:
       - "docs/**"
       - "mkdocs.yml"
+  release:
+    types: [published]
 
 permissions:
   contents: read
@@ -70,7 +72,7 @@ jobs:
         uses: actions/deploy-pages@v4
 
   version:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/ori') || github.event_name == 'release'
     needs: [build, deploy]
     runs-on: ubuntu-latest
     permissions:
@@ -98,9 +100,15 @@ jobs:
 
       - name: Deploy versioned docs
         run: |
-          VERSION=$(cat .ogiri-version)
-          echo "Deploying documentation for version: $VERSION"
-          mike deploy --push --update-aliases "$VERSION" latest
+          if [ "${{ github.event_name }}" == "release" ]; then
+            VERSION=${{ github.event.release.tag_name }}
+            echo "Deploying documentation for release: $VERSION"
+            mike deploy --push "$VERSION"
+          else
+            VERSION=$(cat .ogiri-version)
+            echo "Deploying documentation for version: $VERSION"
+            mike deploy --push --update-aliases "$VERSION" latest
+          fi
 
       - name: Verify deployment
         run: |
