@@ -12,10 +12,9 @@
 #   ./scripts/release.sh --force      # Force reuse with version from .ogiri-version
 #
 # The release workflow will:
-#   1. Extract version from tag
-#   2. Import GPG key for signing
-#   3. Publish to Maven Central
-#   4. Create GitHub release
+#   1. Create GitHub release from tag
+#   2. Trigger docs.yml to build and deploy versioned documentation
+#   3. Maven deploy workflows run independently (not blocked by Maven failures)
 #
 
 set -e
@@ -132,9 +131,9 @@ echo "Release details:"
 echo "  GitHub: https://github.com/mosobande/ogiri/releases/tag/$TAG"
 echo "  Workflow: https://github.com/mosobande/ogiri/actions/workflows/release.yml"
 echo ""
-echo "The automated release workflow will:"
-echo "  - Build and sign artifacts with GPG"
-echo "  - Publish to Maven Central"
-echo "  - Create GitHub release with artifacts"
+echo "The automated workflows will:"
+echo "  - release.yml: Create GitHub release"
+echo "  - docs.yml: Build and deploy versioned documentation"
+echo "  - Maven workflows: Deploy independently (not blocked by each other)"
 echo ""
-echo "Check the workflow status at the link above."
+echo "Check workflow status at: https://github.com/mosobande/ogiri/actions"
