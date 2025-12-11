@@ -1,15 +1,4 @@
-/*
- * Copyright (c) 2025 Quanti Pixels
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- */
+import com.diffplug.gradle.spotless.SpotlessExtension
 
 // Apply centralized version management
 apply(from = "gradle/version.gradle.kts")
@@ -19,11 +8,49 @@ plugins {
   kotlin("jvm") version "2.0.21" apply false
   kotlin("plugin.spring") version "2.0.21" apply false
   kotlin("plugin.jpa") version "2.0.21" apply false
+  id("com.diffplug.spotless") version "7.0.0.BETA4" apply false
 }
 
-subprojects {
-  repositories {
-    mavenCentral()
+allprojects {
+  repositories { mavenCentral() }
+
+  apply(plugin = "com.diffplug.spotless")
+
+  configure<SpotlessExtension> {
+    kotlin {
+      target("src/**/*.kt", "src/**/*.kts")
+      targetExclude("**/build.gradle.kts", "**/settings.gradle.kts", "**/spotless.license.kt")
+      licenseHeaderFile(rootProject.file("spotless.license.kt"))
+      ktfmt("0.43")
+      trimTrailingWhitespace()
+      endWithNewline()
+    }
+    java {
+      target("src/**/*.java")
+      targetExclude("**/build/**")
+      licenseHeaderFile(rootProject.file("spotless.license.kt"))
+      googleJavaFormat("1.22.0")
+      trimTrailingWhitespace()
+      endWithNewline()
+    }
+    kotlinGradle {
+      target("*.gradle.kts")
+      ktfmt("0.43")
+      trimTrailingWhitespace()
+      endWithNewline()
+    }
+    sql {
+      target("src/**/*.sql")
+      dbeaver()
+      trimTrailingWhitespace()
+      endWithNewline()
+    }
+    format("misc") {
+      target("*.md", ".gitignore", ".gitattributes", "**/*.toml", "**/*.yml", "**/*.yaml")
+      targetExclude("**/build/**")
+      trimTrailingWhitespace()
+      endWithNewline()
+    }
   }
 }
 
@@ -65,4 +92,3 @@ tasks.register("setupDev") {
     println("  • pre-push:    Verify tests pass before allowing pushes")
   }
 }
-

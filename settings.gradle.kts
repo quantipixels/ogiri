@@ -16,14 +16,16 @@ rootProject.name = "ogiri"
  *   - Or use: scripts/release.sh (creates tag and pushes to GitHub)
  */
 val versionFile = File(settingsDir, ".ogiri-version")
-val projectVersion = System.getenv("RELEASE_VERSION")
-  ?.takeIf { it.isNotBlank() }
-  ?: (System.getProperty("RELEASE_VERSION")?.takeIf { it.isNotBlank() })
-  ?: (if (versionFile.exists()) versionFile.readText().trim() else null)
-  ?: "0.0.0-SNAPSHOT"
+val projectVersion =
+    System.getenv("RELEASE_VERSION")?.takeIf { it.isNotBlank() }
+        ?: (System.getProperty("RELEASE_VERSION")?.takeIf { it.isNotBlank() })
+            ?: (if (versionFile.exists()) versionFile.readText().trim() else null)
+            ?: "0.0.0-SNAPSHOT"
 
 include(":ogiri-core")
+
 include(":sample:sample-java")
+
 include(":sample:sample-kotlin")
 
 /*
@@ -31,9 +33,7 @@ include(":sample:sample-kotlin")
  * Where Gradle downloads plugins declared in plugins {} blocks of build scripts.
  * These repos apply only to plugin lookup, NOT library dependencies.
  */
-plugins {
-  id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
-}
+plugins { id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0" }
 
 /*
  * Dependency resolution configuration for ALL modules.
@@ -55,9 +55,7 @@ dependencyResolutionManagement {
    *
    * Best practice: keep ALL repository declarations here.
    */
-  repositories {
-    mavenCentral()
-  }
+  repositories { mavenCentral() }
 
   /*
    * Version catalog:

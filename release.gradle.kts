@@ -18,7 +18,6 @@
  * - Minor: new features, e.g., 0.1.0 -> 0.2.0
  * - Patch: bug fixes, e.g., 0.1.0 -> 0.1.1
  */
-
 tasks.register("release") {
   group = "release"
   description = "Release the project to Maven Central"
@@ -32,9 +31,7 @@ tasks.register("release") {
     println("✅ Ready to publish to Maven Central")
 
     // Execute publish task
-    project.exec {
-      commandLine("./gradlew", "publish")
-    }
+    project.exec { commandLine("./gradlew", "publish") }
   }
 }
 
@@ -43,18 +40,20 @@ tasks.register("bumpVersion") {
   description = "Bump patch version in all build files"
 
   doLast {
-    val currentVersion = project.findProperty("currentVersion")?.toString()
-      ?: System.getenv("CURRENT_VERSION")
-      ?: "0.1.0-SNAPSHOT"
-    val newVersion = project.findProperty("newVersion")?.toString()
-      ?: System.getenv("NEW_VERSION")
-      ?: bumpPatchVersion(currentVersion)
+    val currentVersion =
+        project.findProperty("currentVersion")?.toString()
+            ?: System.getenv("CURRENT_VERSION") ?: "0.1.0-SNAPSHOT"
+    val newVersion =
+        project.findProperty("newVersion")?.toString()
+            ?: System.getenv("NEW_VERSION") ?: bumpPatchVersion(currentVersion)
 
     println("📌 Bumping version from $currentVersion to $newVersion")
 
     updateVersionInFile(rootProject.file("ogiri-core/build.gradle.kts"), currentVersion, newVersion)
-    updateVersionInFile(rootProject.file("sample/sample-java/build.gradle.kts"), currentVersion, newVersion)
-    updateVersionInFile(rootProject.file("sample/sample-kotlin/build.gradle.kts"), currentVersion, newVersion)
+    updateVersionInFile(
+        rootProject.file("sample/sample-java/build.gradle.kts"), currentVersion, newVersion)
+    updateVersionInFile(
+        rootProject.file("sample/sample-kotlin/build.gradle.kts"), currentVersion, newVersion)
 
     println("✅ Version updated successfully")
   }
@@ -77,10 +76,7 @@ fun updateVersionInFile(file: File, oldVersion: String, newVersion: String) {
   }
 
   val content = file.readText()
-  val updated = content.replace(
-    oldVersion,
-    newVersion
-  )
+  val updated = content.replace(oldVersion, newVersion)
 
   if (content != updated) {
     file.writeText(updated)

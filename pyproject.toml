@@ -1,0 +1,9 @@
+[project]
+name = "ogiri-docs"
+version = "0.1.0"
+description = "Documentation for Ogiri Security"
+requires-python = ">=3.12"
+dependencies = [
+    "mkdocs-material>=9.5.0",
+    "mkdocs-mike>=2.0.0",
+]

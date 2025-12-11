@@ -1,4 +1,3 @@
-import com.diffplug.gradle.spotless.SpotlessExtension
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -7,7 +6,6 @@ plugins {
   // JPA plugin removed - library is now database-agnostic
   // allopen plugin removed - not needed without JPA
   id("io.spring.dependency-management") version libs.versions.dependencyManagement.get()
-  id("com.diffplug.spotless") version libs.versions.spotless.get()
   jacoco
   `maven-publish`
   signing
@@ -132,34 +130,5 @@ signing {
     if (pub != null) {
       sign(pub)
     }
-  }
-}
-
-// Configure formatters
-configure<SpotlessExtension> {
-  kotlin {
-    target("src/**/*.kt", "src/**/*.kts")
-    targetExclude("**/build.gradle.kts", "**/settings.gradle.kts", "**/spotless.license.kt")
-    licenseHeaderFile(rootProject.file("spotless.license.kt"))
-    ktfmt("0.43")
-    trimTrailingWhitespace()
-    endWithNewline()
-  }
-  kotlinGradle {
-    target("*.gradle.kts")
-    ktfmt("0.43")
-    trimTrailingWhitespace()
-    endWithNewline()
-  }
-  format("misc") {
-    target("*.md", ".gitignore", "*.gradle.kts", ".gitattributes")
-    trimTrailingWhitespace()
-    endWithNewline()
-  }
-  sql {
-    target("src/**/*.sql")
-    dbeaver()
-    trimTrailingWhitespace()
-    endWithNewline()
   }
 }
