@@ -37,6 +37,7 @@ dependencyManagement {
 dependencies {
   api("org.springframework.boot:spring-boot-starter-security")
   api("org.springframework.boot:spring-boot-starter-web")
+  api("org.springframework.boot:spring-boot-starter-validation")
   api("org.springframework:spring-tx")
   // spring-boot-starter-data-jpa removed - users choose their own persistence
   // Users must provide one of:
