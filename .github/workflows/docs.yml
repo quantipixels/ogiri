@@ -47,7 +47,12 @@ jobs:
       - name: Get version
         id: version
         run: |
-          VERSION=$(cat .ogiri-version)
+          if [ "${{ github.event_name }}" == "release" ]; then
+            VERSION=${{ github.event.release.tag_name }}
+            VERSION=${VERSION#v}
+          else
+            VERSION=$(cat .ogiri-version)
+          fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Building docs for version: $VERSION"
 
