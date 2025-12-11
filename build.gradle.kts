@@ -1,14 +1,15 @@
 import com.diffplug.gradle.spotless.SpotlessExtension
+import org.gradle.kotlin.dsl.version
 
 // Apply centralized version management
 apply(from = "gradle/version.gradle.kts")
 
 // Consolidate Kotlin plugin in root to avoid loading multiple times in subprojects
 plugins {
-  kotlin("jvm") version "2.0.21" apply false
-  kotlin("plugin.spring") version "2.0.21" apply false
-  kotlin("plugin.jpa") version "2.0.21" apply false
-  id("com.diffplug.spotless") version "7.0.0.BETA4" apply false
+  kotlin("jvm") version libs.versions.kotlin.get() apply false
+  kotlin("plugin.spring") version libs.versions.kotlin.get() apply false
+  kotlin("plugin.jpa") version libs.versions.kotlin.get() apply false
+  id("com.diffplug.spotless") version libs.versions.spotless.get() apply false
 }
 
 allprojects {
