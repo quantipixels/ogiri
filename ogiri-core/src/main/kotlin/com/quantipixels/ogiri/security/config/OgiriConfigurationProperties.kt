@@ -12,7 +12,11 @@
  */
 package com.quantipixels.ogiri.security.config
 
+import jakarta.validation.Valid
+import jakarta.validation.constraints.Min
+import jakarta.validation.constraints.NotNull
 import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.validation.annotation.Validated
 
 /**
  * Centralized configuration properties for ogiri security library.
@@ -39,6 +43,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties
  *     cron: "0 0 * * * *"
  * ```
  */
+@Validated
 @ConfigurationProperties(prefix = "ogiri")
 open class OgiriConfigurationProperties {
   /**
@@ -51,7 +56,7 @@ open class OgiriConfigurationProperties {
    * Token authentication and rotation configuration. Controls token lifecycle, rotation policies,
    * and grace periods.
    */
-  val auth: AuthProperties = AuthProperties()
+  @field:Valid val auth: AuthProperties = AuthProperties()
 
   /**
    * Scheduled token cleanup job configuration. Controls deletion of expired tokens from the
@@ -93,7 +98,7 @@ open class OgiriConfigurationProperties {
      * - Default: 24 (reasonable for multi-device users)
      * - Relaxed: 50 (for testing or high-concurrency scenarios)
      */
-    var maxClients: Long = 24
+    @field:NotNull @field:Min(1) var maxClients: Long? = null
 
     /**
      * Grace period (seconds) for detecting batch requests within a request window.
@@ -115,7 +120,7 @@ open class OgiriConfigurationProperties {
      *
      * See [OgiriTokenAuthenticationFilter.doFilterInternal] for batch window logic.
      */
-    var batchGraceSeconds: Long = 5
+    @field:NotNull @field:Min(0) var batchGraceSeconds: Long? = null
 
     /**
      * Default token lifetime in days.
@@ -138,7 +143,7 @@ open class OgiriConfigurationProperties {
      *     token-lifespan-days: 7
      * ```
      */
-    var tokenLifespanDays: Long = 14
+    @field:NotNull @field:Min(1) var tokenLifespanDays: Long? = null
 
     /**
      * Only rotate tokens on mutating HTTP requests (POST, PUT, DELETE, PATCH).

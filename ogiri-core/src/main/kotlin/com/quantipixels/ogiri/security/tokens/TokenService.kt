@@ -13,6 +13,7 @@
 package com.quantipixels.ogiri.security.tokens
 
 import com.github.benmanes.caffeine.cache.Caffeine
+import com.quantipixels.ogiri.security.config.OgiriConfigurationProperties
 import com.quantipixels.ogiri.security.core.AuthHeader
 import com.quantipixels.ogiri.security.core.IdentifierPolicy
 import com.quantipixels.ogiri.security.core.JsonCodec
@@ -76,10 +77,17 @@ open class TokenService<T : BaseToken>(
     private val userDirectory: OgiriUserDirectory,
     private val identifierPolicy: IdentifierPolicy,
     private val subTokenRegistry: SubTokenRegistry,
-    val maxClients: Long = 24,
-    val batchGraceSeconds: Long = 5,
-    val tokenLifespanDays: Long = 14,
+    protected val authProperties: OgiriConfigurationProperties.AuthProperties,
 ) {
+  private val maxClients: Long =
+      authProperties.maxClients
+          ?: error("ogiri.auth.max-clients must be defined in application properties")
+  private val batchGraceSeconds: Long =
+      authProperties.batchGraceSeconds
+          ?: error("ogiri.auth.batch-grace-seconds must be defined in application properties")
+  private val tokenLifespanDays: Long =
+      authProperties.tokenLifespanDays
+          ?: error("ogiri.auth.token-lifespan-days must be defined in application properties")
   /**
    * Factory function for creating new token instances.
    *

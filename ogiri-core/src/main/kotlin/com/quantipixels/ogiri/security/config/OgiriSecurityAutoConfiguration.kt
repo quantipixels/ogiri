@@ -94,9 +94,7 @@ class OgiriSecurityAutoConfiguration {
           ogiriUserDirectory,
           identifierPolicy,
           subTokenRegistry,
-          properties.auth.maxClients,
-          properties.auth.batchGraceSeconds,
-          properties.auth.tokenLifespanDays,
+          properties.auth,
       )
           as TokenService<*>
 

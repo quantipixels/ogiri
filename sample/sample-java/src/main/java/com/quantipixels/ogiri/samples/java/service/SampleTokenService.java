@@ -14,6 +14,7 @@ package com.quantipixels.ogiri.samples.java.service;
 
 import com.quantipixels.ogiri.samples.java.entity.SampleToken;
 import com.quantipixels.ogiri.samples.java.repository.SampleTokenRepositoryAdapter;
+import com.quantipixels.ogiri.security.config.OgiriConfigurationProperties;
 import com.quantipixels.ogiri.security.core.IdentifierPolicy;
 import com.quantipixels.ogiri.security.spi.OgiriUserDirectory;
 import com.quantipixels.ogiri.security.tokens.SubTokenRegistry;
@@ -44,17 +45,15 @@ public class SampleTokenService extends TokenService<SampleToken> {
       PasswordEncoder passwordEncoder,
       OgiriUserDirectory userDirectory,
       IdentifierPolicy identifierPolicy,
-      SubTokenRegistry subTokenRegistry) {
+      SubTokenRegistry subTokenRegistry,
+      OgiriConfigurationProperties properties) {
     super(
         tokenRepository,
         passwordEncoder,
         userDirectory,
         identifierPolicy,
         subTokenRegistry,
-        24L, // maxClients - allow up to 24 concurrent clients per user
-        5L, // batchGraceSeconds - grace period for request batches without token rotation
-        14L // tokenLifespanDays - token expiration time in days
-        );
+        properties.getAuth());
   }
 
   /**

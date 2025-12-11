@@ -14,6 +14,7 @@ package com.quantipixels.ogiri.samples.kotlin.service
 
 import com.quantipixels.ogiri.samples.kotlin.entity.SampleToken
 import com.quantipixels.ogiri.samples.kotlin.repository.SampleTokenRepository
+import com.quantipixels.ogiri.security.config.OgiriConfigurationProperties
 import com.quantipixels.ogiri.security.core.IdentifierPolicy
 import com.quantipixels.ogiri.security.spi.OgiriUserDirectory
 import com.quantipixels.ogiri.security.tokens.SubTokenRegistry
@@ -42,6 +43,7 @@ class SampleTokenService(
     userDirectory: OgiriUserDirectory,
     identifierPolicy: IdentifierPolicy,
     subTokenRegistry: SubTokenRegistry,
+    properties: OgiriConfigurationProperties,
 ) :
     TokenService<SampleToken>(
         sampleTokenRepository,
@@ -49,9 +51,7 @@ class SampleTokenService(
         userDirectory,
         identifierPolicy,
         subTokenRegistry,
-        24L, // maxClients - allow up to 24 concurrent clients per user
-        5L, // batchGraceSeconds - grace period for request batches without token rotation
-        14L, // tokenLifespanDays - token expiration time in days
+        properties.auth,
     ) {
   /**
    * Factory method for creating SampleToken instances.

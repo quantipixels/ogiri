@@ -66,6 +66,13 @@ class OgiriTokenAuthenticationFilterTest {
         override fun recordSuccessfulLogin(userId: Long) {}
       }
 
+  private fun defaultAuthProperties() =
+      OgiriConfigurationProperties.AuthProperties().apply {
+        maxClients = 24
+        batchGraceSeconds = 5
+        tokenLifespanDays = 14
+      }
+
   // Custom TokenService that implements tokenFactory for TestToken
   private inner class TestTokenService(
       repository: TokenRepository<TestToken>,
@@ -73,9 +80,7 @@ class OgiriTokenAuthenticationFilterTest {
       userDirectory: OgiriUserDirectory,
       identifierPolicy: IdentifierPolicy,
       subTokenRegistry: com.quantipixels.ogiri.security.tokens.SubTokenRegistry,
-      maxClients: Long = 24,
-      batchGraceSeconds: Long = 5,
-      tokenLifespanDays: Long = 14,
+      authProperties: OgiriConfigurationProperties.AuthProperties,
   ) :
       TokenService<TestToken>(
           repository,
@@ -83,9 +88,7 @@ class OgiriTokenAuthenticationFilterTest {
           userDirectory,
           identifierPolicy,
           subTokenRegistry,
-          maxClients,
-          batchGraceSeconds,
-          tokenLifespanDays,
+          authProperties,
       ) {
     override fun tokenFactory(
         userId: Long,
@@ -215,6 +218,7 @@ class OgiriTokenAuthenticationFilterTest {
             userDirectory,
             identifierPolicy,
             DefaultSubTokenRegistry(emptyList()),
+            defaultAuthProperties(),
         )
     val filter =
         OgiriTokenAuthenticationFilter(
