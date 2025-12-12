@@ -253,7 +253,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../configuration.md" class="md-tabs__link">
+        <a href="../configuration/" class="md-tabs__link">
           
   
   
@@ -720,7 +720,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../configuration.md" class="md-nav__link">
+      <a href="../configuration/" class="md-nav__link">
         
   
   
@@ -748,7 +748,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../database.md" class="md-nav__link">
+      <a href="../database/" class="md-nav__link">
         
   
   
@@ -804,7 +804,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../authentication.md" class="md-nav__link">
+      <a href="../authentication/" class="md-nav__link">
         
   
   
@@ -1203,7 +1203,7 @@ public interface MyTokenRepository extends JpaRepository&lt;Token, Long&gt;, Ogi
 
 </details>
 
-<p>See <a href="database.md">Database Integration</a> for MongoDB, Redis, and custom implementations.</p>
+<p>See <a href="../database/">Database Integration</a> for MongoDB, Redis, and custom implementations.</p>
 <h2 id="3-issue-tokens-on-login">3. Issue Tokens on Login</h2>
 <pre><code class="language-kotlin">@RestController
 class AuthController(private val tokenService: OgiriTokenService&lt;Token&gt;) {
@@ -1265,11 +1265,11 @@ expiry: 2025-12-25T00:00:00Z
 </thead>
 <tbody>
 <tr>
-<td><a href="configuration.md">Configuration</a></td>
+<td><a href="../configuration/">Configuration</a></td>
 <td>Token rotation, cleanup schedules, batch windows</td>
 </tr>
 <tr>
-<td><a href="database.md">Database Integration</a></td>
+<td><a href="../database/">Database Integration</a></td>
 <td>JPA, MongoDB, Redis, custom implementations</td>
 </tr>
 <tr>
@@ -1277,7 +1277,7 @@ expiry: 2025-12-25T00:00:00Z
 <td>Device tokens, chat tokens, API tokens</td>
 </tr>
 <tr>
-<td><a href="authentication.md">Authentication Flow</a></td>
+<td><a href="../authentication/">Authentication Flow</a></td>
 <td>Request lifecycle, rotation policies, headers</td>
 </tr>
 <tr>
