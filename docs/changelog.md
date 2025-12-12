@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.2.0] - 2025-12-12
+
+### Added
+- **Interface-First Design**: Introduced `OgiriToken` interface as the primary contract for tokens, allowing implementation flexibility without forced inheritance.
+- **Migration Guide**: Added [Migration Guide](migration-guide.md) to assist with the transition to 1.2.0.
+
+### Changed
+- **Renamed Core Classes**:
+  - `BaseToken` → `OgiriBaseToken`
+  - `TokenRepository` → `OgiriTokenRepository`
+  - `TokenService` → `OgiriTokenService`
+  - `GeneratedTokens` → `OgiriGeneratedTokens`
+- **Updated Type Bounds**: All generic type parameters now use `<T : OgiriToken>` instead of `<T : BaseToken>`.
+- **Documentation**: Comprehensive updates to reflect the new interface-first architecture.
+
+### Upgrade Notes
+- This release involves renaming core classes. Please refer to the [Migration Guide](migration-guide.md) for detailed instructions on updating your code.
+
 ## [1.1.1] - 2025-12-11
 
 ### Added
@@ -43,7 +61,7 @@ All notable changes to this project will be documented in this file.
 - Documentation for overriding auto-configured `OgiriTokenAuthenticationFilter` with custom bean/subclass
 - Java sample repository with `findAllByUserIdAndTokenSubtype(...)` for sub-token queries
 - `parseBearerToken()` with fallback in auth filter for Base64/JSON bearer payloads
-- `SubTokenRegistration.validate()` plus `TokenService` helpers (`getSubToken`, `revokeSubToken`, `renewSubTokenAndGetHeaders`)
+- `SubTokenRegistration.validate()` plus `OgiriTokenService` helpers (`getSubToken`, `revokeSubToken`, `renewSubTokenAndGetHeaders`)
 
 ### Changed
 - Replaced deprecated `NoOpPasswordEncoder` in tests with inline `PasswordEncoder` stub
@@ -59,7 +77,7 @@ If upgrading from 1.0.x:
 
 1. **Update version** - Change dependency to `1.1.0`
 2. **Implement `getOgiriUserId()`** - Java implementations must add `long getOgiriUserId()` method
-3. **Add `findAllByUserIdAndTokenSubtype()`** - Required in `TokenRepository` for sub-token rotation
+3. **Add `findAllByUserIdAndTokenSubtype()`** - Required in `OgiriTokenRepository` for sub-token rotation
 4. **Review filter overrides** - If you register `OgiriTokenAuthenticationFilter`, auto-configuration will use your bean
 
 ## [1.0.4] - 2025-12-08

@@ -33,7 +33,7 @@ import org.springframework.security.crypto.password.PasswordEncoder
 
 class TokenServiceSubTokenTest {
   private lateinit var repository: InMemoryTokenRepository
-  private lateinit var tokenService: TokenService<TestToken>
+  private lateinit var tokenService: OgiriTokenService<TestToken>
   private val passwordEncoder: PasswordEncoder =
       object : PasswordEncoder {
         override fun encode(rawPassword: CharSequence): String = rawPassword.toString()
@@ -75,14 +75,14 @@ class TokenServiceSubTokenTest {
 
   // Custom TokenService that implements tokenFactory for TestToken
   private inner class TestTokenService(
-      repository: TokenRepository<TestToken>,
+      repository: OgiriTokenRepository<TestToken>,
       passwordEncoder: PasswordEncoder,
       userDirectory: OgiriUserDirectory,
       identifierPolicy: IdentifierPolicy,
-      subTokenRegistry: SubTokenRegistry,
+      subTokenRegistry: OgiriSubTokenRegistry,
       properties: OgiriConfigurationProperties,
   ) :
-      TokenService<TestToken>(
+      OgiriTokenService<TestToken>(
           repository,
           passwordEncoder,
           userDirectory,
@@ -94,7 +94,7 @@ class TokenServiceSubTokenTest {
         userId: Long,
         client: String,
         hashedToken: String,
-        tokenType: TokenType,
+        tokenType: OgiriTokenType,
         expiry: Instant,
         tokenSubtype: String?,
         plainTokenValue: String,
@@ -117,7 +117,7 @@ class TokenServiceSubTokenTest {
 
   @Test
   fun `default sub token is issued and returned in headers`() {
-    val registry = DefaultSubTokenRegistry(listOf(chatRegistration()))
+    val registry = DefaultOgiriSubTokenRegistry(listOf(chatRegistration()))
     tokenService =
         TestTokenService(
             repository,
@@ -131,7 +131,7 @@ class TokenServiceSubTokenTest {
 
     val chatToken = repository.findByUserIdAndClient(user.getOgiriUserId(), "clientA.chat")
     assertNotNull(chatToken)
-    assertEquals(TokenType.SUB, TokenType.of(chatToken!!.tokenType))
+    assertEquals(OgiriTokenType.SUB, OgiriTokenType.of(chatToken!!.tokenType))
     assertEquals("chat", chatToken.tokenSubtype)
     assertNotNull(headers.subTokens?.get("chat"))
   }
@@ -139,7 +139,7 @@ class TokenServiceSubTokenTest {
   @Test
   fun `opt-in sub token is only created when requested`() {
     val registry =
-        DefaultSubTokenRegistry(
+        DefaultOgiriSubTokenRegistry(
             listOf(chatRegistration(), deviceRegistration(includeByDefault = false)))
     tokenService =
         TestTokenService(
@@ -170,7 +170,7 @@ class TokenServiceSubTokenTest {
 
   @Test
   fun `validateSubToken accepts bearer payload`() {
-    val registry = DefaultSubTokenRegistry(listOf(chatRegistration()))
+    val registry = DefaultOgiriSubTokenRegistry(listOf(chatRegistration()))
     tokenService =
         TestTokenService(
             repository,
@@ -202,7 +202,7 @@ class TokenServiceSubTokenTest {
 
   @Test
   fun `primary token is created with generated client ID`() {
-    val registry = DefaultSubTokenRegistry(listOf(chatRegistration()))
+    val registry = DefaultOgiriSubTokenRegistry(listOf(chatRegistration()))
     tokenService =
         TestTokenService(
             repository,
@@ -217,12 +217,12 @@ class TokenServiceSubTokenTest {
     assertNotNull(headers.client)
     val appToken = repository.findByUserIdAndClient(user.getOgiriUserId(), headers.client!!)
     assertNotNull(appToken)
-    assertEquals(TokenType.APP, TokenType.of(appToken!!.tokenType))
+    assertEquals(OgiriTokenType.APP, OgiriTokenType.of(appToken!!.tokenType))
   }
 
   @Test
   fun `primary token creation stores plain token temporarily`() {
-    val registry = DefaultSubTokenRegistry(listOf(chatRegistration()))
+    val registry = DefaultOgiriSubTokenRegistry(listOf(chatRegistration()))
     tokenService =
         TestTokenService(
             repository,
@@ -241,7 +241,7 @@ class TokenServiceSubTokenTest {
 
   @Test
   fun `primary token rotation tracks previous token`() {
-    val registry = DefaultSubTokenRegistry(listOf())
+    val registry = DefaultOgiriSubTokenRegistry(listOf())
     tokenService =
         TestTokenService(
             repository,
@@ -263,7 +263,7 @@ class TokenServiceSubTokenTest {
 
   @Test
   fun `old tokens are cleaned when max clients exceeded`() {
-    val registry = DefaultSubTokenRegistry(listOf())
+    val registry = DefaultOgiriSubTokenRegistry(listOf())
     tokenService =
         TestTokenService(
             repository,
@@ -286,7 +286,7 @@ class TokenServiceSubTokenTest {
 
   @Test
   fun `sub token expiry respects parent token expiry`() {
-    val registry = DefaultSubTokenRegistry(listOf(chatRegistration()))
+    val registry = DefaultOgiriSubTokenRegistry(listOf(chatRegistration()))
     tokenService =
         TestTokenService(
             repository,
@@ -305,7 +305,7 @@ class TokenServiceSubTokenTest {
 
   @Test
   fun `sub token with custom expiry respects registration`() {
-    val registry = DefaultSubTokenRegistry(listOf(shortLivedChatRegistration()))
+    val registry = DefaultOgiriSubTokenRegistry(listOf(shortLivedChatRegistration()))
     tokenService =
         TestTokenService(
             repository,
@@ -325,7 +325,7 @@ class TokenServiceSubTokenTest {
 
   @Test
   fun `validateSubToken rejects expired sub token`() {
-    val registry = DefaultSubTokenRegistry(listOf(chatRegistration()))
+    val registry = DefaultOgiriSubTokenRegistry(listOf(chatRegistration()))
     tokenService =
         TestTokenService(
             repository,
@@ -348,7 +348,7 @@ class TokenServiceSubTokenTest {
 
   @Test
   fun `renewSubToken helper returns single sub-token header`() {
-    val registry = DefaultSubTokenRegistry(listOf(deviceRegistration(includeByDefault = true)))
+    val registry = DefaultOgiriSubTokenRegistry(listOf(deviceRegistration(includeByDefault = true)))
     tokenService =
         TestTokenService(
             repository,
@@ -367,7 +367,7 @@ class TokenServiceSubTokenTest {
 
   @Test
   fun `getSubToken returns stored base token`() {
-    val registry = DefaultSubTokenRegistry(listOf(chatRegistration()))
+    val registry = DefaultOgiriSubTokenRegistry(listOf(chatRegistration()))
     tokenService =
         TestTokenService(
             repository,
@@ -384,8 +384,8 @@ class TokenServiceSubTokenTest {
     assertEquals("base-client.chat", stored!!.client)
   }
 
-  private fun chatRegistration(): SubTokenRegistration =
-      object : SubTokenRegistration {
+  private fun chatRegistration(): OgiriSubTokenRegistration =
+      object : OgiriSubTokenRegistration {
         override val name: String = "chat"
         override val includeByDefault: Boolean = true
 
@@ -395,7 +395,7 @@ class TokenServiceSubTokenTest {
       }
 
   private fun deviceRegistration(includeByDefault: Boolean) =
-      object : SubTokenRegistration {
+      object : OgiriSubTokenRegistration {
         override val name: String = "device"
         override val includeByDefault: Boolean = includeByDefault
 
@@ -404,8 +404,8 @@ class TokenServiceSubTokenTest {
         override fun expiry(parentExpiry: Instant): Instant = parentExpiry
       }
 
-  private fun shortLivedChatRegistration(): SubTokenRegistration =
-      object : SubTokenRegistration {
+  private fun shortLivedChatRegistration(): OgiriSubTokenRegistration =
+      object : OgiriSubTokenRegistration {
         override val name: String = "chat"
         override val includeByDefault: Boolean = true
 

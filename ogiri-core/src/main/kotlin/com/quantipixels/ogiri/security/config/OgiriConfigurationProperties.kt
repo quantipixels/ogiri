@@ -126,7 +126,7 @@ open class OgiriConfigurationProperties {
      *
      * New tokens created by TokenService.createNewAuthToken() will expire after this duration. This
      * applies to APP tokens only; sub-tokens can override this by implementing custom expiry logic
-     * in SubTokenRegistration.expiry().
+     * in OgiriSubTokenRegistration.expiry().
      *
      * Default: 14 Valid Range: 1 - any positive integer
      *
@@ -184,12 +184,12 @@ open class OgiriConfigurationProperties {
   /**
    * Scheduled token cleanup job configuration.
    *
-   * The [TokenCleanupJob] runs periodically to delete expired tokens from the database, preventing
-   * accumulation of stale data.
+   * The [OgiriTokenCleanupJob] runs periodically to delete expired tokens from the database,
+   * preventing accumulation of stale data.
    */
   open class CleanupProperties {
     /**
-     * Enable the scheduled TokenCleanupJob.
+     * Enable the scheduled OgiriTokenCleanupJob.
      *
      * When true, the cleanup job runs according to the cron schedule and deletes all tokens where
      * expiryAt < now(). When false, the cleanup job is not registered or executed.

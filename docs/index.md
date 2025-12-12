@@ -15,7 +15,7 @@ Add the dependency and implement two interfaces:
 
 ```kotlin
 // 1. Add dependency
-implementation("com.quantipixels.ogiri:ogiri-core:1.0.1")
+implementation("com.quantipixels.ogiri:ogiri-core:1.2.0")
 
 // 2. Connect to your user system
 @Component
@@ -29,8 +29,8 @@ class MyUserDirectory(private val userService: UserService) : OgiriUserDirectory
 
 // 3. Declare public routes
 @Component
-class MyRouteRegistry : RouteRegistry {
-  override fun registrations() = listOf(Route.post("/api/auth/**"))
+class MyRouteRegistry : OgiriRouteRegistry {
+  override fun registrations() = listOf(OgiriRoute.post("/api/auth/**"))
 }
 ```
 
@@ -40,9 +40,15 @@ That's it. Ògiri auto-configures the security filter chain.
 
 ## Documentation
 
-### Integration
+### Getting Started
 
 - [Quickstart](quickstart.md) - Get running in 5 minutes
+- [Interface-First Design](interface-first-design.md) - Architecture and design philosophy
+- [Implementation Guide](implementation-guide.md) - Complete step-by-step implementation
+- [Migration Guide](migration-guide.md) - Upgrading to 1.2.0
+
+### Integration & Configuration
+
 - [Configuration](configuration.md) - All configuration properties
 - [Database Integration](database.md) - JPA, MongoDB, Redis, custom adapters
 - [Sub-tokens](sub-tokens.md) - Device, chat, API tokens

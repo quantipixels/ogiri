@@ -12,7 +12,7 @@
  */
 package com.quantipixels.ogiri.security.testutil
 
-import com.quantipixels.ogiri.security.tokens.TokenRepository
+import com.quantipixels.ogiri.security.tokens.OgiriTokenRepository
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicLong
 
@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicLong
  *
  * Thread-safe operations are supported through synchronized blocks.
  */
-class InMemoryTokenRepository : TokenRepository<TestToken> {
+class InMemoryTokenRepository : OgiriTokenRepository<TestToken> {
   private val tokens = mutableListOf<TestToken>()
   private val idSequence = AtomicLong(1L)
 

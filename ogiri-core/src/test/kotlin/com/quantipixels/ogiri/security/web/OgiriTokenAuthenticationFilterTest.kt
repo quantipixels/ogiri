@@ -17,16 +17,16 @@ import com.quantipixels.ogiri.security.core.AuthHeader
 import com.quantipixels.ogiri.security.core.DefaultIdentifierPolicy
 import com.quantipixels.ogiri.security.core.IdentifierPolicy
 import com.quantipixels.ogiri.security.helpers.AuthenticationBypassDecider
-import com.quantipixels.ogiri.security.routes.Route
-import com.quantipixels.ogiri.security.routes.RouteCatalog
-import com.quantipixels.ogiri.security.routes.RouteRegistry
+import com.quantipixels.ogiri.security.routes.OgiriRoute
+import com.quantipixels.ogiri.security.routes.OgiriRouteCatalog
+import com.quantipixels.ogiri.security.routes.OgiriRouteRegistry
 import com.quantipixels.ogiri.security.spi.OgiriUserDirectory
 import com.quantipixels.ogiri.security.testutil.InMemoryTokenRepository
 import com.quantipixels.ogiri.security.testutil.TestFixtures
 import com.quantipixels.ogiri.security.testutil.TestToken
-import com.quantipixels.ogiri.security.tokens.DefaultSubTokenRegistry
-import com.quantipixels.ogiri.security.tokens.TokenRepository
-import com.quantipixels.ogiri.security.tokens.TokenService
+import com.quantipixels.ogiri.security.tokens.DefaultOgiriSubTokenRegistry
+import com.quantipixels.ogiri.security.tokens.OgiriTokenRepository
+import com.quantipixels.ogiri.security.tokens.OgiriTokenService
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import java.time.Instant
@@ -77,14 +77,14 @@ class OgiriTokenAuthenticationFilterTest {
 
   // Custom TokenService that implements tokenFactory for TestToken
   private inner class TestTokenService(
-      repository: TokenRepository<TestToken>,
+      repository: OgiriTokenRepository<TestToken>,
       passwordEncoder: PasswordEncoder,
       userDirectory: OgiriUserDirectory,
       identifierPolicy: IdentifierPolicy,
-      subTokenRegistry: com.quantipixels.ogiri.security.tokens.SubTokenRegistry,
+      subTokenRegistry: com.quantipixels.ogiri.security.tokens.OgiriSubTokenRegistry,
       properties: OgiriConfigurationProperties,
   ) :
-      TokenService<TestToken>(
+      OgiriTokenService<TestToken>(
           repository,
           passwordEncoder,
           userDirectory,
@@ -96,7 +96,7 @@ class OgiriTokenAuthenticationFilterTest {
         userId: Long,
         client: String,
         hashedToken: String,
-        tokenType: com.quantipixels.ogiri.security.tokens.TokenType,
+        tokenType: com.quantipixels.ogiri.security.tokens.OgiriTokenType,
         expiry: Instant,
         tokenSubtype: String?,
         plainTokenValue: String,
@@ -120,10 +120,10 @@ class OgiriTokenAuthenticationFilterTest {
   @Test
   fun `filter bypasses when decider allows`() {
     val bypassRoutes =
-        RouteCatalog(
+        OgiriRouteCatalog(
             listOf(
-                object : RouteRegistry {
-                  override fun routes() = listOf(Route.get("/public", useAuth = false))
+                object : OgiriRouteRegistry {
+                  override fun routes() = listOf(OgiriRoute.get("/public", useAuth = false))
                 },
             ),
         )
@@ -200,16 +200,16 @@ class OgiriTokenAuthenticationFilterTest {
   }
 
   private data class FilterFixture(
-      val repository: TokenRepository<TestToken>,
-      val tokenService: TokenService<TestToken>,
+      val repository: OgiriTokenRepository<TestToken>,
+      val tokenService: OgiriTokenService<TestToken>,
       val entryPoint: RecordingEntryPoint,
       val filter: OgiriTokenAuthenticationFilter,
   )
 
   private fun newFilter(
-      repository: TokenRepository<TestToken> = InMemoryTokenRepository(),
+      repository: OgiriTokenRepository<TestToken> = InMemoryTokenRepository(),
       bypassDecider: AuthenticationBypassDecider =
-          AuthenticationBypassDecider(RouteCatalog(emptyList())),
+          AuthenticationBypassDecider(OgiriRouteCatalog(emptyList())),
       entryPoint: RecordingEntryPoint = RecordingEntryPoint(),
   ): FilterFixture {
     val properties = OgiriConfigurationProperties()
@@ -219,7 +219,7 @@ class OgiriTokenAuthenticationFilterTest {
             passwordEncoder,
             userDirectory,
             identifierPolicy,
-            DefaultSubTokenRegistry(emptyList()),
+            DefaultOgiriSubTokenRegistry(emptyList()),
             defaultAuthProperties(),
         )
     val filter =

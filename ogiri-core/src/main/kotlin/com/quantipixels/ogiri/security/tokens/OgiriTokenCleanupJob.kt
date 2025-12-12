@@ -16,10 +16,10 @@ import java.time.Instant
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 
-class TokenCleanupJob(
-    private val tokenService: TokenService<*>,
+class OgiriTokenCleanupJob(
+    private val tokenService: OgiriTokenService<*>,
 ) {
-  private val logger = LoggerFactory.getLogger(TokenCleanupJob::class.java)
+  private val logger = LoggerFactory.getLogger(OgiriTokenCleanupJob::class.java)
 
   @Scheduled(fixedDelayString = "\${ogiri.auth.tokens.cleanup-interval-ms:900000}")
   fun cleanupExpiredTokens() {

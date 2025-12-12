@@ -17,7 +17,7 @@ import java.nio.charset.StandardCharsets
 import org.springframework.http.HttpMethod
 
 /** Describes an HTTP route for public/auth and rate-limit configuration. */
-class Route(
+class OgiriRoute(
     val method: HttpMethod,
     val path: String,
     val rateLimit: Boolean = true,
@@ -64,34 +64,34 @@ class Route(
         rateLimit: Boolean = true,
         useAuth: Boolean = true,
         rateLimitPermitsPerMinute: Long? = null,
-    ) = Route(HttpMethod.GET, path, rateLimit, useAuth, rateLimitPermitsPerMinute)
+    ) = OgiriRoute(HttpMethod.GET, path, rateLimit, useAuth, rateLimitPermitsPerMinute)
 
     fun post(
         path: String,
         rateLimit: Boolean = true,
         useAuth: Boolean = true,
         rateLimitPermitsPerMinute: Long? = null,
-    ) = Route(HttpMethod.POST, path, rateLimit, useAuth, rateLimitPermitsPerMinute)
+    ) = OgiriRoute(HttpMethod.POST, path, rateLimit, useAuth, rateLimitPermitsPerMinute)
 
     fun put(
         path: String,
         rateLimit: Boolean = true,
         useAuth: Boolean = true,
         rateLimitPermitsPerMinute: Long? = null,
-    ) = Route(HttpMethod.PUT, path, rateLimit, useAuth, rateLimitPermitsPerMinute)
+    ) = OgiriRoute(HttpMethod.PUT, path, rateLimit, useAuth, rateLimitPermitsPerMinute)
 
     fun patch(
         path: String,
         rateLimit: Boolean = true,
         useAuth: Boolean = true,
         rateLimitPermitsPerMinute: Long? = null,
-    ) = Route(HttpMethod.PATCH, path, rateLimit, useAuth, rateLimitPermitsPerMinute)
+    ) = OgiriRoute(HttpMethod.PATCH, path, rateLimit, useAuth, rateLimitPermitsPerMinute)
 
     fun delete(
         path: String,
         rateLimit: Boolean = true,
         useAuth: Boolean = true,
         rateLimitPermitsPerMinute: Long? = null,
-    ) = Route(HttpMethod.DELETE, path, rateLimit, useAuth, rateLimitPermitsPerMinute)
+    ) = OgiriRoute(HttpMethod.DELETE, path, rateLimit, useAuth, rateLimitPermitsPerMinute)
   }
 }

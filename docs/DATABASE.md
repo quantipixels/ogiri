@@ -1,25 +1,25 @@
 # Database Integration
 
-Ògiri is database-agnostic. Implement `TokenRepository<T>` for your database of choice.
+Ògiri is database-agnostic. Implement `OgiriTokenRepository<T>` for your database of choice.
 
 ## Token Model
 
 Your token entity must support these fields:
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `userId` | Long | Yes | User identifier |
-| `client` | String | Yes | Client/app identifier |
-| `token` | String | Yes | BCrypt hash |
-| `tokenType` | String | Yes | "APP" or sub-token name |
-| `expiryAt` | Instant | Yes | Expiration timestamp |
-| `lastToken` | String | No | Previous token (rotation grace) |
-| `previousToken` | String | No | Token before last |
-| `tokenSubtype` | String | No | Sub-token name |
-| `createdAt` | Instant | Yes | Creation timestamp |
-| `updatedAt` | Instant | Yes | Last update |
-| `tokenUpdatedAt` | Instant | Yes | Last rotation |
-| `lastUsedAt` | Instant | No | Last access |
+| Field            | Type    | Required | Description                     |
+| ---------------- | ------- | -------- | ------------------------------- |
+| `userId`         | Long    | Yes      | User identifier                 |
+| `client`         | String  | Yes      | Client/app identifier           |
+| `token`          | String  | Yes      | BCrypt hash                     |
+| `tokenType`      | String  | Yes      | "APP" or sub-token name         |
+| `expiryAt`       | Instant | Yes      | Expiration timestamp            |
+| `lastToken`      | String  | No       | Previous token (rotation grace) |
+| `previousToken`  | String  | No       | Token before last               |
+| `tokenSubtype`   | String  | No       | Sub-token name                  |
+| `createdAt`      | Instant | Yes      | Creation timestamp              |
+| `updatedAt`      | Instant | Yes      | Last update                     |
+| `tokenUpdatedAt` | Instant | Yes      | Last rotation                   |
+| `lastUsedAt`     | Instant | No       | Last access                     |
 
 **Constraints:**
 - Unique constraint on `(userId, client)`
@@ -33,7 +33,7 @@ Use the built-in `Token` entity:
 
 ```kotlin
 @Repository
-interface MyTokenRepository : JpaRepository<Token, Long>, TokenRepository<Token>
+interface MyTokenRepository : JpaRepository<Token, Long>, OgiriTokenRepository<Token>
 ```
 
 <details>
@@ -41,36 +41,41 @@ interface MyTokenRepository : JpaRepository<Token, Long>, TokenRepository<Token>
 
 ```java
 @Repository
-public interface MyTokenRepository extends JpaRepository<Token, Long>, TokenRepository<Token> {}
+public interface MyTokenRepository extends JpaRepository<Token, Long>, OgiriTokenRepository<Token> {}
 ```
 </details>
 
 ### Custom JPA Entity
 
-Extend `BaseToken` for custom table names:
+Extend `OgiriBaseToken` for custom table names:
 
 ```kotlin
 @Entity
 @Table(name = "app_tokens")
 data class AppToken(
-  userId: Long,
-  client: String,
-  token: String,
-  expiryAt: Instant,
-  // ... other fields
-) : BaseToken(userId, client, token, TokenType.APP, expiryAt)
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    override val id: Long = 0,
+    override val userId: Long,
+    override val client: String,
+    override var token: String,
+    override val tokenType: String = "APP",
+    override var expiryAt: Instant,
+    @CreationTimestamp override val createdAt: Instant = Instant.now(),
+    @UpdateTimestamp override val updatedAt: Instant = Instant.now(),
+    override var tokenUpdatedAt: Instant = Instant.now(),
+) : OgiriBaseToken()
 
 @Repository
-interface AppTokenRepository : JpaRepository<AppToken, Long>, TokenRepository<AppToken>
+interface AppTokenRepository : JpaRepository<AppToken, Long>, OgiriTokenRepository<AppToken>
 ```
 
 ### MongoDB
 
-Implement `TokenRepository<T>` directly:
+Implement `OgiriTokenRepository<T>` directly:
 
 ```kotlin
 @Repository
-class MongoTokenRepository(private val mongoTemplate: MongoTemplate) : TokenRepository<MongoToken> {
+class MongoTokenRepository(private val mongoTemplate: MongoTemplate) : OgiriTokenRepository<MongoToken> {
 
   override fun findByUserIdAndClient(userId: Long, client: String): MongoToken? {
     val query = Query(Criteria.where("userId").`is`(userId).and("client").`is`(client))
@@ -94,7 +99,7 @@ class MongoTokenRepository(private val mongoTemplate: MongoTemplate) : TokenRepo
 
 ```kotlin
 @Repository
-class RedisTokenRepository(private val redisTemplate: RedisTemplate<String, Token>) : TokenRepository<Token> {
+class RedisTokenRepository(private val redisTemplate: RedisTemplate<String, Token>) : OgiriTokenRepository<Token> {
 
   override fun findByUserIdAndClient(userId: Long, client: String): Token? {
     return redisTemplate.opsForValue().get("token:$userId:$client")
@@ -123,7 +128,7 @@ Adapt an existing table:
 
 ```kotlin
 @Repository
-class LegacyTokenAdapter(private val legacyService: LegacyTokenService) : TokenRepository<LegacyToken> {
+class LegacyTokenAdapter(private val legacyService: LegacyTokenService) : OgiriTokenRepository<LegacyToken> {
 
   override fun findByUserIdAndClient(userId: Long, client: String) =
     legacyService.findByUserIdAndSessionId(userId, client)
@@ -142,12 +147,12 @@ class LegacyTokenAdapter(private val legacyService: LegacyTokenService) : TokenR
 
 Schemas are bundled in `ogiri-core/src/main/resources/ogiri/db/`:
 
-| Database | File |
-|----------|------|
-| PostgreSQL | `ogiri-user-tokens.sql` |
-| MySQL | `ogiri-user-tokens-mysql.sql` |
-| H2 | `ogiri-user-tokens-h2.sql` |
-| MongoDB | `ogiri-tokens-mongodb.js` |
+| Database   | File                          |
+| ---------- | ----------------------------- |
+| PostgreSQL | `ogiri-user-tokens.sql`       |
+| MySQL      | `ogiri-user-tokens-mysql.sql` |
+| H2         | `ogiri-user-tokens-h2.sql`    |
+| MongoDB    | `ogiri-tokens-mongodb.js`     |
 
 ### Using with Flyway
 

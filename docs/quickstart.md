@@ -6,12 +6,12 @@ Get ogiri integrated into your Spring Boot application in 5 minutes.
 
 **Gradle (Kotlin DSL):**
 ```kotlin
-implementation("com.quantipixels.ogiri:ogiri-core:1.0.1")
+implementation("com.quantipixels.ogiri:ogiri-core:1.2.0")
 ```
 
 **Gradle (Groovy):**
 ```groovy
-implementation 'com.quantipixels.ogiri:ogiri-core:1.0.1'
+implementation 'com.quantipixels.ogiri:ogiri-core:1.2.0'
 ```
 
 **Maven:**
@@ -19,7 +19,7 @@ implementation 'com.quantipixels.ogiri:ogiri-core:1.0.1'
 <dependency>
   <groupId>com.quantipixels.ogiri</groupId>
   <artifactId>ogiri-core</artifactId>
-  <version>1.0.1</version>
+  <version>1.2.0</version>
 </dependency>
 ```
 
@@ -98,11 +98,11 @@ Declares which routes bypass authentication:
 
 ```kotlin
 @Component
-class MyRouteRegistry : RouteRegistry {
+class MyRouteRegistry : OgiriRouteRegistry {
   override fun registrations() = listOf(
-    Route.post("/api/auth/login"),
-    Route.post("/api/auth/register"),
-    Route.get("/api/health"),
+    OgiriRoute.post("/api/auth/login"),
+    OgiriRoute.post("/api/auth/register"),
+    OgiriRoute.get("/api/health"),
   )
 }
 ```
@@ -112,26 +112,26 @@ class MyRouteRegistry : RouteRegistry {
 
 ```java
 @Component
-public class MyRouteRegistry implements RouteRegistry {
+public class MyRouteRegistry implements OgiriRouteRegistry {
   @Override
-  public List<Route> registrations() {
+  public List<OgiriRoute> registrations() {
     return List.of(
-      Route.post("/api/auth/login"),
-      Route.post("/api/auth/register"),
-      Route.get("/api/health")
+      OgiriRoute.post("/api/auth/login"),
+      OgiriRoute.post("/api/auth/register"),
+      OgiriRoute.get("/api/health")
     );
   }
 }
 ```
 </details>
 
-### TokenRepository
+### OgiriTokenRepository
 
 Implement token persistence. For JPA:
 
 ```kotlin
 @Repository
-interface MyTokenRepository : JpaRepository<Token, Long>, TokenRepository<Token>
+interface MyTokenRepository : JpaRepository<Token, Long>, OgiriTokenRepository<Token>
 ```
 
 <details>
@@ -139,7 +139,7 @@ interface MyTokenRepository : JpaRepository<Token, Long>, TokenRepository<Token>
 
 ```java
 @Repository
-public interface MyTokenRepository extends JpaRepository<Token, Long>, TokenRepository<Token> {}
+public interface MyTokenRepository extends JpaRepository<Token, Long>, OgiriTokenRepository<Token> {}
 ```
 </details>
 
@@ -149,7 +149,7 @@ See [Database Integration](database.md) for MongoDB, Redis, and custom implement
 
 ```kotlin
 @RestController
-class AuthController(private val tokenService: TokenService<Token>) {
+class AuthController(private val tokenService: OgiriTokenService<Token>) {
 
   @PostMapping("/api/auth/login")
   fun login(@RequestBody request: LoginRequest, response: HttpServletResponse): ResponseEntity<*> {
@@ -167,9 +167,9 @@ class AuthController(private val tokenService: TokenService<Token>) {
 ```java
 @RestController
 public class AuthController {
-  private final TokenService<Token> tokenService;
+  private final OgiriTokenService<Token> tokenService;
 
-  public AuthController(TokenService<Token> tokenService) {
+  public AuthController(OgiriTokenService<Token> tokenService) {
     this.tokenService = tokenService;
   }
 
@@ -206,10 +206,10 @@ expiry: 2025-12-25T00:00:00Z
 
 ## Next Steps
 
-| Topic | Description |
-|-------|-------------|
-| [Configuration](configuration.md) | Token rotation, cleanup schedules, batch windows |
-| [Database Integration](database.md) | JPA, MongoDB, Redis, custom implementations |
-| [Sub-tokens](sub-tokens.md) | Device tokens, chat tokens, API tokens |
-| [Authentication Flow](authentication.md) | Request lifecycle, rotation policies, headers |
-| [Sample Applications](https://github.com/mosobande/ogiri/tree/main/sample) | Complete Java and Kotlin examples |
+| Topic                                                                      | Description                                      |
+| -------------------------------------------------------------------------- | ------------------------------------------------ |
+| [Configuration](configuration.md)                                          | Token rotation, cleanup schedules, batch windows |
+| [Database Integration](database.md)                                        | JPA, MongoDB, Redis, custom implementations      |
+| [Sub-tokens](sub-tokens.md)                                                | Device tokens, chat tokens, API tokens           |
+| [Authentication Flow](authentication.md)                                   | Request lifecycle, rotation policies, headers    |
+| [Sample Applications](https://github.com/mosobande/ogiri/tree/main/sample) | Complete Java and Kotlin examples                |

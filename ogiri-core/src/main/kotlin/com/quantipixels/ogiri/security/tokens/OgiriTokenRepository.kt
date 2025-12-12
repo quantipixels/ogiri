@@ -35,7 +35,7 @@ import java.time.Instant
  * Example - JPA Implementation:
  * ```kotlin
  * @Repository
- * interface JpaTokenRepository : JpaRepository<MyToken, Long>, TokenRepository<MyToken> {
+ * interface JpaTokenRepository : JpaRepository<MyToken, Long>, OgiriTokenRepository<MyToken> {
  *   override fun findAllByUserId(userId: Long): List<MyToken> =
  *     findAllByUserIdOrderByUpdatedAtDesc(userId)
  *
@@ -46,14 +46,14 @@ import java.time.Instant
  * Example - JDBC Implementation:
  * ```kotlin
  * @Repository
- * class JdbcTokenRepository(private val jdbcTemplate: JdbcTemplate) : TokenRepository<JdbcToken> {
+ * class JdbcTokenRepository(private val jdbcTemplate: JdbcTemplate) : OgiriTokenRepository<JdbcToken> {
  *   override fun save(token: JdbcToken): JdbcToken {
  *     // INSERT or UPDATE logic
  *   }
  * }
  * ```
  */
-interface TokenRepository<T : BaseToken> {
+interface OgiriTokenRepository<T : OgiriToken> {
   /**
    * Save or update a token entity.
    *
@@ -126,7 +126,7 @@ interface TokenRepository<T : BaseToken> {
   /**
    * Find all tokens that have expired before a specific cutoff time.
    *
-   * Used by TokenCleanupJob to identify and remove stale tokens.
+   * Used by OgiriTokenCleanupJob to identify and remove stale tokens.
    *
    * @param cutoff The expiry time threshold (tokens before this are expired)
    * @return List of expired tokens (empty if none found)

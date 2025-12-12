@@ -11,8 +11,8 @@ Minimal Spring Boot applications demonstrating ogiri integration.
 
 Both samples implement the same functionality:
 - `OgiriUserDirectory` - In-memory user directory
-- `RouteRegistry` - Public route declarations
-- `TokenRepository` - JPA token persistence
+- `OgiriRouteRegistry` - Public route declarations
+- `OgiriTokenRepository` - JPA token persistence
 - Health and authenticated endpoints
 
 ## Prerequisites

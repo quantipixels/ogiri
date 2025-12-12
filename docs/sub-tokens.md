@@ -11,11 +11,11 @@ Sub-tokens are specialized tokens issued alongside the main APP token for specif
 
 ## Creating Sub-Tokens
 
-Implement `SubTokenRegistration`:
+Implement `OgiriSubTokenRegistration`:
 
 ```kotlin
 @Bean
-fun deviceSubToken(): SubTokenRegistration = object : SubTokenRegistration {
+fun deviceSubToken(): OgiriSubTokenRegistration = object : OgiriSubTokenRegistration {
   override val name = "device"
   override val includeByDefault = true  // Issued with every APP token
 
@@ -32,8 +32,8 @@ fun deviceSubToken(): SubTokenRegistration = object : SubTokenRegistration {
 
 ```java
 @Bean
-public SubTokenRegistration deviceSubToken() {
-  return new SubTokenRegistration() {
+public OgiriSubTokenRegistration deviceSubToken() {
+  return new OgiriSubTokenRegistration() {
     @Override public String getName() { return "device"; }
     @Override public boolean isIncludeByDefault() { return true; }
     @Override public String clientIdFor(String parentClientId) {
@@ -50,13 +50,13 @@ public SubTokenRegistration deviceSubToken() {
 
 ## Sub-Token Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `name` | String | Unique identifier ("device", "chat", "api") |
-| `includeByDefault` | Boolean | Auto-issue with every APP token |
-| `clientIdFor()` | Function | Derive sub-token client ID from parent |
-| `expiry()` | Function | Calculate expiry from parent expiry |
-| `validate()` | Function | Optional custom validation logic |
+| Property           | Type     | Description                                 |
+| ------------------ | -------- | ------------------------------------------- |
+| `name`             | String   | Unique identifier ("device", "chat", "api") |
+| `includeByDefault` | Boolean  | Auto-issue with every APP token             |
+| `clientIdFor()`    | Function | Derive sub-token client ID from parent      |
+| `expiry()`         | Function | Calculate expiry from parent expiry         |
+| `validate()`       | Function | Optional custom validation logic            |
 
 ## Header Format
 
@@ -181,9 +181,9 @@ fun chatSubToken(): SubTokenRegistration = object : SubTokenRegistration {
 
 ## Troubleshooting
 
-| Issue | Cause | Solution |
-|-------|-------|----------|
-| Sub-tokens not in response | `includeByDefault = false` | Request renewal explicitly |
-| Token expires too quickly | `expiry()` returns early time | Check expiry calculation |
-| Sub-token not found on renewal | Wrong name | Verify registration name matches |
-| Header parsing fails | Invalid Base64 | Check `JsonCodec` encoding |
+| Issue                          | Cause                         | Solution                         |
+| ------------------------------ | ----------------------------- | -------------------------------- |
+| Sub-tokens not in response     | `includeByDefault = false`    | Request renewal explicitly       |
+| Token expires too quickly      | `expiry()` returns early time | Check expiry calculation         |
+| Sub-token not found on renewal | Wrong name                    | Verify registration name matches |
+| Header parsing fails           | Invalid Base64                | Check `JsonCodec` encoding       |

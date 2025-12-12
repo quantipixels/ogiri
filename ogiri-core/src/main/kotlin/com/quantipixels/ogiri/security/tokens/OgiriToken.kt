@@ -15,112 +15,121 @@ package com.quantipixels.ogiri.security.tokens
 import java.time.Instant
 
 /**
- * Table-agnostic base token abstraction.
+ * Core interface for all Ogiri token implementations.
  *
- * This abstract class defines the contract for all token implementations without imposing any
- * database-specific dependencies or annotations.
+ * This interface defines the contract for token entities without imposing implementation
+ * constraints. Users can:
+ * - Implement this interface directly for maximum flexibility
+ * - Extend [OgiriBaseToken] for a convenience implementation with sensible defaults
  *
- * Users should extend this class and provide their own implementations of required properties using
- * their preferred persistence mechanism:
- * - JPA entities with @Entity, @Column, etc.
- * - JDBC data classes with manual SQL
- * - MongoDB @Document classes
- * - Redis data classes
- * - Custom implementations
- *
- * Example - JPA Implementation:
+ * Example - Direct Interface Implementation:
  * ```kotlin
  * @Entity
- * @Table(name = "user_tokens")
- * data class JpaToken(
- *   @Id @GeneratedValue override val id: Long = 0,
- *   @Column(name = "user_id") override val userId: Long,
- *   @Column(name = "client_id") override val client: String,
- *   @Column(name = "token_hash") override val token: String,
- *   // ... remaining fields
- * ) : BaseToken()
+ * @Table(name = "my_tokens")
+ * data class MyToken(
+ *     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+ *     override val id: Long = 0,
+ *     @Column(name = "user_id") override val userId: Long,
+ *     @Column(name = "client_id") override val client: String,
+ *     @Column(name = "token_hash") override var token: String,
+ *     @Column(name = "token_type") override val tokenType: String = "APP",
+ *     @Column(name = "expiry_at") override var expiryAt: Instant,
+ *     @CreationTimestamp override val createdAt: Instant = Instant.now(),
+ *     @UpdateTimestamp override val updatedAt: Instant = Instant.now(),
+ *     @Column(name = "token_updated_at") override var tokenUpdatedAt: Instant = Instant.now(),
+ *     @Column(name = "token_subtype") override var tokenSubtype: String? = null,
+ *     @Column(name = "last_token_hash") override var lastToken: String? = null,
+ *     @Column(name = "previous_token_hash") override var previousToken: String? = null,
+ *     @Column(name = "last_used_at") override var lastUsedAt: Instant? = null,
+ *     // Custom fields for your application
+ *     @Column(name = "metadata") var metadata: String? = null,
+ * ) : OgiriToken {
+ *     @Transient
+ *     override var plainToken: String? = null
+ * }
  * ```
  *
- * Example - JDBC/Plain Kotlin:
+ * Example - Using Base Class:
  * ```kotlin
- * data class JdbcToken(
- *   override val id: Long = 0,
- *   override val userId: Long,
- *   override val client: String,
- *   override val token: String,
- *   // ... remaining fields
- * ) : BaseToken()
+ * @Entity
+ * data class MyToken(
+ *     override val id: Long = 0,
+ *     override val userId: Long,
+ *     // ... remaining fields
+ * ) : OgiriBaseToken()
  * ```
  */
-abstract class BaseToken {
+interface OgiriToken {
   /** Unique token identifier (primary key). Database auto-increment recommended. */
-  abstract val id: Long
+  val id: Long
 
   /** User identifier associated with this token. Should be indexed for efficient lookups. */
-  abstract val userId: Long
+  val userId: Long
 
   /**
    * Client/application identifier. Combined with userId for unique constraint. Should be indexed.
    */
-  abstract val client: String
+  val client: String
 
   /**
    * Hashed token value (never plaintext). Use BCrypt or similar hashing algorithm. Always stored in
    * database.
    */
-  abstract var token: String
+  var token: String
 
   /**
    * Token type classifier. Default: "APP" for primary tokens. Custom: "device", "chat", etc. for
    * sub-tokens.
    */
-  abstract val tokenType: String
+  val tokenType: String
 
   /**
    * Token expiration timestamp (UTC). Should be indexed for efficient cleanup of expired tokens.
    */
-  abstract var expiryAt: Instant
+  var expiryAt: Instant
 
   /**
    * Timestamp when token was created. Usually auto-populated (Instant.now() or database DEFAULT).
    * Not updatable after creation.
    */
-  abstract val createdAt: Instant
+  val createdAt: Instant
 
   /** Timestamp when token was last updated. Usually auto-updated on any row modification. */
-  abstract val updatedAt: Instant
+  val updatedAt: Instant
 
   /** Timestamp when token rotation last occurred. Used for token rotation policy decisions. */
-  abstract var tokenUpdatedAt: Instant
+  var tokenUpdatedAt: Instant
 
   /**
    * Optional sub-token identifier. Used to distinguish different token types within same token
    * record. Example: "device", "chat", "api"
    */
-  open var tokenSubtype: String? = null
+  var tokenSubtype: String?
 
   /**
    * Previous token hash (for grace period during rotation). Allows brief window where old token
    * still works while new token is issued.
    */
-  open var lastToken: String? = null
+  var lastToken: String?
 
   /**
    * Token before last (extended grace period). For additional safety during token rotation cascade.
    */
-  open var previousToken: String? = null
+  var previousToken: String?
 
   /**
    * Last timestamp this token was successfully used for authentication. Useful for monitoring and
    * cleanup of stale tokens.
    */
-  open var lastUsedAt: Instant? = null
+  var lastUsedAt: Instant?
 
   /**
    * Plain (unhashed) token value. NEVER persisted to database. Only exists in-memory temporarily
    * during token creation. Sent to client for authentication headers.
+   *
+   * Implementations using JPA/Hibernate should mark this with @Transient.
    */
-  var plainToken: String? = null
+  var plainToken: String?
 
   /**
    * Check if token has expired.
@@ -129,7 +138,4 @@ abstract class BaseToken {
    * @return true if expiryAt is before now, false otherwise
    */
   fun isExpired(now: Instant = Instant.now()): Boolean = expiryAt.isBefore(now)
-
-  override fun toString(): String =
-      "Token(id=$id, userId=$userId, client=$client, tokenType=$tokenType, expiryAt=$expiryAt)"
 }

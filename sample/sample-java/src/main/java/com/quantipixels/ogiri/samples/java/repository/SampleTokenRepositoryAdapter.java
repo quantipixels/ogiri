@@ -13,7 +13,7 @@
 package com.quantipixels.ogiri.samples.java.repository;
 
 import com.quantipixels.ogiri.samples.java.entity.SampleToken;
-import com.quantipixels.ogiri.security.tokens.TokenRepository;
+import com.quantipixels.ogiri.security.tokens.OgiriTokenRepository;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
@@ -29,7 +29,7 @@ import org.springframework.stereotype.Repository;
  * and JpaRepository.save() which have different generic type bounds.
  */
 @Repository
-public class SampleTokenRepositoryAdapter implements TokenRepository<SampleToken> {
+public class SampleTokenRepositoryAdapter implements OgiriTokenRepository<SampleToken> {
 
   private final SampleTokenRepository jpaRepository;
 

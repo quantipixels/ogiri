@@ -17,9 +17,9 @@ import com.quantipixels.ogiri.samples.kotlin.repository.SampleTokenRepository
 import com.quantipixels.ogiri.security.config.OgiriConfigurationProperties
 import com.quantipixels.ogiri.security.core.IdentifierPolicy
 import com.quantipixels.ogiri.security.spi.OgiriUserDirectory
-import com.quantipixels.ogiri.security.tokens.SubTokenRegistry
-import com.quantipixels.ogiri.security.tokens.TokenService
-import com.quantipixels.ogiri.security.tokens.TokenType
+import com.quantipixels.ogiri.security.tokens.OgiriSubTokenRegistry
+import com.quantipixels.ogiri.security.tokens.OgiriTokenService
+import com.quantipixels.ogiri.security.tokens.OgiriTokenType
 import java.time.Instant
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -42,10 +42,10 @@ class SampleTokenService(
     passwordEncoder: PasswordEncoder,
     userDirectory: OgiriUserDirectory,
     identifierPolicy: IdentifierPolicy,
-    subTokenRegistry: SubTokenRegistry,
+    subTokenRegistry: OgiriSubTokenRegistry,
     properties: OgiriConfigurationProperties,
 ) :
-    TokenService<SampleToken>(
+    OgiriTokenService<SampleToken>(
         sampleTokenRepository,
         passwordEncoder,
         userDirectory,
@@ -78,7 +78,7 @@ class SampleTokenService(
       userId: Long,
       client: String,
       hashedToken: String,
-      tokenType: TokenType,
+      tokenType: OgiriTokenType,
       expiry: Instant,
       tokenSubtype: String?,
       plainTokenValue: String,

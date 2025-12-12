@@ -12,7 +12,7 @@
  */
 package com.quantipixels.ogiri.security.testutil
 
-import com.quantipixels.ogiri.security.tokens.BaseToken
+import com.quantipixels.ogiri.security.tokens.OgiriBaseToken
 import java.time.Instant
 
 /**
@@ -50,7 +50,7 @@ data class TestToken(
     override var previousToken: String? = null,
     /** Last used timestamp - mutable for testing. */
     override var lastUsedAt: Instant? = null,
-) : BaseToken() {
+) : OgiriBaseToken() {
   /**
    * Plain (unhashed) token value - temporary for testing. Note: This uses the inherited var
    * plainToken from BaseToken.

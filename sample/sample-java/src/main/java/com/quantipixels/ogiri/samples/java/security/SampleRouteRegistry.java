@@ -12,8 +12,8 @@
  */
 package com.quantipixels.ogiri.samples.java.security;
 
-import com.quantipixels.ogiri.security.routes.Route;
-import com.quantipixels.ogiri.security.routes.RouteRegistry;
+import com.quantipixels.ogiri.security.routes.OgiriRoute;
+import com.quantipixels.ogiri.security.routes.OgiriRouteRegistry;
 import java.util.List;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
@@ -24,13 +24,13 @@ import org.springframework.stereotype.Component;
  * <p>Declares public/unauthenticated routes that the filter should allow.
  */
 @Component
-public class SampleRouteRegistry implements RouteRegistry {
+public class SampleRouteRegistry implements OgiriRouteRegistry {
 
   @Override
-  public List<Route> routes() {
+  public List<OgiriRoute> routes() {
     return List.of(
-        new Route(HttpMethod.POST, "/api/auth/login", true, false, null),
-        new Route(HttpMethod.GET, "/api/health", true, false, null),
-        new Route(HttpMethod.GET, "/api/docs/**", true, false, null));
+        new OgiriRoute(HttpMethod.POST, "/api/auth/login", true, false, null),
+        new OgiriRoute(HttpMethod.GET, "/api/health", true, false, null),
+        new OgiriRoute(HttpMethod.GET, "/api/docs/**", true, false, null));
   }
 }

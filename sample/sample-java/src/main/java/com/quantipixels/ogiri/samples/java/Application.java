@@ -20,7 +20,7 @@ import org.springframework.context.annotation.ComponentScan;
  * Spring Boot application demonstrating ogiri token-based authentication in Java.
  *
  * <p>This sample shows how to: - Integrate ogiri as a dependency in a Java Spring Boot application
- * - Configure required SPI implementations (OgiriUserDirectory, RouteRegistry) - Use the
+ * - Configure required SPI implementations (OgiriUserDirectory, OgiriRouteRegistry) - Use the
  * authentication filter and token service
  */
 @SpringBootApplication

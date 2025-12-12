@@ -16,21 +16,23 @@ import org.springframework.http.HttpMethod
 import org.springframework.util.AntPathMatcher
 
 /** Contracts for modules/apps to expose their routes to security filters. */
-interface RouteRegistry {
-  fun routes(): List<Route>
+interface OgiriRouteRegistry {
+  fun routes(): List<OgiriRoute>
 }
 
-/** Aggregates registered [RouteRegistry] beans for quick lookup in filters and rate limiting. */
-class RouteCatalog(
-    registries: List<RouteRegistry>,
+/**
+ * Aggregates registered [OgiriRouteRegistry] beans for quick lookup in filters and rate limiting.
+ */
+class OgiriRouteCatalog(
+    registries: List<OgiriRouteRegistry>,
 ) {
   private val matcher = AntPathMatcher()
-  private val configuredRoutes: List<Route> = registries.flatMap { it.routes() }
-  private val publicRoutes: List<Route> = configuredRoutes.filterNot { it.useAuth }
+  private val configuredRoutes: List<OgiriRoute> = registries.flatMap { it.routes() }
+  private val publicRoutes: List<OgiriRoute> = configuredRoutes.filterNot { it.useAuth }
 
-  fun configured(): List<Route> = configuredRoutes
+  fun configured(): List<OgiriRoute> = configuredRoutes
 
-  fun public(): List<Route> = publicRoutes
+  fun public(): List<OgiriRoute> = publicRoutes
 
   fun isPublicRoute(
       uri: String,

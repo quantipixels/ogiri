@@ -14,7 +14,7 @@ Instead, please report security vulnerabilities by emailing:
 
 Include the following information in your report:
 1. **Description** of the vulnerability
-2. **Affected Component** (e.g., TokenService, OgiriTokenAuthenticationFilter, TokenRepository)
+2. **Affected Component** (e.g., OgiriTokenService, OgiriTokenAuthenticationFilter, OgiriTokenRepository)
 3. **Affected Version(s)** (version tag or commit hash)
 4. **Steps to Reproduce** (if possible)
 5. **Impact Assessment** (low, medium, high, critical)

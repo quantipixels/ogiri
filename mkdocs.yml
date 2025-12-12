@@ -28,18 +28,9 @@ plugins:
       # Language configuration - optimizes tokenization and stemming
       lang: en
 
-      # Minimum search term length to avoid too many results
-      min_search_length: 2
-
-      # Maximum number of results to show per search
-      max_results: 50
-
       # Advanced configuration for word tokenization
       # Splits on whitespace, hyphens, and underscores (useful for kebab-case terms)
       separator: '[\s\-_]+'
-
-      # Pre-build the search index at build time (improves load performance)
-      prebuild_index: true
 
       # Exclude certain pages from the search index (optional - uncomment to use)
       # exclude:
@@ -48,11 +39,15 @@ plugins:
 nav:
   - Home: index.md
   - Quickstart: quickstart.md
+  - Core Concepts:
+      - Interface Design: interface-first-design.md
+      - Implementation: implementation-guide.md
   - Guides:
       - Configuration: configuration.md
       - Database Integration: database.md
       - Sub-tokens: sub-tokens.md
       - Authentication Flow: authentication.md
+      - Migration Guide: migration-guide.md
   - Contributing:
       - Development Guide: development.md
       - Contributing Guidelines: contributing.md

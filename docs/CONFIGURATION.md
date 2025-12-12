@@ -94,7 +94,7 @@ ogiri:
 
 ## Custom Beans
 
-### Custom TokenService
+### Custom OgiriTokenService
 
 ```kotlin
 @Configuration
@@ -102,12 +102,12 @@ class CustomConfig(private val properties: OgiriConfigurationProperties) {
 
   @Bean
   fun tokenService(
-    tokenRepository: TokenRepository<MyToken>,
+    tokenRepository: OgiriTokenRepository<MyToken>,
     passwordEncoder: PasswordEncoder,
     ogiriUserDirectory: OgiriUserDirectory,
     identifierPolicy: IdentifierPolicy,
-    subTokenRegistry: SubTokenRegistry,
-  ): TokenService<MyToken> =
+    subTokenRegistry: OgiriSubTokenRegistry,
+  ): OgiriTokenService<MyToken> =
     MyCustomTokenService(
       tokenRepository,
       passwordEncoder,
@@ -160,9 +160,9 @@ ogiri.cleanup.cron=0 0 * * * *
 
 ## Troubleshooting
 
-| Issue | Solution |
-|-------|----------|
-| Token expires immediately | Increase `token-lifespan-days` |
-| Tokens rotate too frequently | Increase `batch-grace-seconds` |
-| Too many active tokens | Decrease `max-clients` |
-| Tests fail with token mismatch | Set `ogiri.cleanup.enabled=false` in test profile |
+| Issue                            | Solution                                           |
+|----------------------------------|----------------------------------------------------|
+| Token expires immediately        | Increase `token-lifespan-days`                     |
+| Tokens rotate too frequently     | Increase `batch-grace-seconds`                     |
+| Too many active tokens           | Decrease `max-clients`                             |
+| Tests fail with token mismatch   | Set `ogiri.cleanup.enabled=false` in test profile  |

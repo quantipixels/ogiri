@@ -41,7 +41,7 @@ data class AuthHeader(
           !expiry.isNullOrBlank()
 }
 
-/** Sub-token header payload for arbitrary token types (see [SubTokenRegistration]). */
+/** Sub-token header payload for arbitrary token types (see [OgiriSubTokenRegistration]). */
 data class SubTokenHeader(
     val client: String? = null,
     val token: String? = null,

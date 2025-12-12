@@ -57,7 +57,7 @@ private fun tokensMatch(
   return result
 }
 
-data class GeneratedTokens<T : BaseToken>(
+data class OgiriGeneratedTokens<T : OgiriToken>(
     val appToken: T,
     val subTokens: Map<String, T>,
 )
@@ -66,17 +66,17 @@ data class GeneratedTokens<T : BaseToken>(
  * Core token orchestration: issues/rotates APP tokens, manages pluggable sub-tokens, and validates
  * tokens for authentication and downstream protocols.
  *
- * This service works with any token implementation extending BaseToken. Subclasses can override
+ * This service works with any token implementation of OgiriToken. Subclasses can override
  * tokenFactory() to customize token creation if needed, or supply tokens directly through the
  * public API methods.
  */
 @Service
-open class TokenService<T : BaseToken>(
-    private val repository: TokenRepository<T>,
+open class OgiriTokenService<T : OgiriToken>(
+    private val repository: OgiriTokenRepository<T>,
     private val passwordEncoder: PasswordEncoder,
     private val userDirectory: OgiriUserDirectory,
     private val identifierPolicy: IdentifierPolicy,
-    private val subTokenRegistry: SubTokenRegistry,
+    private val subTokenRegistry: OgiriSubTokenRegistry,
     protected val properties: OgiriConfigurationProperties,
 ) {
   private val maxClients: Long = properties.auth.maxClients
@@ -86,20 +86,20 @@ open class TokenService<T : BaseToken>(
    * Factory function for creating new token instances.
    *
    * This method can be overridden by subclasses to provide custom token creation logic. Users can
-   * extend TokenService and override this method to instantiate their custom BaseToken
+   * extend OgiriTokenService and override this method to instantiate their custom OgiriToken
    * implementations.
    *
    * Example:
    * ```kotlin
-   * class MyTokenService<T : BaseToken>(
-   *   repository: TokenRepository<T>,
+   * class MyTokenService<T : OgiriToken>(
+   *   repository: OgiriTokenRepository<T>,
    *   // ... other dependencies
-   * ) : TokenService<T>(repository, ...) {
+   * ) : OgiriTokenService<T>(repository, ...) {
    *   override fun tokenFactory(
    *     userId: Long,
    *     client: String,
    *     hashedToken: String,
-   *     tokenType: TokenType,
+   *     tokenType: OgiriTokenType,
    *     expiry: Instant,
    *     tokenSubtype: String?,
    *     plainTokenValue: String,
@@ -129,7 +129,7 @@ open class TokenService<T : BaseToken>(
       userId: Long,
       client: String,
       hashedToken: String,
-      tokenType: TokenType,
+      tokenType: OgiriTokenType,
       expiry: Instant,
       tokenSubtype: String?,
       plainTokenValue: String,
@@ -205,7 +205,7 @@ open class TokenService<T : BaseToken>(
   }
 
   private fun clientForSubToken(
-      reg: SubTokenRegistration,
+      reg: OgiriSubTokenRegistration,
       parentClient: String,
   ): String = reg.clientIdFor(parentClient)
 
@@ -215,7 +215,7 @@ open class TokenService<T : BaseToken>(
       user: OgiriUser,
       client: String?,
       expiry: Instant,
-      tokenType: TokenType = TokenType.APP,
+      tokenType: OgiriTokenType = OgiriTokenType.APP,
       tokenSubtype: String? = null,
   ): T {
     val tokenClient = client ?: identifierPolicy.generate()
@@ -238,7 +238,7 @@ open class TokenService<T : BaseToken>(
     }
     token.apply {
       expiryAt = expiry
-      if (tokenType == TokenType.APP) {
+      if (tokenType == OgiriTokenType.APP) {
         if (id != 0L) {
           previousToken = lastToken
           lastToken = this.token
@@ -259,12 +259,12 @@ open class TokenService<T : BaseToken>(
   fun createToken(
       user: OgiriUser,
       client: String?,
-  ): GeneratedTokens<T> {
+  ): OgiriGeneratedTokens<T> {
     val expiry = Instant.now().plus(tokenLifespanDays, ChronoUnit.DAYS)
     val appToken = createOrUpdateToken(user, client, expiry)
     val subTokens = issueSubTokens(user, appToken.client, null, forceNew = false)
     cleanOldTokens(user)
-    return GeneratedTokens(appToken, subTokens)
+    return OgiriGeneratedTokens(appToken, subTokens)
   }
 
   /**
@@ -301,7 +301,7 @@ open class TokenService<T : BaseToken>(
                   user = user,
                   client = subClient,
                   expiry = expiry,
-                  tokenType = TokenType.SUB,
+                  tokenType = OgiriTokenType.SUB,
                   tokenSubtype = reg.name,
               )
       results[reg.name] = token
@@ -377,7 +377,8 @@ open class TokenService<T : BaseToken>(
     if (tokens.isEmpty()) return
 
     val registrations = subTokenRegistry.registrations()
-    val (appTokens, subTokens) = tokens.partition { TokenType.of(it.tokenType) == TokenType.APP }
+    val (appTokens, subTokens) =
+        tokens.partition { OgiriTokenType.of(it.tokenType) == OgiriTokenType.APP }
 
     // Remove orphaned sub-tokens (sub-tokens without corresponding app token)
     val appClients = appTokens.clientIds()
@@ -389,7 +390,7 @@ open class TokenService<T : BaseToken>(
       val toRemoveCount = (appTokens.size - maxClients).toInt()
       val sorted =
           appTokens.sortedWith(
-              compareBy<BaseToken> { it.lastUsedAt ?: it.updatedAt }.thenBy { it.updatedAt },
+              compareBy<OgiriToken> { it.lastUsedAt ?: it.updatedAt }.thenBy { it.updatedAt },
           )
       val remove = sorted.take(toRemoveCount)
       remove.forEach { repository.delete(it) }
@@ -486,7 +487,7 @@ open class TokenService<T : BaseToken>(
         client = client,
         uid = user.username,
         expiry = appToken?.expiryAt.toString(),
-        kind = TokenType.APP.label,
+        kind = OgiriTokenType.APP.label,
         subTokens = filteredSubHeaders.ifEmpty { null },
     )
   }
@@ -641,7 +642,7 @@ open class TokenService<T : BaseToken>(
         !authHeader.client.isNullOrBlank()) {
       val token =
           getByUserIdAndClient(user.getOgiriUserId(), authHeader.client)?.takeIf {
-            TokenType.of(it.tokenType) == TokenType.SUB && it.tokenSubtype == subTokenName
+            OgiriTokenType.of(it.tokenType) == OgiriTokenType.SUB && it.tokenSubtype == subTokenName
           }
               ?: return false
       return tokenMatches(token, authHeader.token) && registration.validate(authHeader.token)
@@ -649,7 +650,7 @@ open class TokenService<T : BaseToken>(
 
     val all =
         repository.findAllByUserIdAndTokenSubtype(user.getOgiriUserId(), subTokenName).filter {
-          TokenType.of(it.tokenType) == TokenType.SUB
+          OgiriTokenType.of(it.tokenType) == OgiriTokenType.SUB
         }
     return all.any { tokenMatches(it, tokenField) && registration.validate(tokenField) }
   }
@@ -657,7 +658,7 @@ open class TokenService<T : BaseToken>(
   /**
    * Retrieve a sub-token for a user by name.
    *
-   * Returns the raw [BaseToken] so consumers that only know the generic contract can inspect the
+   * Returns the raw [OgiriToken] so consumers that only know the generic contract can inspect the
    * stored hash, expiry, or client identifiers without depending on a concrete token class.
    *
    * @param userId User ID
@@ -668,11 +669,11 @@ open class TokenService<T : BaseToken>(
   fun getSubToken(
       userId: Long,
       subtype: String,
-  ): BaseToken? {
+  ): OgiriToken? {
     val registration = subTokenRegistry.registrations().find { it.name == subtype } ?: return null
 
     return repository.findAllByUserIdAndTokenSubtype(userId, subtype).firstOrNull { token ->
-      TokenType.of(token.tokenType) == TokenType.SUB
+      OgiriTokenType.of(token.tokenType) == OgiriTokenType.SUB
     }
   }
 
@@ -693,7 +694,7 @@ open class TokenService<T : BaseToken>(
   ): Boolean {
     val tokens =
         repository.findAllByUserIdAndTokenSubtype(userId, subtypeName).filter {
-          TokenType.of(it.tokenType) == TokenType.SUB
+          OgiriTokenType.of(it.tokenType) == OgiriTokenType.SUB
         }
 
     if (tokens.isEmpty()) return false
@@ -728,7 +729,7 @@ open class TokenService<T : BaseToken>(
             user = user,
             client = subClient,
             expiry = registration.expiry(parentToken.expiryAt),
-            tokenType = TokenType.SUB,
+            tokenType = OgiriTokenType.SUB,
             tokenSubtype = subtypeName,
         )
 
@@ -751,7 +752,7 @@ open class TokenService<T : BaseToken>(
    */
   private fun expectedSubClientsFor(
       appClients: Set<String>,
-      registrations: List<SubTokenRegistration>,
+      registrations: List<OgiriSubTokenRegistration>,
   ): Set<String> =
       appClients.flatMap { parent -> registrations.map { it.clientIdFor(parent) } }.toSet()
 
@@ -764,6 +765,6 @@ open class TokenService<T : BaseToken>(
    */
   private fun generateSubClientIds(
       appClients: Set<String>,
-      registrations: List<SubTokenRegistration>,
+      registrations: List<OgiriSubTokenRegistration>,
   ): List<String> = appClients.flatMap { parent -> registrations.map { it.clientIdFor(parent) } }
 }

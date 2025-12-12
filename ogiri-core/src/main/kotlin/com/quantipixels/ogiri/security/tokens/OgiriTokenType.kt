@@ -26,7 +26,7 @@ package com.quantipixels.ogiri.security.tokens
  * Example - JPA Entity with string mapping:
  * ```kotlin
  * @Entity
- * class MyToken : BaseToken() {
+ * class MyToken : OgiriBaseToken() {
  *   @Column(name = "token_type", nullable = false)
  *   val tokenType: String = "APP"  // or use @Enumerated(EnumType.STRING)
  * }
@@ -36,10 +36,10 @@ package com.quantipixels.ogiri.security.tokens
  * ```kotlin
  * data class JdbcToken(
  *   override val tokenType: String,  // stored as "APP" or "SUB"
- * ) : BaseToken()
+ * ) : OgiriBaseToken()
  * ```
  */
-enum class TokenType(val label: String) {
+enum class OgiriTokenType(val label: String) {
   /** Primary application token for user authentication and authorization. */
   APP("app"),
 
@@ -49,33 +49,33 @@ enum class TokenType(val label: String) {
 
   companion object {
     /**
-     * Parse a TokenType from a string label (case-insensitive).
+     * Parse a OgiriTokenType from a string label (case-insensitive).
      *
      * @param label The token type label ("app" or "sub")
-     * @return The corresponding TokenType
+     * @return The corresponding OgiriTokenType
      * @throws IllegalArgumentException if label doesn't match any type
      */
-    fun of(label: String): TokenType =
+    fun of(label: String): OgiriTokenType =
         entries.firstOrNull { it.label.equals(label, ignoreCase = true) }
             ?: throw IllegalArgumentException("Invalid token type: $label")
 
     /**
-     * Parse a TokenType from a string, with fallback to APP type if invalid.
+     * Parse a OgiriTokenType from a string, with fallback to APP type if invalid.
      *
      * Useful for database conversions where null/missing values should default to APP.
      *
      * @param label The token type label ("app" or "sub")
-     * @return The corresponding TokenType, or APP if label is null or invalid
+     * @return The corresponding OgiriTokenType, or APP if label is null or invalid
      */
-    fun ofOrDefault(label: String?): TokenType = label?.let { ofNullable(it) } ?: APP
+    fun ofOrDefault(label: String?): OgiriTokenType = label?.let { ofNullable(it) } ?: APP
 
     /**
-     * Parse a TokenType from a nullable string label.
+     * Parse a OgiriTokenType from a nullable string label.
      *
      * @param label The token type label ("app" or "sub"), or null
-     * @return The corresponding TokenType, or APP if label is null or invalid
+     * @return The corresponding OgiriTokenType, or APP if label is null or invalid
      */
-    private fun ofNullable(label: String?): TokenType =
+    private fun ofNullable(label: String?): OgiriTokenType =
         label?.let { value -> entries.firstOrNull { it.label.equals(value, ignoreCase = true) } }
             ?: APP
   }

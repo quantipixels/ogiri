@@ -54,7 +54,7 @@ class TokenServiceIntegrationTest {
     assertEquals(TEST_USER_ID, savedToken.getUserId());
     assertEquals(TEST_CLIENT, savedToken.getClient());
     assertEquals("hashed-token-value", savedToken.getToken());
-    assertEquals("APP", savedToken.getTokenType());
+    assertEquals("APP", savedToken.getOgiriTokenType());
   }
 
   @Test
@@ -101,7 +101,7 @@ class TokenServiceIntegrationTest {
     SampleToken subToken =
         new SampleToken(
             TEST_USER_ID, TEST_CLIENT + ".device", "sub-token", Instant.now().plusSeconds(1800));
-    subToken.setTokenType("SUB");
+    subToken.setOgiriTokenType("SUB");
     subToken.setTokenSubtype("device");
     tokenRepository.save(subToken);
 
@@ -111,8 +111,8 @@ class TokenServiceIntegrationTest {
 
     assertNotNull(mainSaved);
     assertNotNull(subSaved);
-    assertEquals("APP", mainSaved.getTokenType());
-    assertEquals("SUB", subSaved.getTokenType());
+    assertEquals("APP", mainSaved.getOgiriTokenType());
+    assertEquals("SUB", subSaved.getOgiriTokenType());
     assertEquals("device", subSaved.getTokenSubtype());
   }
 

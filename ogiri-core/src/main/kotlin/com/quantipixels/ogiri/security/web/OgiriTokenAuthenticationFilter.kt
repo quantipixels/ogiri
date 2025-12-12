@@ -21,8 +21,8 @@ import com.quantipixels.ogiri.security.core.parseBearerToken
 import com.quantipixels.ogiri.security.helpers.AuthenticationBypassDecider
 import com.quantipixels.ogiri.security.spi.OgiriUser
 import com.quantipixels.ogiri.security.spi.OgiriUserDirectory
-import com.quantipixels.ogiri.security.tokens.TokenService
-import com.quantipixels.ogiri.security.tokens.TokenType
+import com.quantipixels.ogiri.security.tokens.OgiriTokenService
+import com.quantipixels.ogiri.security.tokens.OgiriTokenType
 import jakarta.servlet.FilterChain
 import jakarta.servlet.ServletException
 import jakarta.servlet.http.HttpServletRequest
@@ -50,7 +50,7 @@ import org.springframework.web.filter.OncePerRequestFilter
  */
 open class OgiriTokenAuthenticationFilter(
     private val userDirectory: OgiriUserDirectory,
-    private val tokenService: TokenService<*>,
+    private val tokenService: OgiriTokenService<*>,
     private val authenticationEntryPoint: AuthenticationEntryPoint,
     private val bypassDecider: AuthenticationBypassDecider,
     private val identifierPolicy: IdentifierPolicy,
@@ -253,10 +253,8 @@ open class OgiriTokenAuthenticationFilter(
       method.equals("GET", ignoreCase = true) || method.equals("HEAD", ignoreCase = true)
 
   private fun ensureAppToken(kind: String?) {
-    val tokenKind =
-        runCatching { TokenType.valueOf(kind?.trim()?.uppercase() ?: "APP") }
-            .getOrDefault(TokenType.APP)
-    if (tokenKind != TokenType.APP) throw BadCredentialsException("error.auth.bad_token_type")
+    val tokenKind = OgiriTokenType.ofOrDefault(kind)
+    if (tokenKind != OgiriTokenType.APP) throw BadCredentialsException("error.auth.bad_token_type")
   }
 
   private fun validateIdentifier(

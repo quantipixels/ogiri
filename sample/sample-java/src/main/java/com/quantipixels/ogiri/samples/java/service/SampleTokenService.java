@@ -17,9 +17,9 @@ import com.quantipixels.ogiri.samples.java.repository.SampleTokenRepositoryAdapt
 import com.quantipixels.ogiri.security.config.OgiriConfigurationProperties;
 import com.quantipixels.ogiri.security.core.IdentifierPolicy;
 import com.quantipixels.ogiri.security.spi.OgiriUserDirectory;
-import com.quantipixels.ogiri.security.tokens.SubTokenRegistry;
-import com.quantipixels.ogiri.security.tokens.TokenService;
-import com.quantipixels.ogiri.security.tokens.TokenType;
+import com.quantipixels.ogiri.security.tokens.OgiriSubTokenRegistry;
+import com.quantipixels.ogiri.security.tokens.OgiriTokenService;
+import com.quantipixels.ogiri.security.tokens.OgiriTokenType;
 import java.time.Instant;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -37,7 +37,7 @@ import org.springframework.stereotype.Service;
  * authentication, token rotation, and sub-token generation.
  */
 @Service
-public class SampleTokenService extends TokenService<SampleToken> {
+public class SampleTokenService extends OgiriTokenService<SampleToken> {
 
   /** Constructor - injects all dependencies needed by TokenService. */
   public SampleTokenService(
@@ -45,7 +45,7 @@ public class SampleTokenService extends TokenService<SampleToken> {
       PasswordEncoder passwordEncoder,
       OgiriUserDirectory userDirectory,
       IdentifierPolicy identifierPolicy,
-      SubTokenRegistry subTokenRegistry,
+      OgiriSubTokenRegistry subTokenRegistry,
       OgiriConfigurationProperties properties) {
     super(
         tokenRepository,
@@ -80,7 +80,7 @@ public class SampleTokenService extends TokenService<SampleToken> {
       Long userId,
       String client,
       String hashedToken,
-      TokenType tokenType,
+      OgiriTokenType tokenType,
       Instant expiry,
       String tokenSubtype,
       String plainTokenValue) {
@@ -88,7 +88,7 @@ public class SampleTokenService extends TokenService<SampleToken> {
     SampleToken token = new SampleToken(userId, client, hashedToken, expiry);
 
     // Set token type (convert enum to string: "APP" or "SUB")
-    token.setTokenType(tokenType.name());
+    token.setOgiriTokenType(tokenType.name());
 
     // Set optional sub-token type
     if (tokenSubtype != null) {

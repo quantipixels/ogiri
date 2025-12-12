@@ -12,9 +12,9 @@
  */
 package com.quantipixels.ogiri.security.helpers
 
-import com.quantipixels.ogiri.security.routes.Route
-import com.quantipixels.ogiri.security.routes.RouteCatalog
-import com.quantipixels.ogiri.security.routes.RouteRegistry
+import com.quantipixels.ogiri.security.routes.OgiriRoute
+import com.quantipixels.ogiri.security.routes.OgiriRouteCatalog
+import com.quantipixels.ogiri.security.routes.OgiriRouteRegistry
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -36,7 +36,7 @@ class AuthenticationBypassDeciderTest {
     SecurityContextHolder.getContext().authentication =
         UsernamePasswordAuthenticationToken("user", "pw", listOf(SimpleGrantedAuthority("USER")))
 
-    val catalog = RouteCatalog(emptyList())
+    val catalog = OgiriRouteCatalog(emptyList())
     val decider = AuthenticationBypassDecider(catalog)
 
     val request = MockHttpServletRequest("GET", "/any")
@@ -45,7 +45,7 @@ class AuthenticationBypassDeciderTest {
 
   @Test
   fun `bypasses whitelisted actuator route`() {
-    val catalog = RouteCatalog(emptyList())
+    val catalog = OgiriRouteCatalog(emptyList())
     val decider = AuthenticationBypassDecider(catalog)
     val request = MockHttpServletRequest("GET", "/actuator/health")
 
@@ -54,7 +54,7 @@ class AuthenticationBypassDeciderTest {
 
   @Test
   fun `bypasses OPTIONS preflight`() {
-    val catalog = RouteCatalog(emptyList())
+    val catalog = OgiriRouteCatalog(emptyList())
     val decider = AuthenticationBypassDecider(catalog)
     val request = MockHttpServletRequest("OPTIONS", "/api/anything")
 
@@ -64,11 +64,13 @@ class AuthenticationBypassDeciderTest {
   @Test
   fun `bypasses public route from catalog`() {
     val registry =
-        object : RouteRegistry {
-          override fun routes(): List<Route> =
-              listOf(Route.get("/public", useAuth = false), Route.get("/private", useAuth = true))
+        object : OgiriRouteRegistry {
+          override fun routes(): List<OgiriRoute> =
+              listOf(
+                  OgiriRoute.get("/public", useAuth = false),
+                  OgiriRoute.get("/private", useAuth = true))
         }
-    val catalog = RouteCatalog(listOf(registry))
+    val catalog = OgiriRouteCatalog(listOf(registry))
     val decider = AuthenticationBypassDecider(catalog)
 
     val publicRequest = MockHttpServletRequest("GET", "/public")
@@ -81,10 +83,11 @@ class AuthenticationBypassDeciderTest {
   @Test
   fun `route catalog matches templated paths`() {
     val registry =
-        object : RouteRegistry {
-          override fun routes(): List<Route> = listOf(Route.get("/users/{id}", useAuth = false))
+        object : OgiriRouteRegistry {
+          override fun routes(): List<OgiriRoute> =
+              listOf(OgiriRoute.get("/users/{id}", useAuth = false))
         }
-    val catalog = RouteCatalog(listOf(registry))
+    val catalog = OgiriRouteCatalog(listOf(registry))
 
     assertTrue(catalog.isPublicRoute("/users/123", HttpMethod.GET))
     assertFalse(catalog.isPublicRoute("/users/123", HttpMethod.POST))

@@ -15,16 +15,16 @@ package com.quantipixels.ogiri.security.config
 import com.quantipixels.ogiri.security.core.DefaultIdentifierPolicy
 import com.quantipixels.ogiri.security.core.IdentifierPolicy
 import com.quantipixels.ogiri.security.helpers.AuthenticationBypassDecider
-import com.quantipixels.ogiri.security.routes.RouteCatalog
-import com.quantipixels.ogiri.security.routes.RouteRegistry
+import com.quantipixels.ogiri.security.routes.OgiriRouteCatalog
+import com.quantipixels.ogiri.security.routes.OgiriRouteRegistry
 import com.quantipixels.ogiri.security.spi.OgiriUserDirectory
-import com.quantipixels.ogiri.security.tokens.BaseToken
-import com.quantipixels.ogiri.security.tokens.DefaultSubTokenRegistry
-import com.quantipixels.ogiri.security.tokens.SubTokenRegistration
-import com.quantipixels.ogiri.security.tokens.SubTokenRegistry
-import com.quantipixels.ogiri.security.tokens.TokenCleanupJob
-import com.quantipixels.ogiri.security.tokens.TokenRepository
-import com.quantipixels.ogiri.security.tokens.TokenService
+import com.quantipixels.ogiri.security.tokens.DefaultOgiriSubTokenRegistry
+import com.quantipixels.ogiri.security.tokens.OgiriSubTokenRegistration
+import com.quantipixels.ogiri.security.tokens.OgiriSubTokenRegistry
+import com.quantipixels.ogiri.security.tokens.OgiriToken
+import com.quantipixels.ogiri.security.tokens.OgiriTokenCleanupJob
+import com.quantipixels.ogiri.security.tokens.OgiriTokenRepository
+import com.quantipixels.ogiri.security.tokens.OgiriTokenService
 import com.quantipixels.ogiri.security.web.OgiriAuthenticationEntryPoint
 import com.quantipixels.ogiri.security.web.OgiriTokenAuthenticationFilter
 import org.springframework.beans.factory.ObjectProvider
@@ -49,13 +49,13 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  * - Enables the OgiriConfigurationProperties for property binding
  * - Creates core ogiri beans (TokenService, TokenAuthenticationFilter, etc.)
  * - Registers the security filter chain when enabled via properties
- * - Conditionally registers TokenCleanupJob for expired token deletion
+ * - Conditionally registers OgiriTokenCleanupJob for expired token deletion
  *
  * Configuration is loaded from application.yml/application.properties with prefix "ogiri". All
  * beans are registered with @ConditionalOnMissingBean for easy override.
  */
 @Configuration
-@Import(TokenCleanupJob::class)
+@Import(OgiriTokenCleanupJob::class)
 @EnableConfigurationProperties(OgiriConfigurationProperties::class)
 class OgiriSecurityAutoConfiguration {
   @Bean
@@ -64,39 +64,40 @@ class OgiriSecurityAutoConfiguration {
 
   @Bean
   @ConditionalOnMissingBean
-  fun routeCatalog(registries: ObjectProvider<RouteRegistry>): RouteCatalog =
-      RouteCatalog(registries.orderedStream().toList())
+  fun routeCatalog(registries: ObjectProvider<OgiriRouteRegistry>): OgiriRouteCatalog =
+      OgiriRouteCatalog(registries.orderedStream().toList())
 
   @Bean
   @ConditionalOnMissingBean
-  fun authenticationBypassDecider(routeCatalog: RouteCatalog): AuthenticationBypassDecider =
+  fun authenticationBypassDecider(routeCatalog: OgiriRouteCatalog): AuthenticationBypassDecider =
       AuthenticationBypassDecider(routeCatalog)
 
   @Bean
   @ConditionalOnMissingBean
-  fun subTokenRegistry(registrations: ObjectProvider<SubTokenRegistration>): SubTokenRegistry =
-      DefaultSubTokenRegistry(registrations.orderedStream().toList())
+  fun subTokenRegistry(
+      registrations: ObjectProvider<OgiriSubTokenRegistration>
+  ): OgiriSubTokenRegistry = DefaultOgiriSubTokenRegistry(registrations.orderedStream().toList())
 
   @Bean
   @ConditionalOnMissingBean
   fun ogiriTokenService(
-      repository: TokenRepository<*>,
+      repository: OgiriTokenRepository<*>,
       passwordEncoder: PasswordEncoder,
       ogiriUserDirectory: OgiriUserDirectory,
       identifierPolicy: IdentifierPolicy,
-      subTokenRegistry: SubTokenRegistry,
+      subTokenRegistry: OgiriSubTokenRegistry,
       properties: OgiriConfigurationProperties,
-  ): TokenService<*> =
+  ): OgiriTokenService<*> =
       @Suppress("UNCHECKED_CAST")
-      TokenService(
-          repository as TokenRepository<BaseToken>,
+      OgiriTokenService(
+          repository as OgiriTokenRepository<OgiriToken>,
           passwordEncoder,
           ogiriUserDirectory,
           identifierPolicy,
           subTokenRegistry,
           properties,
       )
-          as TokenService<*>
+          as OgiriTokenService<*>
 
   @Bean
   @ConditionalOnMissingBean
@@ -107,7 +108,7 @@ class OgiriSecurityAutoConfiguration {
   @ConditionalOnMissingBean
   fun ogiriTokenAuthenticationFilter(
       ogiriUserDirectory: OgiriUserDirectory,
-      tokenService: TokenService<*>,
+      tokenService: OgiriTokenService<*>,
       authenticationEntryPoint: AuthenticationEntryPoint,
       authenticationBypassDecider: AuthenticationBypassDecider,
       identifierPolicy: IdentifierPolicy,

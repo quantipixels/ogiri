@@ -129,18 +129,18 @@ Include these headers with authenticated requests:
 ## Key Components
 
 ### Entity
-- **SampleToken** - JPA entity extending `BaseToken`
+- **SampleToken** - JPA entity extending `OgiriBaseToken`
 
 ### Repository
-- **SampleTokenRepository** - Spring Data JPA + ogiri `TokenRepository` interface
+- **SampleTokenRepository** - Spring Data JPA + ogiri `OgiriTokenRepository` interface
 
 ### Security
 - **SampleOgiriUserDirectory** - Implements `OgiriUserDirectory` for user lookup
-- **SampleRouteRegistry** - Declares public routes via `RouteRegistry`
+- **SampleRouteRegistry** - Declares public routes via `OgiriRouteRegistry`
 - **SecurityConfig** - Spring Security configuration
 
 ### Service
-- **SampleTokenService** - Extends ogiri `TokenService` with custom token factory
+- **SampleTokenService** - Extends ogiri `OgiriTokenService` with custom token factory
 
 ## Development
 
@@ -201,7 +201,7 @@ sample-kotlin/
 The sample uses Kotlin data classes for token entities, providing automatic `equals()`, `hashCode()`, and `toString()`:
 
 ```kotlin
-data class SampleToken(...) : BaseToken()
+data class SampleToken(...) : OgiriBaseToken()
 ```
 
 ### Extension Functions

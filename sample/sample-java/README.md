@@ -107,18 +107,18 @@ Include these headers with authenticated requests:
 ## Key Components
 
 ### Entity
-- **SampleToken** - JPA entity extending `BaseToken`
+- **SampleToken** - JPA entity extending `OgiriBaseToken`
 
 ### Repository
-- **SampleTokenRepository** - Spring Data JPA + ogiri `TokenRepository` interface
+- **SampleTokenRepository** - Spring Data JPA + ogiri `OgiriTokenRepository` interface
 
 ### Security
 - **SampleOgiriUserDirectory** - Implements `OgiriUserDirectory` for user lookup
-- **SampleRouteRegistry** - Declares public routes via `RouteRegistry`
+- **SampleRouteRegistry** - Declares public routes via `OgiriRouteRegistry`
 - **SecurityConfig** - Spring Security configuration
 
 ### Service
-- **SampleTokenService** - Extends ogiri `TokenService` with custom token factory
+- **SampleTokenService** - Extends ogiri `OgiriTokenService` with custom token factory
 
 ## Development
 
@@ -189,12 +189,12 @@ public List<Route> routes() {
 
 ### Adding Sub-Tokens
 
-Implement `SubTokenRegistration` to create domain-specific tokens (device, chat, etc.):
+Implement `OgiriSubTokenRegistration` to create domain-specific tokens (device, chat, etc.):
 
 ```java
 @Bean
-public SubTokenRegistration deviceToken() {
-  return new SubTokenRegistration() {
+public OgiriSubTokenRegistration deviceToken() {
+  return new OgiriSubTokenRegistration() {
     @Override
     public String getName() { return "device"; }
 

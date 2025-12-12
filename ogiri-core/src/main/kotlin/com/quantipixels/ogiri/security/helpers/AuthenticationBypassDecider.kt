@@ -12,7 +12,7 @@
  */
 package com.quantipixels.ogiri.security.helpers
 
-import com.quantipixels.ogiri.security.routes.RouteCatalog
+import com.quantipixels.ogiri.security.routes.OgiriRouteCatalog
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.http.HttpMethod
 import org.springframework.security.core.context.SecurityContextHolder
@@ -22,7 +22,7 @@ import org.springframework.security.core.context.SecurityContextHolder
  * paths, CORS preflight, or public routes).
  */
 class AuthenticationBypassDecider(
-    private val routeCatalog: RouteCatalog,
+    private val routeCatalog: OgiriRouteCatalog,
 ) {
   fun canSkip(request: HttpServletRequest): Boolean {
     val isAuthenticated = SecurityContextHolder.getContext().authentication != null

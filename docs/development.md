@@ -37,12 +37,12 @@ ogiri/
 │   ├── src/main/kotlin/             # Source code
 │   │   └── com/quantipixels/ogiri/security/
 │   │       ├── core/                # AuthHeader, JsonCodec, exceptions
-│   │       ├── tokens/              # TokenService, TokenRepository, BaseToken
-│   │       ├── web/                 # OgiriTokenAuthenticationFilter
-│   │       ├── spi/                 # OgiriUserDirectory, OgiriUser, RouteRegistry
-│   │       ├── helpers/             # AuthenticationBypassDecider, SecurityHelpers
-│   │       ├── routes/              # RouteCatalog, Route
-│   │       └── config/              # OgiriSecurityAutoConfiguration
+│       ├── tokens/                  # OgiriTokenService, OgiriTokenRepository, OgiriBaseToken, OgiriToken
+│       ├── web/                     # OgiriTokenAuthenticationFilter
+│       ├── spi/                     # OgiriUserDirectory, OgiriUser
+│       ├── helpers/                 # AuthenticationBypassDecider, SecurityHelpers
+│       ├── routes/                  # OgiriRouteRegistry, OgiriRoute
+│       └── config/                  # OgiriSecurityAutoConfiguration
 │   ├── src/test/kotlin/             # JUnit 5 tests
 │   └── src/main/resources/ogiri/db/ # Bundled SQL schemas
 ├── sample/
@@ -81,13 +81,13 @@ Coverage report: `ogiri-core/build/reports/jacoco/test/html/index.html`
 
 ### Current Coverage
 
-| Component | Coverage |
-|-----------|----------|
-| AuthenticationBypassDecider | 100% |
-| AuthHeader | 90% |
-| OgiriTokenAuthenticationFilter | 70% |
-| TokenService (sub-tokens) | 25% |
-| OgiriSecurityAutoConfiguration | 0% |
+| Component                      | Coverage  |
+|--------------------------------|-----------|
+| AuthenticationBypassDecider    | 100%      |
+| AuthHeader                     | 90%       |
+| OgiriTokenAuthenticationFilter | 70%       |
+| OgiriTokenService (sub-tokens) | 25%       |
+| OgiriSecurityAutoConfiguration | 0%        |
 
 ## Git Hooks
 
@@ -168,24 +168,24 @@ GitHub Actions will:
 
 ### CI/CD Workflows
 
-| Workflow | Trigger | Purpose |
-|----------|---------|---------|
-| `build.yml` | All pushes | Compile modules |
-| `test.yml` | All pushes | Run tests with coverage |
-| `lint.yml` | All pushes | Verify formatting |
-| `release.yml` | Tag `v*.*.*` | Publish to Maven Central |
-| `snapshot.yml` | Push to `main` | Deploy snapshots |
+| Workflow       | Trigger        | Purpose                  |
+|----------------|----------------|--------------------------|
+| `build.yml`    | All pushes     | Compile modules          |
+| `test.yml`     | All pushes     | Run tests with coverage  |
+| `lint.yml`     | All pushes     | Verify formatting        |
+| `release.yml`  | Tag `v*.*.*`   | Publish to Maven Central |
+| `snapshot.yml` | Push to `main` | Deploy snapshots         |
 
 ### Required Secrets
 
 Configure in GitHub repository settings:
 
-| Secret | Purpose |
-|--------|---------|
-| `OSSRH_USERNAME` | Sonatype username |
-| `OSSRH_PASSWORD` | Sonatype password |
-| `GPG_KEY_ID` | GPG key ID |
-| `GPG_PASSPHRASE` | GPG passphrase |
+| Secret            | Purpose                |
+|-------------------|------------------------|
+| `OSSRH_USERNAME`  | Sonatype username      |
+| `OSSRH_PASSWORD`  | Sonatype password      |
+| `GPG_KEY_ID`      | GPG key ID             |
+| `GPG_PASSPHRASE`  | GPG passphrase         |
 | `GPG_PRIVATE_KEY` | Base64-encoded GPG key |
 
 Export GPG key:
@@ -222,15 +222,15 @@ export OSSRH_PASSWORD=your_password
 
 ### Modifying Token Rotation
 
-1. Update `TokenService.rotateTokensIfNeeded()`
+1. Update `OgiriTokenService.rotateTokensIfNeeded()`
 2. Add tests in `OgiriTokenAuthenticationFilterTest`
 3. Update `docs/configuration.md`
 
 ### Extending Token Entity
 
-1. Create class extending `BaseToken`
-2. Implement `TokenRepository<MyToken>`
-3. Provide custom `TokenService<MyToken>` bean
+1. Create class extending `OgiriBaseToken`
+2. Implement `OgiriTokenRepository<MyToken>`
+3. Provide custom `OgiriTokenService<MyToken>` bean
 4. Set `ogiri.security.register-filter=false`
 
 ## Security

@@ -83,7 +83,7 @@ object TestFixtures {
 
     fun withToken(token: String) = apply { this.token = token }
 
-    fun withTokenType(tokenType: String) = apply { this.tokenType = tokenType }
+    fun withOgiriTokenType(tokenType: String) = apply { this.tokenType = tokenType }
 
     fun withExpiry(expiryAt: Instant) = apply { this.expiryAt = expiryAt }
 

@@ -13,7 +13,7 @@
 package com.quantipixels.ogiri.samples.kotlin.repository
 
 import com.quantipixels.ogiri.samples.kotlin.entity.SampleToken
-import com.quantipixels.ogiri.security.tokens.TokenRepository
+import com.quantipixels.ogiri.security.tokens.OgiriTokenRepository
 import java.time.Instant
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
@@ -35,7 +35,8 @@ import org.springframework.transaction.annotation.Transactional
  * - deleteByExpiryAtBefore -> DELETE where expiry_at < ?
  */
 @Repository
-interface SampleTokenRepository : JpaRepository<SampleToken, Long>, TokenRepository<SampleToken> {
+interface SampleTokenRepository :
+    JpaRepository<SampleToken, Long>, OgiriTokenRepository<SampleToken> {
   override fun findAllByUserId(userId: Long): List<SampleToken> =
       findByUserIdOrderByUpdatedAtDesc(userId)
 

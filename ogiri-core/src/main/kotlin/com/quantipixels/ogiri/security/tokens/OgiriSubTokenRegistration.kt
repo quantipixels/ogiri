@@ -17,14 +17,14 @@ import java.time.Instant
 /**
  * Describes a sub-token that should be issued alongside an APP token.
  *
- * Implementations can plug into [SubTokenRegistry] to declare additional token kinds (e.g.,
+ * Implementations can plug into [OgiriSubTokenRegistry] to declare additional token kinds (e.g.,
  * device-scoped tokens, chat credentials). The contract is intentionally small: name, client id
  * mapping, expiry policy, and whether creation should be forced on every issuance.
  *
  * Implementations may also provide custom validation logic via [validate] for format-specific
  * checks (e.g., XMPP token signature verification, device fingerprint validation).
  */
-interface SubTokenRegistration {
+interface OgiriSubTokenRegistration {
   /** Unique name for the sub-token (e.g., "device", "chat"). */
   val name: String
 
@@ -64,13 +64,15 @@ interface SubTokenRegistration {
   fun validate(plainToken: String): Boolean = true
 }
 
-interface SubTokenRegistry {
-  fun registrations(): List<SubTokenRegistration>
+interface OgiriSubTokenRegistry {
+  fun registrations(): List<OgiriSubTokenRegistration>
 }
 
-/** Simple registry implementation backed by a provided list of [SubTokenRegistration] beans. */
-class DefaultSubTokenRegistry(
-    private val registrations: List<SubTokenRegistration> = emptyList(),
-) : SubTokenRegistry {
-  override fun registrations(): List<SubTokenRegistration> = registrations
+/**
+ * Simple registry implementation backed by a provided list of [OgiriSubTokenRegistration] beans.
+ */
+class DefaultOgiriSubTokenRegistry(
+    private val registrations: List<OgiriSubTokenRegistration> = emptyList(),
+) : OgiriSubTokenRegistry {
+  override fun registrations(): List<OgiriSubTokenRegistration> = registrations
 }
