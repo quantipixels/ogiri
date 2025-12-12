@@ -9,6 +9,8 @@
 
 Reusable Spring Boot security components for token-based authentication with pluggable sub-tokens.
 
+**[📖 Full Documentation](https://mosobande.github.io/ogiri/)** | [Quickstart](https://mosobande.github.io/ogiri/quickstart/) | [Migration Guide](https://mosobande.github.io/ogiri/migration-guide/)
+
 ## Features
 
 - **Database-agnostic** - Works with JPA, MongoDB, Redis, or any custom persistence
@@ -21,7 +23,7 @@ Reusable Spring Boot security components for token-based authentication with plu
 
 **Gradle:**
 ```kotlin
-implementation("com.quantipixels.ogiri:ogiri-core:1.0.1")
+implementation("com.quantipixels.ogiri:ogiri-core:1.2.0")
 ```
 
 **Maven:**
@@ -29,7 +31,7 @@ implementation("com.quantipixels.ogiri:ogiri-core:1.0.1")
 <dependency>
   <groupId>com.quantipixels.ogiri</groupId>
   <artifactId>ogiri-core</artifactId>
-  <version>1.0.1</version>
+  <version>1.2.0</version>
 </dependency>
 ```
 
@@ -52,8 +54,8 @@ class MyUserDirectory(private val userService: UserService) : OgiriUserDirectory
 **2. Declare public routes:**
 ```kotlin
 @Component
-class MyRouteRegistry : RouteRegistry {
-  override fun registrations() = listOf(Route.post("/api/auth/**"), Route.get("/api/health"))
+class MyRouteRegistry : OgiriRouteRegistry {
+  override fun registrations() = listOf(OgiriRoute.post("/api/auth/**"), OgiriRoute.get("/api/health"))
 }
 ```
 
@@ -68,18 +70,20 @@ fun login(@RequestBody request: LoginRequest, response: HttpServletResponse) {
 
 Done! Ògiri auto-configures the security filter chain.
 
-See the [Quickstart Guide](docs/quickstart.md) for complete examples in both Kotlin and Java.
+See the [full Quickstart Guide](https://mosobande.github.io/ogiri/quickstart/) for complete examples in both Kotlin and Java.
 
 ## Documentation
 
 | Topic | Description |
 |-------|-------------|
-| [Quickstart](docs/quickstart.md) | 5-minute integration guide |
-| [Configuration](docs/configuration.md) | Token rotation, cleanup, batch windows |
-| [Database Integration](docs/database.md) | JPA, MongoDB, Redis examples |
-| [Sub-tokens](docs/sub-tokens.md) | Device, chat, API tokens |
-| [Authentication Flow](docs/authentication.md) | Request lifecycle, headers |
-| [Sample Applications](sample/README.md) | Java and Kotlin examples |
+| [Quickstart](https://mosobande.github.io/ogiri/quickstart/) | 5-minute integration guide |
+| [Interface Design](https://mosobande.github.io/ogiri/core-concepts/interface-design/) | Architecture and design philosophy |
+| [Configuration](https://mosobande.github.io/ogiri/guides/configuration/) | Token rotation, cleanup, batch windows |
+| [Database Integration](https://mosobande.github.io/ogiri/guides/database-integration/) | JPA, MongoDB, Redis examples |
+| [Sub-tokens](https://mosobande.github.io/ogiri/guides/sub-tokens/) | Device, chat, API tokens |
+| [Authentication Flow](https://mosobande.github.io/ogiri/guides/authentication-flow/) | Request lifecycle, headers |
+| [Migration Guide](https://mosobande.github.io/ogiri/guides/migration-guide/) | Upgrade from v1.1.1 to v1.2.0 |
+| [Sample Applications](https://github.com/mosobande/ogiri/tree/main/sample) | Java and Kotlin examples |
 
 ## Development
 
@@ -89,7 +93,7 @@ See the [Quickstart Guide](docs/quickstart.md) for complete examples in both Kot
 ./gradlew spotlessApply  # Format code
 ```
 
-See [development.md](docs/development.md) for contributor guidelines.
+See [development guide](https://mosobande.github.io/ogiri/contributing/development-guide/) for contributor guidelines.
 
 ## License
 

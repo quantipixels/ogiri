@@ -13,40 +13,40 @@ Sub-tokens are specialized tokens issued alongside the main APP token for specif
 
 Implement `OgiriSubTokenRegistration`:
 
-```kotlin
-@Bean
-fun deviceSubToken(): OgiriSubTokenRegistration = object : OgiriSubTokenRegistration {
-  override val name = "device"
-  override val includeByDefault = true  // Issued with every APP token
+=== "Kotlin"
 
-  override fun clientIdFor(parentClientId: String): String =
-    "$parentClientId.device"
+    ```kotlin
+    @Bean
+    fun deviceSubToken(): OgiriSubTokenRegistration = object : OgiriSubTokenRegistration {
+      override val name = "device"
+      override val includeByDefault = true  // Issued with every APP token
 
-  override fun expiry(parentExpiry: Instant): Instant =
-    minOf(parentExpiry, Instant.now().plus(12, ChronoUnit.HOURS))
-}
-```
+      override fun clientIdFor(parentClientId: String): String =
+        "$parentClientId.device"
 
-<details>
-<summary>Java version</summary>
-
-```java
-@Bean
-public OgiriSubTokenRegistration deviceSubToken() {
-  return new OgiriSubTokenRegistration() {
-    @Override public String getName() { return "device"; }
-    @Override public boolean isIncludeByDefault() { return true; }
-    @Override public String clientIdFor(String parentClientId) {
-      return parentClientId + ".device";
+      override fun expiry(parentExpiry: Instant): Instant =
+        minOf(parentExpiry, Instant.now().plus(12, ChronoUnit.HOURS))
     }
-    @Override public Instant expiry(Instant parentExpiry) {
-      Instant limit = Instant.now().plus(Duration.ofHours(12));
-      return parentExpiry.isBefore(limit) ? parentExpiry : limit;
+    ```
+
+=== "Java"
+
+    ```java
+    @Bean
+    public OgiriSubTokenRegistration deviceSubToken() {
+      return new OgiriSubTokenRegistration() {
+        @Override public String getName() { return "device"; }
+        @Override public boolean isIncludeByDefault() { return true; }
+        @Override public String clientIdFor(String parentClientId) {
+          return parentClientId + ".device";
+        }
+        @Override public Instant expiry(Instant parentExpiry) {
+          Instant limit = Instant.now().plus(Duration.ofHours(12));
+          return parentExpiry.isBefore(limit) ? parentExpiry : limit;
+        }
+      };
     }
-  };
-}
-```
-</details>
+    ```
 
 ## Sub-Token Properties
 

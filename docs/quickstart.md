@@ -31,158 +31,158 @@ implementation 'com.quantipixels.ogiri:ogiri-core:1.2.0'
 
 Connects Ògiri to your user database:
 
-```kotlin
-@Component
-class MyUserDirectory(private val userService: UserService) : OgiriUserDirectory {
+=== "Kotlin"
 
-  override fun findById(id: Long): OgiriUser? = userService.getById(id)
+    ```kotlin
+    @Component
+    class MyUserDirectory(private val userService: UserService) : OgiriUserDirectory {
 
-  override fun findByUsername(username: String): OgiriUser? = userService.getByUsername(username)
+      override fun findById(id: Long): OgiriUser? = userService.getById(id)
 
-  override fun findByEmail(email: String): OgiriUser? = userService.getByEmail(email)
+      override fun findByUsername(username: String): OgiriUser? = userService.getByUsername(username)
 
-  override fun loadUserByUsername(username: String): OgiriUser =
-    userService.getByUsername(username) ?: throw UsernameNotFoundException(username)
+      override fun findByEmail(email: String): OgiriUser? = userService.getByEmail(email)
 
-  override fun recordSuccessfulLogin(userId: Long) {
-    userService.recordLogin(userId)
-  }
-}
-```
+      override fun loadUserByUsername(username: String): OgiriUser =
+        userService.getByUsername(username) ?: throw UsernameNotFoundException(username)
 
-<details>
-<summary>Java version</summary>
+      override fun recordSuccessfulLogin(userId: Long) {
+        userService.recordLogin(userId)
+      }
+    }
+    ```
 
-```java
-@Component
-public class MyUserDirectory implements OgiriUserDirectory {
-  private final UserService userService;
+=== "Java"
 
-  public MyUserDirectory(UserService userService) {
-    this.userService = userService;
-  }
+    ```java
+    @Component
+    public class MyUserDirectory implements OgiriUserDirectory {
+      private final UserService userService;
 
-  @Override
-  public OgiriUser findById(Long id) {
-    return userService.getById(id);
-  }
+      public MyUserDirectory(UserService userService) {
+        this.userService = userService;
+      }
 
-  @Override
-  public OgiriUser findByUsername(String username) {
-    return userService.getByUsername(username);
-  }
+      @Override
+      public OgiriUser findById(Long id) {
+        return userService.getById(id);
+      }
 
-  @Override
-  public OgiriUser findByEmail(String email) {
-    return userService.getByEmail(email);
-  }
+      @Override
+      public OgiriUser findByUsername(String username) {
+        return userService.getByUsername(username);
+      }
 
-  @Override
-  public OgiriUser loadUserByUsername(String username) {
-    OgiriUser user = userService.getByUsername(username);
-    if (user == null) throw new UsernameNotFoundException(username);
-    return user;
-  }
+      @Override
+      public OgiriUser findByEmail(String email) {
+        return userService.getByEmail(email);
+      }
 
-  @Override
-  public void recordSuccessfulLogin(Long userId) {
-    userService.recordLogin(userId);
-  }
-}
-```
-</details>
+      @Override
+      public OgiriUser loadUserByUsername(String username) {
+        OgiriUser user = userService.getByUsername(username);
+        if (user == null) throw new UsernameNotFoundException(username);
+        return user;
+      }
+
+      @Override
+      public void recordSuccessfulLogin(Long userId) {
+        userService.recordLogin(userId);
+      }
+    }
+    ```
 
 ### RouteRegistry
 
 Declares which routes bypass authentication:
 
-```kotlin
-@Component
-class MyRouteRegistry : OgiriRouteRegistry {
-  override fun registrations() = listOf(
-    OgiriRoute.post("/api/auth/login"),
-    OgiriRoute.post("/api/auth/register"),
-    OgiriRoute.get("/api/health"),
-  )
-}
-```
+=== "Kotlin"
 
-<details>
-<summary>Java version</summary>
+    ```kotlin
+    @Component
+    class MyRouteRegistry : OgiriRouteRegistry {
+      override fun registrations() = listOf(
+        OgiriRoute.post("/api/auth/login"),
+        OgiriRoute.post("/api/auth/register"),
+        OgiriRoute.get("/api/health"),
+      )
+    }
+    ```
 
-```java
-@Component
-public class MyRouteRegistry implements OgiriRouteRegistry {
-  @Override
-  public List<OgiriRoute> registrations() {
-    return List.of(
-      OgiriRoute.post("/api/auth/login"),
-      OgiriRoute.post("/api/auth/register"),
-      OgiriRoute.get("/api/health")
-    );
-  }
-}
-```
-</details>
+=== "Java"
+
+    ```java
+    @Component
+    public class MyRouteRegistry implements OgiriRouteRegistry {
+      @Override
+      public List<OgiriRoute> registrations() {
+        return List.of(
+          OgiriRoute.post("/api/auth/login"),
+          OgiriRoute.post("/api/auth/register"),
+          OgiriRoute.get("/api/health")
+        );
+      }
+    }
+    ```
 
 ### OgiriTokenRepository
 
 Implement token persistence. For JPA:
 
-```kotlin
-@Repository
-interface MyTokenRepository : JpaRepository<Token, Long>, OgiriTokenRepository<Token>
-```
+=== "Kotlin"
 
-<details>
-<summary>Java version</summary>
+    ```kotlin
+    @Repository
+    interface MyTokenRepository : JpaRepository<Token, Long>, OgiriTokenRepository<Token>
+    ```
 
-```java
-@Repository
-public interface MyTokenRepository extends JpaRepository<Token, Long>, OgiriTokenRepository<Token> {}
-```
-</details>
+=== "Java"
+
+    ```java
+    @Repository
+    public interface MyTokenRepository extends JpaRepository<Token, Long>, OgiriTokenRepository<Token> {}
+    ```
 
 See [Database Integration](database.md) for MongoDB, Redis, and custom implementations.
 
 ## 3. Issue Tokens on Login
 
-```kotlin
-@RestController
-class AuthController(private val tokenService: OgiriTokenService<Token>) {
+=== "Kotlin"
 
-  @PostMapping("/api/auth/login")
-  fun login(@RequestBody request: LoginRequest, response: HttpServletResponse): ResponseEntity<*> {
-    val user = authenticate(request.username, request.password)
-    val authHeader = tokenService.createNewAuthToken(user.id, "web")
-    response.appendAuthHeaders(authHeader)
-    return ResponseEntity.ok(mapOf("message" to "Login successful"))
-  }
-}
-```
+    ```kotlin
+    @RestController
+    class AuthController(private val tokenService: OgiriTokenService<Token>) {
 
-<details>
-<summary>Java version</summary>
+      @PostMapping("/api/auth/login")
+      fun login(@RequestBody request: LoginRequest, response: HttpServletResponse): ResponseEntity<*> {
+        val user = authenticate(request.username, request.password)
+        val authHeader = tokenService.createNewAuthToken(user.id, "web")
+        response.appendAuthHeaders(authHeader)
+        return ResponseEntity.ok(mapOf("message" to "Login successful"))
+      }
+    }
+    ```
 
-```java
-@RestController
-public class AuthController {
-  private final OgiriTokenService<Token> tokenService;
+=== "Java"
 
-  public AuthController(OgiriTokenService<Token> tokenService) {
-    this.tokenService = tokenService;
-  }
+    ```java
+    @RestController
+    public class AuthController {
+      private final OgiriTokenService<Token> tokenService;
 
-  @PostMapping("/api/auth/login")
-  public ResponseEntity<?> login(@RequestBody LoginRequest request, HttpServletResponse response) {
-    User user = authenticate(request.getUsername(), request.getPassword());
-    AuthHeader authHeader = tokenService.createNewAuthToken(user.getId(), "web");
-    AuthHeaderKt.appendAuthHeaders(response, authHeader);
-    return ResponseEntity.ok(Map.of("message", "Login successful"));
-  }
-}
-```
-</details>
+      public AuthController(OgiriTokenService<Token> tokenService) {
+        this.tokenService = tokenService;
+      }
+
+      @PostMapping("/api/auth/login")
+      public ResponseEntity<?> login(@RequestBody LoginRequest request, HttpServletResponse response) {
+        User user = authenticate(request.getUsername(), request.getPassword());
+        AuthHeader authHeader = tokenService.createNewAuthToken(user.getId(), "web");
+        AuthHeaderKt.appendAuthHeaders(response, authHeader);
+        return ResponseEntity.ok(Map.of("message", "Login successful"));
+      }
+    }
+    ```
 
 ## Done!
 

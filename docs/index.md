@@ -13,26 +13,60 @@
 
 Add the dependency and implement two interfaces:
 
-```kotlin
-// 1. Add dependency
-implementation("com.quantipixels.ogiri:ogiri-core:1.2.0")
+=== "Kotlin"
 
-// 2. Connect to your user system
-@Component
-class MyUserDirectory(private val userService: UserService) : OgiriUserDirectory {
-  override fun findById(id: Long) = userService.getById(id)
-  override fun findByUsername(username: String) = userService.getByUsername(username)
-  override fun findByEmail(email: String) = userService.getByEmail(email)
-  override fun loadUserByUsername(username: String) = userService.getByUsername(username)!!
-  override fun recordSuccessfulLogin(userId: Long) { userService.recordLogin(userId) }
-}
+    ```kotlin
+    // 1. Add dependency
+    implementation("com.quantipixels.ogiri:ogiri-core:1.2.0")
 
-// 3. Declare public routes
-@Component
-class MyRouteRegistry : OgiriRouteRegistry {
-  override fun registrations() = listOf(OgiriRoute.post("/api/auth/**"))
-}
-```
+    // 2. Connect to your user system
+    @Component
+    class MyUserDirectory(private val userService: UserService) : OgiriUserDirectory {
+      override fun findById(id: Long) = userService.getById(id)
+      override fun findByUsername(username: String) = userService.getByUsername(username)
+      override fun findByEmail(email: String) = userService.getByEmail(email)
+      override fun loadUserByUsername(username: String) = userService.getByUsername(username)!!
+      override fun recordSuccessfulLogin(userId: Long) { userService.recordLogin(userId) }
+    }
+
+    // 3. Declare public routes
+    @Component
+    class MyRouteRegistry : OgiriRouteRegistry {
+      override fun registrations() = listOf(OgiriRoute.post("/api/auth/**"))
+    }
+    ```
+
+=== "Java"
+
+    ```java
+    // 1. Add dependency
+    // implementation("com.quantipixels.ogiri:ogiri-core:1.2.0")
+
+    // 2. Connect to your user system
+    @Component
+    public class MyUserDirectory implements OgiriUserDirectory {
+      private final UserService userService;
+
+      public MyUserDirectory(UserService userService) {
+        this.userService = userService;
+      }
+
+      @Override public OgiriUser findById(Long id) { return userService.getById(id); }
+      @Override public OgiriUser findByUsername(String username) { return userService.getByUsername(username); }
+      @Override public OgiriUser findByEmail(String email) { return userService.getByEmail(email); }
+      @Override public OgiriUser loadUserByUsername(String username) { return userService.getByUsername(username); }
+      @Override public void recordSuccessfulLogin(Long userId) { userService.recordLogin(userId); }
+    }
+
+    // 3. Declare public routes
+    @Component
+    public class MyRouteRegistry implements OgiriRouteRegistry {
+      @Override
+      public List<OgiriRoute> registrations() {
+        return List.of(OgiriRoute.post("/api/auth/**"));
+      }
+    }
+    ```
 
 That's it. Ògiri auto-configures the security filter chain.
 

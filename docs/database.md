@@ -31,19 +31,19 @@ Your token entity must support these fields:
 
 Use the built-in `Token` entity:
 
-```kotlin
-@Repository
-interface MyTokenRepository : JpaRepository<Token, Long>, OgiriTokenRepository<Token>
-```
+=== "Kotlin"
 
-<details>
-<summary>Java version</summary>
+    ```kotlin
+    @Repository
+    interface MyTokenRepository : JpaRepository<Token, Long>, OgiriTokenRepository<Token>
+    ```
 
-```java
-@Repository
-public interface MyTokenRepository extends JpaRepository<Token, Long>, OgiriTokenRepository<Token> {}
-```
-</details>
+=== "Java"
+
+    ```java
+    @Repository
+    public interface MyTokenRepository extends JpaRepository<Token, Long>, OgiriTokenRepository<Token> {}
+    ```
 
 ### Custom JPA Entity
 
