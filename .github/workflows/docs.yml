@@ -44,26 +44,22 @@ jobs:
 
       - name: Deploy versioned docs
         run: |
-          # Determine version and whether to set as latest
           if [ "${{ github.event_name }}" == "release" ]; then
-            # Release event: use release tag, set as latest
+            # Release event: deploy as versioned docs only
             VERSION=${{ github.event.release.tag_name }}
             VERSION=${VERSION#v}
-            echo "Deploying release docs: $VERSION (latest)"
-            mike deploy --push --update-aliases "$VERSION" latest
-            mike set-default --push latest
+            echo "Deploying release docs: $VERSION"
+            mike deploy --push "$VERSION"
           elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
-            # Tag push: use tag version, set as latest
+            # Tag push: deploy as versioned docs only
             VERSION=${{ github.ref_name }}
             VERSION=${VERSION#v}
-            echo "Deploying tagged docs: $VERSION (latest)"
-            mike deploy --push --update-aliases "$VERSION" latest
-            mike set-default --push latest
+            echo "Deploying tagged docs: $VERSION"
+            mike deploy --push "$VERSION"
           else
-            # Branch push: use version file, set as latest (dev)
-            VERSION=$(cat .ogiri-version)
-            echo "Deploying dev docs: $VERSION (latest)"
-            mike deploy --push --update-aliases "$VERSION" latest
+            # ori branch push: deploy as "latest"
+            echo "Deploying ori branch docs as latest"
+            mike deploy --push --update-aliases ori latest
             mike set-default --push latest
           fi
 
