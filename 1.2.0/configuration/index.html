@@ -67,6 +67,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#configuration" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -585,6 +590,26 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
         
@@ -602,6 +627,208 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#properties-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Properties Reference
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Properties Reference">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#security-filter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Security Filter
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#token-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Token Behavior
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#token-rotation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Token Rotation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#token-cleanup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Token Cleanup
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration Examples
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#basic-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Basic Setup
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#high-security" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        High Security
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#high-performance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        High Performance
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#development" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Development
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#custom-beans" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Custom Beans
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Custom Beans">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#custom-ogiritokenservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Custom OgiriTokenService
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#custom-securityfilterchain" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Custom SecurityFilterChain
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#properties-file-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Properties File Format
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -945,9 +1172,220 @@
   
 
 
-  <h1>Configuration</h1>
+<h1 id="configuration">Configuration</h1>
+<p>All ogiri properties are prefixed with <code>ogiri</code>.</p>
+<h2 id="properties-reference">Properties Reference</h2>
+<h3 id="security-filter">Security Filter</h3>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ogiri.security.register-filter</code></td>
+<td><code>true</code></td>
+<td>Auto-register SecurityFilterChain</td>
+</tr>
+</tbody>
+</table>
+<h3 id="token-behavior">Token Behavior</h3>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ogiri.auth.max-clients</code></td>
+<td><code>24</code></td>
+<td>Max active tokens per user</td>
+</tr>
+<tr>
+<td><code>ogiri.auth.batch-grace-seconds</code></td>
+<td><code>5</code></td>
+<td>Grace period before rotation</td>
+</tr>
+<tr>
+<td><code>ogiri.auth.token-lifespan-days</code></td>
+<td><code>14</code></td>
+<td>Token lifetime in days</td>
+</tr>
+</tbody>
+</table>
+<h3 id="token-rotation">Token Rotation</h3>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ogiri.auth.rotate-on-write-only</code></td>
+<td><code>false</code></td>
+<td>Only rotate on POST/PUT/DELETE</td>
+</tr>
+<tr>
+<td><code>ogiri.auth.rotate-stale-seconds</code></td>
+<td><code>0</code></td>
+<td>Force rotation after N seconds (0 = disabled)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="token-cleanup">Token Cleanup</h3>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ogiri.cleanup.enabled</code></td>
+<td><code>true</code></td>
+<td>Enable scheduled cleanup job</td>
+</tr>
+<tr>
+<td><code>ogiri.cleanup.cron</code></td>
+<td><code>0 0 * * * *</code></td>
+<td>Cleanup schedule (daily at midnight)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="configuration-examples">Configuration Examples</h2>
+<h3 id="basic-setup">Basic Setup</h3>
+<pre><code class="language-yaml">ogiri:
+  security:
+    register-filter: true
+  auth:
+    max-clients: 24
+    batch-grace-seconds: 5
+    token-lifespan-days: 14
+  cleanup:
+    enabled: true
+</code></pre>
+<h3 id="high-security">High Security</h3>
+<p>Frequent rotation, short tokens, strict limits:</p>
+<pre><code class="language-yaml">ogiri:
+  auth:
+    max-clients: 5
+    batch-grace-seconds: 1
+    token-lifespan-days: 7
+    rotate-on-write-only: false
+    rotate-stale-seconds: 3600  # Force rotation every hour
+  cleanup:
+    cron: &quot;0 0 * * * *&quot;
+</code></pre>
+<h3 id="high-performance">High Performance</h3>
+<p>Longer tokens, less rotation:</p>
+<pre><code class="language-yaml">ogiri:
+  auth:
+    max-clients: 50
+    batch-grace-seconds: 30
+    token-lifespan-days: 30
+    rotate-on-write-only: true   # Only rotate on writes
+    rotate-stale-seconds: 0      # No forced rotation
+</code></pre>
+<h3 id="development">Development</h3>
+<p>Lenient settings for testing:</p>
+<pre><code class="language-yaml">ogiri:
+  auth:
+    max-clients: 100
+    batch-grace-seconds: 60
+    token-lifespan-days: 30
+  cleanup:
+    enabled: false  # Keep test tokens
+</code></pre>
+<h2 id="custom-beans">Custom Beans</h2>
+<h3 id="custom-ogiritokenservice">Custom OgiriTokenService</h3>
+<pre><code class="language-kotlin">@Configuration
+class CustomConfig(private val properties: OgiriConfigurationProperties) {
 
+  @Bean
+  fun tokenService(
+    tokenRepository: OgiriTokenRepository&lt;MyToken&gt;,
+    passwordEncoder: PasswordEncoder,
+    ogiriUserDirectory: OgiriUserDirectory,
+    identifierPolicy: IdentifierPolicy,
+    subTokenRegistry: OgiriSubTokenRegistry,
+  ): OgiriTokenService&lt;MyToken&gt; =
+    MyCustomTokenService(
+      tokenRepository,
+      passwordEncoder,
+      ogiriUserDirectory,
+      identifierPolicy,
+      subTokenRegistry,
+      properties.auth,
+    )
+}
+</code></pre>
+<h3 id="custom-securityfilterchain">Custom SecurityFilterChain</h3>
+<p>Disable auto-configuration:</p>
+<pre><code class="language-yaml">ogiri:
+  security:
+    register-filter: false
+</code></pre>
+<p>Then provide your own:</p>
+<pre><code class="language-kotlin">@Configuration
+class SecurityConfig {
 
+  @Bean
+  fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
+    return http
+      .authorizeRequests { it.anyRequest().authenticated() }
+      .addFilter(OgiriTokenAuthenticationFilter(tokenService, authBypassDecider))
+      .build()
+  }
+}
+</code></pre>
+<h2 id="properties-file-format">Properties File Format</h2>
+<pre><code class="language-properties">ogiri.security.register-filter=true
+ogiri.auth.max-clients=24
+ogiri.auth.batch-grace-seconds=5
+ogiri.auth.token-lifespan-days=14
+ogiri.auth.rotate-on-write-only=false
+ogiri.auth.rotate-stale-seconds=0
+ogiri.cleanup.enabled=true
+ogiri.cleanup.cron=0 0 * * * *
+</code></pre>
+<h2 id="troubleshooting">Troubleshooting</h2>
+<table>
+<thead>
+<tr>
+<th>Issue</th>
+<th>Solution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Token expires immediately</td>
+<td>Increase <code>token-lifespan-days</code></td>
+</tr>
+<tr>
+<td>Tokens rotate too frequently</td>
+<td>Increase <code>batch-grace-seconds</code></td>
+</tr>
+<tr>
+<td>Too many active tokens</td>
+<td>Decrease <code>max-clients</code></td>
+</tr>
+<tr>
+<td>Tests fail with token mismatch</td>
+<td>Set <code>ogiri.cleanup.enabled=false</code> in test profile</td>
+</tr>
+</tbody>
+</table>
 
 
 

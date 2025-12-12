@@ -67,6 +67,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#database-integration" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -613,6 +618,26 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Database Integration
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
         
@@ -630,6 +655,169 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#token-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Token Model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Patterns
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Implementation Patterns">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#jpa-recommended-for-sql" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        JPA (Recommended for SQL)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#custom-jpa-entity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Custom JPA Entity
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mongodb" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MongoDB
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#redis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Redis
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#existing-token-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Existing Token Table
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bundled-schemas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bundled Schemas
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Bundled Schemas">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#using-with-flyway" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using with Flyway
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-with-liquibase" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using with Liquibase
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#postgresql-schema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PostgreSQL Schema
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Best Practices
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -945,9 +1133,264 @@
   
 
 
-  <h1>Database Integration</h1>
+<h1 id="database-integration">Database Integration</h1>
+<p>Ògiri is database-agnostic. Implement <code>OgiriTokenRepository&lt;T&gt;</code> for your database of choice.</p>
+<h2 id="token-model">Token Model</h2>
+<p>Your token entity must support these fields:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>userId</code></td>
+<td>Long</td>
+<td>Yes</td>
+<td>User identifier</td>
+</tr>
+<tr>
+<td><code>client</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>Client/app identifier</td>
+</tr>
+<tr>
+<td><code>token</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>BCrypt hash</td>
+</tr>
+<tr>
+<td><code>tokenType</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>"APP" or sub-token name</td>
+</tr>
+<tr>
+<td><code>expiryAt</code></td>
+<td>Instant</td>
+<td>Yes</td>
+<td>Expiration timestamp</td>
+</tr>
+<tr>
+<td><code>lastToken</code></td>
+<td>String</td>
+<td>No</td>
+<td>Previous token (rotation grace)</td>
+</tr>
+<tr>
+<td><code>previousToken</code></td>
+<td>String</td>
+<td>No</td>
+<td>Token before last</td>
+</tr>
+<tr>
+<td><code>tokenSubtype</code></td>
+<td>String</td>
+<td>No</td>
+<td>Sub-token name</td>
+</tr>
+<tr>
+<td><code>createdAt</code></td>
+<td>Instant</td>
+<td>Yes</td>
+<td>Creation timestamp</td>
+</tr>
+<tr>
+<td><code>updatedAt</code></td>
+<td>Instant</td>
+<td>Yes</td>
+<td>Last update</td>
+</tr>
+<tr>
+<td><code>tokenUpdatedAt</code></td>
+<td>Instant</td>
+<td>Yes</td>
+<td>Last rotation</td>
+</tr>
+<tr>
+<td><code>lastUsedAt</code></td>
+<td>Instant</td>
+<td>No</td>
+<td>Last access</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Constraints:</strong>
+- Unique constraint on <code>(userId, client)</code>
+- Index on <code>userId</code> and <code>expiryAt</code></p>
+<h2 id="implementation-patterns">Implementation Patterns</h2>
+<h3 id="jpa-recommended-for-sql">JPA (Recommended for SQL)</h3>
+<p>Use the built-in <code>Token</code> entity:</p>
+<pre><code class="language-kotlin">@Repository
+interface MyTokenRepository : JpaRepository&lt;Token, Long&gt;, OgiriTokenRepository&lt;Token&gt;
+</code></pre>
+<details>
+<summary>Java version</summary>
 
 
+<pre><code class="language-java">@Repository
+public interface MyTokenRepository extends JpaRepository&lt;Token, Long&gt;, OgiriTokenRepository&lt;Token&gt; {}
+</code></pre>
+
+</details>
+
+<h3 id="custom-jpa-entity">Custom JPA Entity</h3>
+<p>Extend <code>OgiriBaseToken</code> for custom table names:</p>
+<pre><code class="language-kotlin">@Entity
+@Table(name = &quot;app_tokens&quot;)
+data class AppToken(
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    override val id: Long = 0,
+    override val userId: Long,
+    override val client: String,
+    override var token: String,
+    override val tokenType: String = &quot;APP&quot;,
+    override var expiryAt: Instant,
+    @CreationTimestamp override val createdAt: Instant = Instant.now(),
+    @UpdateTimestamp override val updatedAt: Instant = Instant.now(),
+    override var tokenUpdatedAt: Instant = Instant.now(),
+) : OgiriBaseToken()
+
+@Repository
+interface AppTokenRepository : JpaRepository&lt;AppToken, Long&gt;, OgiriTokenRepository&lt;AppToken&gt;
+</code></pre>
+<h3 id="mongodb">MongoDB</h3>
+<p>Implement <code>OgiriTokenRepository&lt;T&gt;</code> directly:</p>
+<pre><code class="language-kotlin">@Repository
+class MongoTokenRepository(private val mongoTemplate: MongoTemplate) : OgiriTokenRepository&lt;MongoToken&gt; {
+
+  override fun findByUserIdAndClient(userId: Long, client: String): MongoToken? {
+    val query = Query(Criteria.where(&quot;userId&quot;).`is`(userId).and(&quot;client&quot;).`is`(client))
+    return mongoTemplate.findOne(query, MongoToken::class.java)
+  }
+
+  override fun deleteExpiredTokens(expiryBefore: Instant) {
+    val query = Query(Criteria.where(&quot;expiryAt&quot;).lt(expiryBefore))
+    mongoTemplate.remove(query, MongoToken::class.java)
+  }
+
+  override fun save(token: MongoToken): MongoToken = mongoTemplate.save(token)
+
+  override fun delete(token: MongoToken) {
+    mongoTemplate.remove(Query(Criteria.where(&quot;_id&quot;).`is`(token.id)), MongoToken::class.java)
+  }
+}
+</code></pre>
+<h3 id="redis">Redis</h3>
+<pre><code class="language-kotlin">@Repository
+class RedisTokenRepository(private val redisTemplate: RedisTemplate&lt;String, Token&gt;) : OgiriTokenRepository&lt;Token&gt; {
+
+  override fun findByUserIdAndClient(userId: Long, client: String): Token? {
+    return redisTemplate.opsForValue().get(&quot;token:$userId:$client&quot;)
+  }
+
+  override fun save(token: Token): Token {
+    val key = &quot;token:${token.userId}:${token.client}&quot;
+    val ttl = Duration.between(Instant.now(), token.expiryAt)
+    redisTemplate.opsForValue().set(key, token, ttl)
+    return token
+  }
+
+  override fun deleteExpiredTokens(expiryBefore: Instant) {
+    // Redis handles TTL automatically
+  }
+
+  override fun delete(token: Token) {
+    redisTemplate.delete(&quot;token:${token.userId}:${token.client}&quot;)
+  }
+}
+</code></pre>
+<h3 id="existing-token-table">Existing Token Table</h3>
+<p>Adapt an existing table:</p>
+<pre><code class="language-kotlin">@Repository
+class LegacyTokenAdapter(private val legacyService: LegacyTokenService) : OgiriTokenRepository&lt;LegacyToken&gt; {
+
+  override fun findByUserIdAndClient(userId: Long, client: String) =
+    legacyService.findByUserIdAndSessionId(userId, client)
+
+  override fun deleteExpiredTokens(expiryBefore: Instant) {
+    legacyService.deleteExpiredBefore(expiryBefore.atZone(ZoneId.systemDefault()).toLocalDateTime())
+  }
+
+  override fun save(token: LegacyToken) = legacyService.save(token)
+
+  override fun delete(token: LegacyToken) = legacyService.delete(token.id)
+}
+</code></pre>
+<h2 id="bundled-schemas">Bundled Schemas</h2>
+<p>Schemas are bundled in <code>ogiri-core/src/main/resources/ogiri/db/</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Database</th>
+<th>File</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PostgreSQL</td>
+<td><code>ogiri-user-tokens.sql</code></td>
+</tr>
+<tr>
+<td>MySQL</td>
+<td><code>ogiri-user-tokens-mysql.sql</code></td>
+</tr>
+<tr>
+<td>H2</td>
+<td><code>ogiri-user-tokens-h2.sql</code></td>
+</tr>
+<tr>
+<td>MongoDB</td>
+<td><code>ogiri-tokens-mongodb.js</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="using-with-flyway">Using with Flyway</h3>
+<pre><code class="language-yaml">spring:
+  flyway:
+    locations: classpath:db/migration,classpath:/ogiri/db
+</code></pre>
+<h3 id="using-with-liquibase">Using with Liquibase</h3>
+<pre><code class="language-xml">&lt;databaseChangeLog&gt;
+  &lt;include file=&quot;classpath:/ogiri/db/ogiri-user-tokens.sql&quot;/&gt;
+&lt;/databaseChangeLog&gt;
+</code></pre>
+<h3 id="postgresql-schema">PostgreSQL Schema</h3>
+<pre><code class="language-sql">CREATE TABLE user_tokens (
+  id BIGSERIAL PRIMARY KEY,
+  user_id BIGINT NOT NULL,
+  client_id VARCHAR(255) NOT NULL,
+  token_hash VARCHAR(255) NOT NULL,
+  token_type VARCHAR(50) NOT NULL DEFAULT 'APP',
+  expiry_at TIMESTAMP NOT NULL,
+  last_token_hash VARCHAR(255),
+  previous_token_hash VARCHAR(255),
+  token_subtype VARCHAR(50),
+  created_at TIMESTAMP NOT NULL,
+  updated_at TIMESTAMP NOT NULL,
+  token_updated_at TIMESTAMP NOT NULL,
+  last_used_at TIMESTAMP,
+
+  UNIQUE (user_id, client_id)
+);
+
+CREATE INDEX idx_user_tokens_user_id ON user_tokens (user_id);
+CREATE INDEX idx_user_tokens_expiry ON user_tokens (expiry_at);
+</code></pre>
+<h2 id="best-practices">Best Practices</h2>
+<ol>
+<li><strong>Always hash tokens</strong> - Never store plaintext</li>
+<li><strong>Index expiry_at</strong> - Enables fast cleanup queries</li>
+<li><strong>Use connection pooling</strong> - HikariCP recommended</li>
+<li><strong>Monitor table size</strong> - Archive old tokens if needed</li>
+<li><strong>Test with your database</strong> - Different databases have quirks</li>
+</ol>
 
 
 

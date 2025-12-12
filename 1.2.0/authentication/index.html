@@ -67,6 +67,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#authentication-flow" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -669,6 +674,26 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Authentication Flow
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
         
@@ -686,6 +711,252 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#request-lifecycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Request Lifecycle
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Request Lifecycle">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-filter-entry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Filter Entry
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-bypass-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Bypass Check
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-header-extraction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Header Extraction
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-token-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Token Validation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-token-rotation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Token Rotation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-response" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Response
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#token-rotation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Token Rotation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Token Rotation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#batch-window" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Batch Window
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#staleness-rotation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Staleness Rotation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#write-only-rotation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Write-Only Rotation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#headers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Headers
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Headers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#request-headers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Request Headers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#response-headers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Response Headers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sub-token-header" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sub-Token Header
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#route-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Route Registry
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#error-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Error Handling
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security-best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Security Best Practices
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Testing
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -945,9 +1216,234 @@
   
 
 
-  <h1>Authentication Flow</h1>
+<h1 id="authentication-flow">Authentication Flow</h1>
+<p>How ogiri authenticates requests, rotates tokens, and manages headers.</p>
+<h2 id="request-lifecycle">Request Lifecycle</h2>
+<pre><code>Request → Filter → Bypass Check → Header Extraction → Token Validation → Rotation → Response
+</code></pre>
+<h3 id="1-filter-entry">1. Filter Entry</h3>
+<p><code>OgiriTokenAuthenticationFilter.doFilterInternal()</code> intercepts every request.</p>
+<h3 id="2-bypass-check">2. Bypass Check</h3>
+<p><code>AuthenticationBypassDecider.canSkip()</code> returns <code>true</code> for:</p>
+<ul>
+<li>Already authenticated users (SecurityContext populated)</li>
+<li>Public routes declared in <code>OgiriRouteRegistry</code></li>
+<li>CORS preflight requests (OPTIONS method)</li>
+<li>Health and docs paths (<code>/health</code>, <code>/actuator/**</code>, <code>/swagger-ui/**</code>)</li>
+</ul>
+<h3 id="3-header-extraction">3. Header Extraction</h3>
+<p><code>AuthHeader.extractAuthHeader()</code> parses authentication from:</p>
+<p><strong>Individual headers (preferred):</strong></p>
+<pre><code>access-token: &lt;token-hash&gt;
+client: web
+uid: 123
+expiry: 2025-12-25T00:00:00Z
+</code></pre>
+<p><strong>Bearer token (fallback):</strong></p>
+<pre><code>Authorization: Bearer eyJhY2Nlc3MtdG9rZW4iOiJ4eXoiLCJjbGllbnQiOiJ3ZWIiLCJ1aWQiOiIxMjMiLCJleHBpcnkiOiIyMDI1LTEyLTI1In0=
+</code></pre>
+<p>The Bearer token decodes to:</p>
+<pre><code class="language-json">{
+  &quot;access-token&quot;: &quot;xyz&quot;,
+  &quot;client&quot;: &quot;web&quot;,
+  &quot;uid&quot;: &quot;123&quot;,
+  &quot;expiry&quot;: &quot;2025-12-25&quot;
+}
+</code></pre>
+<h3 id="4-token-validation">4. Token Validation</h3>
+<p><code>OgiriTokenService.validToken()</code> verifies:</p>
+<ol>
+<li>Token hash matches database record</li>
+<li>Token is not expired</li>
+<li>Grace period tokens (<code>lastToken</code>, <code>previousToken</code>) are accepted during rotation</li>
+</ol>
+<h3 id="5-token-rotation">5. Token Rotation</h3>
+<p>Based on configuration:</p>
+<table>
+<thead>
+<tr>
+<th>Condition</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Within batch grace window</td>
+<td>Update <code>lastUsedAt</code> only, no new headers</td>
+</tr>
+<tr>
+<td>Outside batch window</td>
+<td>Rotate token, emit new headers</td>
+</tr>
+<tr>
+<td><code>rotate-on-write-only=true</code></td>
+<td>Only rotate on POST/PUT/DELETE</td>
+</tr>
+<tr>
+<td>Token exceeds <code>rotate-stale-seconds</code></td>
+<td>Force rotation</td>
+</tr>
+</tbody>
+</table>
+<h3 id="6-response">6. Response</h3>
+<p>On success:
+- <code>SecurityContext</code> populated with authenticated user
+- New auth headers appended (if rotated)</p>
+<p>On failure:
+- <code>SecurityContext</code> cleared
+- <code>AuthenticationEntryPoint</code> returns error response</p>
+<h2 id="token-rotation">Token Rotation</h2>
+<h3 id="batch-window">Batch Window</h3>
+<p>Prevents token thrashing from rapid requests:</p>
+<pre><code class="language-yaml">ogiri:
+  auth:
+    batch-grace-seconds: 5  # Requests within 5s share same token
+</code></pre>
+<p>Within the window, only <code>lastUsedAt</code> is updated.</p>
+<h3 id="staleness-rotation">Staleness Rotation</h3>
+<p>Force rotation after a time period:</p>
+<pre><code class="language-yaml">ogiri:
+  auth:
+    rotate-stale-seconds: 3600  # Rotate tokens older than 1 hour
+</code></pre>
+<h3 id="write-only-rotation">Write-Only Rotation</h3>
+<p>Only rotate on mutating requests:</p>
+<pre><code class="language-yaml">ogiri:
+  auth:
+    rotate-on-write-only: true  # GET requests don't rotate
+</code></pre>
+<h2 id="headers">Headers</h2>
+<h3 id="request-headers">Request Headers</h3>
+<p>Clients send these on authenticated requests:</p>
+<table>
+<thead>
+<tr>
+<th>Header</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>access-token</code></td>
+<td>Token hash</td>
+</tr>
+<tr>
+<td><code>client</code></td>
+<td>Client identifier (e.g., "web", "mobile")</td>
+</tr>
+<tr>
+<td><code>uid</code></td>
+<td>User identifier</td>
+</tr>
+<tr>
+<td><code>expiry</code></td>
+<td>Token expiration (ISO-8601)</td>
+</tr>
+</tbody>
+</table>
+<p>Or use a single Bearer header containing Base64-encoded JSON.</p>
+<h3 id="response-headers">Response Headers</h3>
+<p>After login or rotation:</p>
+<table>
+<thead>
+<tr>
+<th>Header</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>access-token</code></td>
+<td>New token hash</td>
+</tr>
+<tr>
+<td><code>client</code></td>
+<td>Client identifier</td>
+</tr>
+<tr>
+<td><code>uid</code></td>
+<td>User identifier</td>
+</tr>
+<tr>
+<td><code>expiry</code></td>
+<td>New expiration</td>
+</tr>
+<tr>
+<td><code>sub-tokens</code></td>
+<td>Base64-encoded sub-token map (optional)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="sub-token-header">Sub-Token Header</h3>
+<p>When sub-tokens are issued:</p>
+<pre><code>sub-tokens: eyJkZXZpY2UiOnsiY2xpZW50IjoiYXBwLmRldmljZSIsInRva2VuIjoiYWJjMTIzIiwiZXhwaXJ5IjoiMjAyNS0xMi0yNVQwMDowMDowMFoifX0=
+</code></pre>
+<p>Decodes to:</p>
+<pre><code class="language-json">{
+  &quot;device&quot;: {
+    &quot;client&quot;: &quot;app.device&quot;,
+    &quot;token&quot;: &quot;abc123&quot;,
+    &quot;expiry&quot;: &quot;2025-12-25T00:00:00Z&quot;
+  }
+}
+</code></pre>
+<h2 id="route-registry">Route Registry</h2>
+<p>Declare unauthenticated routes:</p>
+<pre><code class="language-kotlin">@Component
+class MyRouteRegistry : OgiriRouteRegistry {
+  override fun registrations() = listOf(
+    OgiriRoute.get(&quot;/public/**&quot;),
+    OgiriRoute.post(&quot;/api/auth/login&quot;),
+    OgiriRoute.post(&quot;/api/auth/register&quot;),
+    OgiriRoute.get(&quot;/health&quot;),
+    OgiriRoute.get(&quot;/api/docs/**&quot;)
+  )
+}
+</code></pre>
+<p>Routes support wildcards:
+- <code>*</code> matches single path segment
+- <code>**</code> matches multiple path segments</p>
+<h2 id="error-handling">Error Handling</h2>
+<p>Use <code>SecurityServiceException</code> for auth errors:</p>
+<pre><code class="language-kotlin">throw SecurityServiceException(&quot;error.auth.invalid_token&quot;, &quot;Token is invalid&quot;)
+</code></pre>
+<p>Recommended error codes:
+- <code>error.auth.invalid_token</code>
+- <code>error.auth.expired_token</code>
+- <code>error.auth.missing_headers</code>
+- <code>error.auth.user_not_found</code></p>
+<p>Handle in <code>@ControllerAdvice</code>:</p>
+<pre><code class="language-kotlin">@ExceptionHandler(SecurityServiceException::class)
+fun handleAuthError(ex: SecurityServiceException): ResponseEntity&lt;*&gt; {
+  return ResponseEntity
+    .status(HttpStatus.UNAUTHORIZED)
+    .body(mapOf(&quot;error&quot; to ex.code, &quot;message&quot; to ex.message))
+}
+</code></pre>
+<h2 id="security-best-practices">Security Best Practices</h2>
+<ol>
+<li><strong>Never log raw tokens</strong> - Use <code>SecurityHelpers</code> for parsing</li>
+<li><strong>Register public routes</strong> - Prevent accidental lockouts</li>
+<li><strong>Use SecurityServiceException</strong> - Avoid leaking internal errors</li>
+<li><strong>Validate identifiers</strong> - Use <code>IdentifierPolicy</code> before database queries</li>
+</ol>
+<h2 id="testing">Testing</h2>
+<p>Use in-memory fixtures for testing:</p>
+<pre><code class="language-kotlin">@Test
+fun `should authenticate valid token`() {
+  val token = tokenService.createNewAuthToken(userId, &quot;test-client&quot;)
 
-
+  mockMvc.get(&quot;/api/protected&quot;) {
+    header(&quot;access-token&quot;, token.accessToken)
+    header(&quot;client&quot;, token.client)
+    header(&quot;uid&quot;, userId.toString())
+    header(&quot;expiry&quot;, token.expiry.toString())
+  }.andExpect {
+    status { isOk() }
+  }
+}
+</code></pre>
+<p>See <code>OgiriTokenAuthenticationFilterTest</code> for comprehensive examples.</p>
 
 
 
