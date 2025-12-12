@@ -1219,8 +1219,8 @@
 <h1 id="authentication-flow">Authentication Flow</h1>
 <p>How ogiri authenticates requests, rotates tokens, and manages headers.</p>
 <h2 id="request-lifecycle">Request Lifecycle</h2>
-<pre><code>Request → Filter → Bypass Check → Header Extraction → Token Validation → Rotation → Response
-</code></pre>
+<div class="highlight"><pre><span></span><code>Request → Filter → Bypass Check → Header Extraction → Token Validation → Rotation → Response
+</code></pre></div>
 <h3 id="1-filter-entry">1. Filter Entry</h3>
 <p><code>OgiriTokenAuthenticationFilter.doFilterInternal()</code> intercepts every request.</p>
 <h3 id="2-bypass-check">2. Bypass Check</h3>
@@ -1233,23 +1233,23 @@
 </ul>
 <h3 id="3-header-extraction">3. Header Extraction</h3>
 <p><code>AuthHeader.extractAuthHeader()</code> parses authentication from:</p>
-<p><strong>Individual headers (preferred):</strong></p>
-<pre><code>access-token: &lt;token-hash&gt;
+<p><strong>Individual headers (preferred):</strong>
+<div class="highlight"><pre><span></span><code>access-token: &lt;token-hash&gt;
 client: web
 uid: 123
 expiry: 2025-12-25T00:00:00Z
-</code></pre>
-<p><strong>Bearer token (fallback):</strong></p>
-<pre><code>Authorization: Bearer eyJhY2Nlc3MtdG9rZW4iOiJ4eXoiLCJjbGllbnQiOiJ3ZWIiLCJ1aWQiOiIxMjMiLCJleHBpcnkiOiIyMDI1LTEyLTI1In0=
-</code></pre>
-<p>The Bearer token decodes to:</p>
-<pre><code class="language-json">{
-  &quot;access-token&quot;: &quot;xyz&quot;,
-  &quot;client&quot;: &quot;web&quot;,
-  &quot;uid&quot;: &quot;123&quot;,
-  &quot;expiry&quot;: &quot;2025-12-25&quot;
-}
-</code></pre>
+</code></pre></div></p>
+<p><strong>Bearer token (fallback):</strong>
+<div class="highlight"><pre><span></span><code>Authorization: Bearer eyJhY2Nlc3MtdG9rZW4iOiJ4eXoiLCJjbGllbnQiOiJ3ZWIiLCJ1aWQiOiIxMjMiLCJleHBpcnkiOiIyMDI1LTEyLTI1In0=
+</code></pre></div></p>
+<p>The Bearer token decodes to:
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;access-token&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;xyz&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;client&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;web&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;uid&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;123&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;expiry&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2025-12-25&quot;</span>
+<span class="p">}</span>
+</code></pre></div></p>
 <h3 id="4-token-validation">4. Token Validation</h3>
 <p><code>OgiriTokenService.validToken()</code> verifies:</p>
 <ol>
@@ -1295,23 +1295,23 @@ expiry: 2025-12-25T00:00:00Z
 <h2 id="token-rotation">Token Rotation</h2>
 <h3 id="batch-window">Batch Window</h3>
 <p>Prevents token thrashing from rapid requests:</p>
-<pre><code class="language-yaml">ogiri:
-  auth:
-    batch-grace-seconds: 5  # Requests within 5s share same token
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="nt">ogiri</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">auth</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">batch-grace-seconds</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span><span class="w">  </span><span class="c1"># Requests within 5s share same token</span>
+</code></pre></div>
 <p>Within the window, only <code>lastUsedAt</code> is updated.</p>
 <h3 id="staleness-rotation">Staleness Rotation</h3>
 <p>Force rotation after a time period:</p>
-<pre><code class="language-yaml">ogiri:
-  auth:
-    rotate-stale-seconds: 3600  # Rotate tokens older than 1 hour
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="nt">ogiri</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">auth</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">rotate-stale-seconds</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3600</span><span class="w">  </span><span class="c1"># Rotate tokens older than 1 hour</span>
+</code></pre></div>
 <h3 id="write-only-rotation">Write-Only Rotation</h3>
 <p>Only rotate on mutating requests:</p>
-<pre><code class="language-yaml">ogiri:
-  auth:
-    rotate-on-write-only: true  # GET requests don't rotate
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="nt">ogiri</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">auth</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">rotate-on-write-only</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w">  </span><span class="c1"># GET requests don&#39;t rotate</span>
+</code></pre></div>
 <h2 id="headers">Headers</h2>
 <h3 id="request-headers">Request Headers</h3>
 <p>Clients send these on authenticated requests:</p>
@@ -1376,50 +1376,50 @@ expiry: 2025-12-25T00:00:00Z
 </table>
 <h3 id="sub-token-header">Sub-Token Header</h3>
 <p>When sub-tokens are issued:</p>
-<pre><code>sub-tokens: eyJkZXZpY2UiOnsiY2xpZW50IjoiYXBwLmRldmljZSIsInRva2VuIjoiYWJjMTIzIiwiZXhwaXJ5IjoiMjAyNS0xMi0yNVQwMDowMDowMFoifX0=
-</code></pre>
-<p>Decodes to:</p>
-<pre><code class="language-json">{
-  &quot;device&quot;: {
-    &quot;client&quot;: &quot;app.device&quot;,
-    &quot;token&quot;: &quot;abc123&quot;,
-    &quot;expiry&quot;: &quot;2025-12-25T00:00:00Z&quot;
-  }
-}
-</code></pre>
+<div class="highlight"><pre><span></span><code>sub-tokens: eyJkZXZpY2UiOnsiY2xpZW50IjoiYXBwLmRldmljZSIsInRva2VuIjoiYWJjMTIzIiwiZXhwaXJ5IjoiMjAyNS0xMi0yNVQwMDowMDowMFoifX0=
+</code></pre></div>
+<p>Decodes to:
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;device&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;client&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;app.device&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;token&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;abc123&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;expiry&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2025-12-25T00:00:00Z&quot;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></p>
 <h2 id="route-registry">Route Registry</h2>
 <p>Declare unauthenticated routes:</p>
-<pre><code class="language-kotlin">@Component
-class MyRouteRegistry : OgiriRouteRegistry {
-  override fun registrations() = listOf(
-    OgiriRoute.get(&quot;/public/**&quot;),
-    OgiriRoute.post(&quot;/api/auth/login&quot;),
-    OgiriRoute.post(&quot;/api/auth/register&quot;),
-    OgiriRoute.get(&quot;/health&quot;),
-    OgiriRoute.get(&quot;/api/docs/**&quot;)
-  )
-}
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="nd">@Component</span>
+<span class="kd">class</span><span class="w"> </span><span class="nc">MyRouteRegistry</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">OgiriRouteRegistry</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">override</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">registrations</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">listOf</span><span class="p">(</span>
+<span class="w">    </span><span class="n">OgiriRoute</span><span class="p">.</span><span class="na">get</span><span class="p">(</span><span class="s">&quot;/public/**&quot;</span><span class="p">),</span>
+<span class="w">    </span><span class="n">OgiriRoute</span><span class="p">.</span><span class="na">post</span><span class="p">(</span><span class="s">&quot;/api/auth/login&quot;</span><span class="p">),</span>
+<span class="w">    </span><span class="n">OgiriRoute</span><span class="p">.</span><span class="na">post</span><span class="p">(</span><span class="s">&quot;/api/auth/register&quot;</span><span class="p">),</span>
+<span class="w">    </span><span class="n">OgiriRoute</span><span class="p">.</span><span class="na">get</span><span class="p">(</span><span class="s">&quot;/health&quot;</span><span class="p">),</span>
+<span class="w">    </span><span class="n">OgiriRoute</span><span class="p">.</span><span class="na">get</span><span class="p">(</span><span class="s">&quot;/api/docs/**&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
 <p>Routes support wildcards:
 - <code>*</code> matches single path segment
 - <code>**</code> matches multiple path segments</p>
 <h2 id="error-handling">Error Handling</h2>
 <p>Use <code>SecurityServiceException</code> for auth errors:</p>
-<pre><code class="language-kotlin">throw SecurityServiceException(&quot;error.auth.invalid_token&quot;, &quot;Token is invalid&quot;)
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="k">throw</span><span class="w"> </span><span class="n">SecurityServiceException</span><span class="p">(</span><span class="s">&quot;error.auth.invalid_token&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Token is invalid&quot;</span><span class="p">)</span>
+</code></pre></div>
 <p>Recommended error codes:
 - <code>error.auth.invalid_token</code>
 - <code>error.auth.expired_token</code>
 - <code>error.auth.missing_headers</code>
 - <code>error.auth.user_not_found</code></p>
 <p>Handle in <code>@ControllerAdvice</code>:</p>
-<pre><code class="language-kotlin">@ExceptionHandler(SecurityServiceException::class)
-fun handleAuthError(ex: SecurityServiceException): ResponseEntity&lt;*&gt; {
-  return ResponseEntity
-    .status(HttpStatus.UNAUTHORIZED)
-    .body(mapOf(&quot;error&quot; to ex.code, &quot;message&quot; to ex.message))
-}
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="nd">@ExceptionHandler</span><span class="p">(</span><span class="n">SecurityServiceException</span><span class="o">::</span><span class="n">class</span><span class="p">)</span>
+<span class="kd">fun</span><span class="w"> </span><span class="nf">handleAuthError</span><span class="p">(</span><span class="n">ex</span><span class="p">:</span><span class="w"> </span><span class="n">SecurityServiceException</span><span class="p">):</span><span class="w"> </span><span class="n">ResponseEntity</span><span class="o">&lt;*&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">ResponseEntity</span>
+<span class="w">    </span><span class="p">.</span><span class="na">status</span><span class="p">(</span><span class="n">HttpStatus</span><span class="p">.</span><span class="na">UNAUTHORIZED</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="na">body</span><span class="p">(</span><span class="n">mapOf</span><span class="p">(</span><span class="s">&quot;error&quot;</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">ex</span><span class="p">.</span><span class="na">code</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;message&quot;</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">ex</span><span class="p">.</span><span class="na">message</span><span class="p">))</span>
+<span class="p">}</span>
+</code></pre></div>
 <h2 id="security-best-practices">Security Best Practices</h2>
 <ol>
 <li><strong>Never log raw tokens</strong> - Use <code>SecurityHelpers</code> for parsing</li>
@@ -1429,20 +1429,20 @@ fun handleAuthError(ex: SecurityServiceException): ResponseEntity&lt;*&gt; {
 </ol>
 <h2 id="testing">Testing</h2>
 <p>Use in-memory fixtures for testing:</p>
-<pre><code class="language-kotlin">@Test
-fun `should authenticate valid token`() {
-  val token = tokenService.createNewAuthToken(userId, &quot;test-client&quot;)
+<div class="highlight"><pre><span></span><code><span class="nd">@Test</span>
+<span class="kd">fun</span><span class="w"> </span><span class="nf">`should authenticate valid token`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">val</span><span class="w"> </span><span class="nv">token</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tokenService</span><span class="p">.</span><span class="na">createNewAuthToken</span><span class="p">(</span><span class="n">userId</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;test-client&quot;</span><span class="p">)</span>
 
-  mockMvc.get(&quot;/api/protected&quot;) {
-    header(&quot;access-token&quot;, token.accessToken)
-    header(&quot;client&quot;, token.client)
-    header(&quot;uid&quot;, userId.toString())
-    header(&quot;expiry&quot;, token.expiry.toString())
-  }.andExpect {
-    status { isOk() }
-  }
-}
-</code></pre>
+<span class="w">  </span><span class="n">mockMvc</span><span class="p">.</span><span class="na">get</span><span class="p">(</span><span class="s">&quot;/api/protected&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">header</span><span class="p">(</span><span class="s">&quot;access-token&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">token</span><span class="p">.</span><span class="na">accessToken</span><span class="p">)</span>
+<span class="w">    </span><span class="n">header</span><span class="p">(</span><span class="s">&quot;client&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">token</span><span class="p">.</span><span class="na">client</span><span class="p">)</span>
+<span class="w">    </span><span class="n">header</span><span class="p">(</span><span class="s">&quot;uid&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">userId</span><span class="p">.</span><span class="na">toString</span><span class="p">())</span>
+<span class="w">    </span><span class="n">header</span><span class="p">(</span><span class="s">&quot;expiry&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">token</span><span class="p">.</span><span class="na">expiry</span><span class="p">.</span><span class="na">toString</span><span class="p">())</span>
+<span class="w">  </span><span class="p">}.</span><span class="na">andExpect</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">status</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">isOk</span><span class="p">()</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
 <p>See <code>OgiriTokenAuthenticationFilterTest</code> for comprehensive examples.</p>
 
 
@@ -1461,6 +1461,8 @@ fun `should authenticate valid token`() {
             </div>
           
           
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
         
@@ -1515,7 +1517,7 @@ fun `should authenticate valid token`() {
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.top", "navigation.sections", "navigation.tabs", "toc.integrate", "content.code.copy"], "search": "../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.top", "navigation.sections", "navigation.tabs", "toc.integrate", "content.code.copy", "content.tabs.link"], "search": "../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
     
     
       <script src="../assets/javascripts/bundle.e71a0d61.min.js"></script>

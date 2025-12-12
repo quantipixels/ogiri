@@ -1350,12 +1350,12 @@
 </tbody>
 </table>
 <h3 id="running-samples">Running Samples</h3>
-<pre><code class="language-bash">./gradlew :sample:sample-kotlin:bootRun  # Kotlin sample
-./gradlew :sample:sample-java:bootRun    # Java sample
-</code></pre>
+<div class="highlight"><pre><span></span><code>./gradlew<span class="w"> </span>:sample:sample-kotlin:bootRun<span class="w">  </span><span class="c1"># Kotlin sample</span>
+./gradlew<span class="w"> </span>:sample:sample-java:bootRun<span class="w">    </span><span class="c1"># Java sample</span>
+</code></pre></div>
 <p>Requires PostgreSQL on <code>localhost:5432</code>. See <a href="../sample/README.md">sample/README.md</a> for setup.</p>
 <h2 id="project-structure">Project Structure</h2>
-<pre><code>ogiri/
+<div class="highlight"><pre><span></span><code>ogiri/
 ├── ogiri-core/                      # Main library (published to Maven Central)
 │   ├── src/main/kotlin/             # Source code
 │   │   └── com/quantipixels/ogiri/security/
@@ -1373,7 +1373,7 @@
 │   └── sample-kotlin/               # Kotlin example
 ├── docs/                            # Documentation (MkDocs)
 └── .github/workflows/               # CI/CD pipelines
-</code></pre>
+</code></pre></div>
 <h2 id="code-style">Code Style</h2>
 <ul>
 <li><strong>Indentation:</strong> 2 spaces</li>
@@ -1384,9 +1384,9 @@
 </ul>
 <h2 id="testing">Testing</h2>
 <h3 id="running-tests">Running Tests</h3>
-<pre><code class="language-bash">./gradlew test                    # All tests
-./gradlew :ogiri-core:test        # Core only
-</code></pre>
+<div class="highlight"><pre><span></span><code>./gradlew<span class="w"> </span><span class="nb">test</span><span class="w">                    </span><span class="c1"># All tests</span>
+./gradlew<span class="w"> </span>:ogiri-core:test<span class="w">        </span><span class="c1"># Core only</span>
+</code></pre></div>
 <p>Coverage report: <code>ogiri-core/build/reports/jacoco/test/html/index.html</code></p>
 <h3 id="test-guidelines">Test Guidelines</h3>
 <ul>
@@ -1429,21 +1429,21 @@
 </table>
 <h2 id="git-hooks">Git Hooks</h2>
 <p>Install hooks for code quality enforcement:</p>
-<pre><code class="language-bash">./gradlew setupDev
-</code></pre>
+<div class="highlight"><pre><span></span><code>./gradlew<span class="w"> </span>setupDev
+</code></pre></div>
 <ul>
 <li><strong>Pre-commit:</strong> Runs <code>spotlessCheck</code></li>
 <li><strong>Pre-push:</strong> Runs full build</li>
 </ul>
 <h2 id="commit-guidelines">Commit Guidelines</h2>
 <p>Use <a href="https://www.conventionalcommits.org/">Conventional Commits</a>:</p>
-<pre><code>feat: add chat sub-token renewal
+<div class="highlight"><pre><span></span><code>feat: add chat sub-token renewal
 fix: adjust expiry parsing
 refactor: extract validation logic
 docs: update configuration guide
 test: add rotation edge cases
 chore: bump version to 1.0.2
-</code></pre>
+</code></pre></div>
 <h2 id="pull-request-process">Pull Request Process</h2>
 <ol>
 <li>Create feature branch from <code>main</code></li>
@@ -1455,27 +1455,27 @@ chore: bump version to 1.0.2
 </ol>
 <h2 id="version-management">Version Management</h2>
 <p>Version is defined in <code>settings.gradle.kts</code>:</p>
-<pre><code class="language-kotlin">val projectVersion = System.getenv(&quot;RELEASE_VERSION&quot;) ?: &quot;1.0.1&quot;
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="kd">val</span><span class="w"> </span><span class="nv">projectVersion</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">System</span><span class="p">.</span><span class="na">getenv</span><span class="p">(</span><span class="s">&quot;RELEASE_VERSION&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">?:</span><span class="w"> </span><span class="s">&quot;1.0.1&quot;</span>
+</code></pre></div>
 <h3 id="override-version">Override Version</h3>
-<pre><code class="language-bash">RELEASE_VERSION=1.0.2 ./gradlew build
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="nv">RELEASE_VERSION</span><span class="o">=</span><span class="m">1</span>.0.2<span class="w"> </span>./gradlew<span class="w"> </span>build
+</code></pre></div>
 <h3 id="bump-version">Bump Version</h3>
-<pre><code class="language-bash">./gradlew bumpVersion -PnewVersion=1.0.2
-</code></pre>
+<div class="highlight"><pre><span></span><code>./gradlew<span class="w"> </span>bumpVersion<span class="w"> </span>-PnewVersion<span class="o">=</span><span class="m">1</span>.0.2
+</code></pre></div>
 <h2 id="release-process">Release Process</h2>
 <h3 id="automated-release-recommended">Automated Release (Recommended)</h3>
 <p>Push a git tag to trigger the release workflow:</p>
-<pre><code class="language-bash"># 1. Update version in settings.gradle.kts
-# 2. Update changelog.md
-# 3. Commit changes
-git add settings.gradle.kts docs/changelog.md
-git commit -m &quot;chore: bump version to 1.0.2&quot;
+<div class="highlight"><pre><span></span><code><span class="c1"># 1. Update version in settings.gradle.kts</span>
+<span class="c1"># 2. Update changelog.md</span>
+<span class="c1"># 3. Commit changes</span>
+git<span class="w"> </span>add<span class="w"> </span>settings.gradle.kts<span class="w"> </span>docs/changelog.md
+git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;chore: bump version to 1.0.2&quot;</span>
 
-# 4. Create and push tag
-git tag v1.0.2
-git push origin main v1.0.2
-</code></pre>
+<span class="c1"># 4. Create and push tag</span>
+git<span class="w"> </span>tag<span class="w"> </span>v1.0.2
+git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>main<span class="w"> </span>v1.0.2
+</code></pre></div>
 <p>GitHub Actions will:
 - Build and test
 - Sign artifacts with GPG
@@ -1550,15 +1550,15 @@ git push origin main v1.0.2
 </tr>
 </tbody>
 </table>
-<p>Export GPG key:</p>
-<pre><code class="language-bash">gpg --export-secret-key &lt;KEY_ID&gt; | base64
-</code></pre>
+<p>Export GPG key:
+<div class="highlight"><pre><span></span><code>gpg<span class="w"> </span>--export-secret-key<span class="w"> </span>&lt;KEY_ID&gt;<span class="w"> </span><span class="p">|</span><span class="w"> </span>base64
+</code></pre></div></p>
 <h3 id="manual-release-not-recommended">Manual Release (Not Recommended)</h3>
-<pre><code class="language-bash">export OSSRH_USERNAME=your_username
-export OSSRH_PASSWORD=your_password
-./gradlew test
-./gradlew publish -Psigning.gnupg.executable=gpg
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">OSSRH_USERNAME</span><span class="o">=</span>your_username
+<span class="nb">export</span><span class="w"> </span><span class="nv">OSSRH_PASSWORD</span><span class="o">=</span>your_password
+./gradlew<span class="w"> </span><span class="nb">test</span>
+./gradlew<span class="w"> </span>publish<span class="w"> </span>-Psigning.gnupg.executable<span class="o">=</span>gpg
+</code></pre></div>
 <h3 id="release-checklist">Release Checklist</h3>
 <ul>
 <li>[ ] Tests pass: <code>./gradlew test</code></li>
@@ -1613,6 +1613,8 @@ export OSSRH_PASSWORD=your_password
             </div>
           
           
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
         
@@ -1667,7 +1669,7 @@ export OSSRH_PASSWORD=your_password
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.top", "navigation.sections", "navigation.tabs", "toc.integrate", "content.code.copy"], "search": "../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.top", "navigation.sections", "navigation.tabs", "toc.integrate", "content.code.copy", "content.tabs.link"], "search": "../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
     
     
       <script src="../assets/javascripts/bundle.e71a0d61.min.js"></script>

@@ -1316,54 +1316,54 @@
 <hr />
 <h2 id="security-best-practices-for-users">Security Best Practices for Users</h2>
 <h3 id="configuration">Configuration</h3>
-<pre><code class="language-yaml"># DO: Use environment variables for sensitive data
-spring:
-  datasource:
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD:!required}
+<div class="highlight"><pre><span></span><code><span class="c1"># DO: Use environment variables for sensitive data</span>
+<span class="nt">spring</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">datasource</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${DB_USERNAME}</span>
+<span class="w">    </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${DB_PASSWORD:!required}</span>
 
-# DON'T: Hardcode credentials
-spring:
-  datasource:
-    username: postgres
-    password: mypassword
-</code></pre>
+<span class="c1"># DON&#39;T: Hardcode credentials</span>
+<span class="nt">spring</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">datasource</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">postgres</span>
+<span class="w">    </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mypassword</span>
+</code></pre></div>
 <h3 id="token-rotation">Token Rotation</h3>
 <p>Enable and configure token rotation based on your security requirements:</p>
-<pre><code class="language-yaml">ogiri:
-  auth:
-    rotate-on-write-only: false  # Rotate on every write
-    rotate-stale-seconds: 3600   # Rotate tokens older than 1 hour
-    batch-grace-seconds: 30      # Grace period for old tokens
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="nt">ogiri</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">auth</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">rotate-on-write-only</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w">  </span><span class="c1"># Rotate on every write</span>
+<span class="w">    </span><span class="nt">rotate-stale-seconds</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3600</span><span class="w">   </span><span class="c1"># Rotate tokens older than 1 hour</span>
+<span class="w">    </span><span class="nt">batch-grace-seconds</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30</span><span class="w">      </span><span class="c1"># Grace period for old tokens</span>
+</code></pre></div>
 <h3 id="cors-configuration">CORS Configuration</h3>
 <p>Properly configure CORS to prevent unauthorized cross-origin token theft:</p>
-<pre><code class="language-kotlin">@Configuration
-class SecurityConfig {
-  @Bean
-  fun corsConfigurationSource(): CorsConfigurationSource {
-    val config = CorsConfiguration().apply {
-      allowedOrigins = listOf(&quot;https://yourdomain.com&quot;)  // Specific origins only
-      allowedMethods = listOf(&quot;GET&quot;, &quot;POST&quot;, &quot;PUT&quot;, &quot;DELETE&quot;)
-      allowedHeaders = listOf(&quot;*&quot;)
-      exposedHeaders = listOf(&quot;Authorization&quot;, &quot;access-token&quot;, &quot;sub-tokens&quot;)
-      allowCredentials = true
-      maxAge = 3600
-    }
-    val source = UrlBasedCorsConfigurationSource()
-    source.registerCorsConfiguration(&quot;/**&quot;, config)
-    return source
-  }
-}
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="nd">@Configuration</span>
+<span class="kd">class</span><span class="w"> </span><span class="nc">SecurityConfig</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nd">@Bean</span>
+<span class="w">  </span><span class="kd">fun</span><span class="w"> </span><span class="nf">corsConfigurationSource</span><span class="p">():</span><span class="w"> </span><span class="n">CorsConfigurationSource</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CorsConfiguration</span><span class="p">().</span><span class="na">apply</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="n">allowedOrigins</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">listOf</span><span class="p">(</span><span class="s">&quot;https://yourdomain.com&quot;</span><span class="p">)</span><span class="w">  </span><span class="c1">// Specific origins only</span>
+<span class="w">      </span><span class="n">allowedMethods</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">listOf</span><span class="p">(</span><span class="s">&quot;GET&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;POST&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;PUT&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;DELETE&quot;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">allowedHeaders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">listOf</span><span class="p">(</span><span class="s">&quot;*&quot;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">exposedHeaders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">listOf</span><span class="p">(</span><span class="s">&quot;Authorization&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;access-token&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;sub-tokens&quot;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">allowCredentials</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">      </span><span class="n">maxAge</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">3600</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">source</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">UrlBasedCorsConfigurationSource</span><span class="p">()</span>
+<span class="w">    </span><span class="n">source</span><span class="p">.</span><span class="na">registerCorsConfiguration</span><span class="p">(</span><span class="s">&quot;/**&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">config</span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">source</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
 <h3 id="logging">Logging</h3>
 <p>Be careful with logging to avoid exposing tokens:</p>
-<pre><code class="language-kotlin">// DON'T log tokens
-logger.info(&quot;User token: $token&quot;)
+<div class="highlight"><pre><span></span><code><span class="c1">// DON&#39;T log tokens</span>
+<span class="n">logger</span><span class="p">.</span><span class="na">info</span><span class="p">(</span><span class="s">&quot;User token: </span><span class="si">$</span><span class="n">token</span><span class="s">&quot;</span><span class="p">)</span>
 
-// DO log token identifiers instead
-logger.info(&quot;User $userId authenticated with token type: $tokenType&quot;)
-</code></pre>
+<span class="c1">// DO log token identifiers instead</span>
+<span class="n">logger</span><span class="p">.</span><span class="na">info</span><span class="p">(</span><span class="s">&quot;User </span><span class="si">$</span><span class="n">userId</span><span class="s"> authenticated with token type: </span><span class="si">$</span><span class="n">tokenType</span><span class="s">&quot;</span><span class="p">)</span>
+</code></pre></div>
 <hr />
 <h2 id="dependency-security">Dependency Security</h2>
 <p>We actively monitor dependencies for security vulnerabilities:</p>
@@ -1372,9 +1372,9 @@ logger.info(&quot;User $userId authenticated with token type: $tokenType&quot;)
 <li><strong>GitHub Security Scanning</strong> is enabled for vulnerability detection</li>
 <li><strong>Regular audits</strong> are performed on the dependency tree</li>
 </ul>
-<p>To check for vulnerabilities in your copy:</p>
-<pre><code class="language-bash">./gradlew dependencyCheckAnalyze
-</code></pre>
+<p>To check for vulnerabilities in your copy:
+<div class="highlight"><pre><span></span><code>./gradlew<span class="w"> </span>dependencyCheckAnalyze
+</code></pre></div></p>
 <hr />
 <h2 id="vulnerability-disclosure">Vulnerability Disclosure</h2>
 <p>When a security vulnerability is reported and patched:</p>
@@ -1437,6 +1437,8 @@ logger.info(&quot;User $userId authenticated with token type: $tokenType&quot;)
             </div>
           
           
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
         
@@ -1491,7 +1493,7 @@ logger.info(&quot;User $userId authenticated with token type: $tokenType&quot;)
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.top", "navigation.sections", "navigation.tabs", "toc.integrate", "content.code.copy"], "search": "../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.top", "navigation.sections", "navigation.tabs", "toc.integrate", "content.code.copy", "content.tabs.link"], "search": "../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
     
     
       <script src="../assets/javascripts/bundle.e71a0d61.min.js"></script>

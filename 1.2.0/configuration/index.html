@@ -1265,100 +1265,100 @@
 </table>
 <h2 id="configuration-examples">Configuration Examples</h2>
 <h3 id="basic-setup">Basic Setup</h3>
-<pre><code class="language-yaml">ogiri:
-  security:
-    register-filter: true
-  auth:
-    max-clients: 24
-    batch-grace-seconds: 5
-    token-lifespan-days: 14
-  cleanup:
-    enabled: true
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="nt">ogiri</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">security</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">register-filter</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="nt">auth</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">max-clients</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">24</span>
+<span class="w">    </span><span class="nt">batch-grace-seconds</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+<span class="w">    </span><span class="nt">token-lifespan-days</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">14</span>
+<span class="w">  </span><span class="nt">cleanup</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</code></pre></div>
 <h3 id="high-security">High Security</h3>
 <p>Frequent rotation, short tokens, strict limits:</p>
-<pre><code class="language-yaml">ogiri:
-  auth:
-    max-clients: 5
-    batch-grace-seconds: 1
-    token-lifespan-days: 7
-    rotate-on-write-only: false
-    rotate-stale-seconds: 3600  # Force rotation every hour
-  cleanup:
-    cron: &quot;0 0 * * * *&quot;
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="nt">ogiri</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">auth</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">max-clients</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+<span class="w">    </span><span class="nt">batch-grace-seconds</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">    </span><span class="nt">token-lifespan-days</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">7</span>
+<span class="w">    </span><span class="nt">rotate-on-write-only</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">    </span><span class="nt">rotate-stale-seconds</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3600</span><span class="w">  </span><span class="c1"># Force rotation every hour</span>
+<span class="w">  </span><span class="nt">cleanup</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">cron</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;0</span><span class="nv"> </span><span class="s">0</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">*&quot;</span>
+</code></pre></div>
 <h3 id="high-performance">High Performance</h3>
 <p>Longer tokens, less rotation:</p>
-<pre><code class="language-yaml">ogiri:
-  auth:
-    max-clients: 50
-    batch-grace-seconds: 30
-    token-lifespan-days: 30
-    rotate-on-write-only: true   # Only rotate on writes
-    rotate-stale-seconds: 0      # No forced rotation
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="nt">ogiri</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">auth</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">max-clients</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">50</span>
+<span class="w">    </span><span class="nt">batch-grace-seconds</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30</span>
+<span class="w">    </span><span class="nt">token-lifespan-days</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30</span>
+<span class="w">    </span><span class="nt">rotate-on-write-only</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w">   </span><span class="c1"># Only rotate on writes</span>
+<span class="w">    </span><span class="nt">rotate-stale-seconds</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span><span class="w">      </span><span class="c1"># No forced rotation</span>
+</code></pre></div>
 <h3 id="development">Development</h3>
 <p>Lenient settings for testing:</p>
-<pre><code class="language-yaml">ogiri:
-  auth:
-    max-clients: 100
-    batch-grace-seconds: 60
-    token-lifespan-days: 30
-  cleanup:
-    enabled: false  # Keep test tokens
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="nt">ogiri</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">auth</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">max-clients</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span>
+<span class="w">    </span><span class="nt">batch-grace-seconds</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">60</span>
+<span class="w">    </span><span class="nt">token-lifespan-days</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30</span>
+<span class="w">  </span><span class="nt">cleanup</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w">  </span><span class="c1"># Keep test tokens</span>
+</code></pre></div>
 <h2 id="custom-beans">Custom Beans</h2>
 <h3 id="custom-ogiritokenservice">Custom OgiriTokenService</h3>
-<pre><code class="language-kotlin">@Configuration
-class CustomConfig(private val properties: OgiriConfigurationProperties) {
+<div class="highlight"><pre><span></span><code><span class="nd">@Configuration</span>
+<span class="kd">class</span><span class="w"> </span><span class="nc">CustomConfig</span><span class="p">(</span><span class="kd">private</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">properties</span><span class="p">:</span><span class="w"> </span><span class="n">OgiriConfigurationProperties</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 
-  @Bean
-  fun tokenService(
-    tokenRepository: OgiriTokenRepository&lt;MyToken&gt;,
-    passwordEncoder: PasswordEncoder,
-    ogiriUserDirectory: OgiriUserDirectory,
-    identifierPolicy: IdentifierPolicy,
-    subTokenRegistry: OgiriSubTokenRegistry,
-  ): OgiriTokenService&lt;MyToken&gt; =
-    MyCustomTokenService(
-      tokenRepository,
-      passwordEncoder,
-      ogiriUserDirectory,
-      identifierPolicy,
-      subTokenRegistry,
-      properties.auth,
-    )
-}
-</code></pre>
+<span class="w">  </span><span class="nd">@Bean</span>
+<span class="w">  </span><span class="kd">fun</span><span class="w"> </span><span class="nf">tokenService</span><span class="p">(</span>
+<span class="w">    </span><span class="n">tokenRepository</span><span class="p">:</span><span class="w"> </span><span class="n">OgiriTokenRepository</span><span class="o">&lt;</span><span class="n">MyToken</span><span class="o">&gt;</span><span class="p">,</span>
+<span class="w">    </span><span class="n">passwordEncoder</span><span class="p">:</span><span class="w"> </span><span class="n">PasswordEncoder</span><span class="p">,</span>
+<span class="w">    </span><span class="n">ogiriUserDirectory</span><span class="p">:</span><span class="w"> </span><span class="n">OgiriUserDirectory</span><span class="p">,</span>
+<span class="w">    </span><span class="n">identifierPolicy</span><span class="p">:</span><span class="w"> </span><span class="n">IdentifierPolicy</span><span class="p">,</span>
+<span class="w">    </span><span class="n">subTokenRegistry</span><span class="p">:</span><span class="w"> </span><span class="n">OgiriSubTokenRegistry</span><span class="p">,</span>
+<span class="w">  </span><span class="p">):</span><span class="w"> </span><span class="n">OgiriTokenService</span><span class="o">&lt;</span><span class="n">MyToken</span><span class="o">&gt;</span><span class="w"> </span><span class="o">=</span>
+<span class="w">    </span><span class="n">MyCustomTokenService</span><span class="p">(</span>
+<span class="w">      </span><span class="n">tokenRepository</span><span class="p">,</span>
+<span class="w">      </span><span class="n">passwordEncoder</span><span class="p">,</span>
+<span class="w">      </span><span class="n">ogiriUserDirectory</span><span class="p">,</span>
+<span class="w">      </span><span class="n">identifierPolicy</span><span class="p">,</span>
+<span class="w">      </span><span class="n">subTokenRegistry</span><span class="p">,</span>
+<span class="w">      </span><span class="n">properties</span><span class="p">.</span><span class="na">auth</span><span class="p">,</span>
+<span class="w">    </span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
 <h3 id="custom-securityfilterchain">Custom SecurityFilterChain</h3>
 <p>Disable auto-configuration:</p>
-<pre><code class="language-yaml">ogiri:
-  security:
-    register-filter: false
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="nt">ogiri</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">security</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">register-filter</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+</code></pre></div>
 <p>Then provide your own:</p>
-<pre><code class="language-kotlin">@Configuration
-class SecurityConfig {
+<div class="highlight"><pre><span></span><code><span class="nd">@Configuration</span>
+<span class="kd">class</span><span class="w"> </span><span class="nc">SecurityConfig</span><span class="w"> </span><span class="p">{</span>
 
-  @Bean
-  fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
-    return http
-      .authorizeRequests { it.anyRequest().authenticated() }
-      .addFilter(OgiriTokenAuthenticationFilter(tokenService, authBypassDecider))
-      .build()
-  }
-}
-</code></pre>
+<span class="w">  </span><span class="nd">@Bean</span>
+<span class="w">  </span><span class="kd">fun</span><span class="w"> </span><span class="nf">securityFilterChain</span><span class="p">(</span><span class="n">http</span><span class="p">:</span><span class="w"> </span><span class="n">HttpSecurity</span><span class="p">):</span><span class="w"> </span><span class="n">SecurityFilterChain</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">http</span>
+<span class="w">      </span><span class="p">.</span><span class="na">authorizeRequests</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nb">it</span><span class="p">.</span><span class="na">anyRequest</span><span class="p">().</span><span class="na">authenticated</span><span class="p">()</span><span class="w"> </span><span class="p">}</span>
+<span class="w">      </span><span class="p">.</span><span class="na">addFilter</span><span class="p">(</span><span class="n">OgiriTokenAuthenticationFilter</span><span class="p">(</span><span class="n">tokenService</span><span class="p">,</span><span class="w"> </span><span class="n">authBypassDecider</span><span class="p">))</span>
+<span class="w">      </span><span class="p">.</span><span class="na">build</span><span class="p">()</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
 <h2 id="properties-file-format">Properties File Format</h2>
-<pre><code class="language-properties">ogiri.security.register-filter=true
-ogiri.auth.max-clients=24
-ogiri.auth.batch-grace-seconds=5
-ogiri.auth.token-lifespan-days=14
-ogiri.auth.rotate-on-write-only=false
-ogiri.auth.rotate-stale-seconds=0
-ogiri.cleanup.enabled=true
-ogiri.cleanup.cron=0 0 * * * *
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="na">ogiri.security.register-filter</span><span class="o">=</span><span class="s">true</span>
+<span class="na">ogiri.auth.max-clients</span><span class="o">=</span><span class="s">24</span>
+<span class="na">ogiri.auth.batch-grace-seconds</span><span class="o">=</span><span class="s">5</span>
+<span class="na">ogiri.auth.token-lifespan-days</span><span class="o">=</span><span class="s">14</span>
+<span class="na">ogiri.auth.rotate-on-write-only</span><span class="o">=</span><span class="s">false</span>
+<span class="na">ogiri.auth.rotate-stale-seconds</span><span class="o">=</span><span class="s">0</span>
+<span class="na">ogiri.cleanup.enabled</span><span class="o">=</span><span class="s">true</span>
+<span class="na">ogiri.cleanup.cron</span><span class="o">=</span><span class="s">0 0 * * * *</span>
+</code></pre></div>
 <h2 id="troubleshooting">Troubleshooting</h2>
 <table>
 <thead>
@@ -1403,6 +1403,8 @@ ogiri.cleanup.cron=0 0 * * * *
             </div>
           
           
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
         
@@ -1457,7 +1459,7 @@ ogiri.cleanup.cron=0 0 * * * *
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.top", "navigation.sections", "navigation.tabs", "toc.integrate", "content.code.copy"], "search": "../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.top", "navigation.sections", "navigation.tabs", "toc.integrate", "content.code.copy", "content.tabs.link"], "search": "../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
     
     
       <script src="../assets/javascripts/bundle.e71a0d61.min.js"></script>

@@ -1315,506 +1315,506 @@
 <h3 id="core-contract-ogiritoken">Core Contract: OgiriToken</h3>
 <p>Every token in Ogiri must implement the <code>OgiriToken</code> interface. This defines all properties the library needs to manage tokens.</p>
 <h3 id="option-1-extend-ogiribasetoken-recommended-for-simple-cases">Option 1: Extend OgiriBaseToken (Recommended for Simple Cases)</h3>
-<pre><code class="language-kotlin">import com.quantipixels.ogiri.security.tokens.OgiriBaseToken
-import jakarta.persistence.*
-import java.time.Instant
-import org.hibernate.annotations.CreationTimestamp
-import org.hibernate.annotations.UpdateTimestamp
+<div class="highlight"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="nn">com.quantipixels.ogiri.security.tokens.OgiriBaseToken</span>
+<span class="k">import</span><span class="w"> </span><span class="nn">jakarta.persistence.*</span>
+<span class="k">import</span><span class="w"> </span><span class="nn">java.time.Instant</span>
+<span class="k">import</span><span class="w"> </span><span class="nn">org.hibernate.annotations.CreationTimestamp</span>
+<span class="k">import</span><span class="w"> </span><span class="nn">org.hibernate.annotations.UpdateTimestamp</span>
 
-@Entity
-@Table(
-    name = &quot;tokens&quot;,
-    indexes = [
-        Index(name = &quot;idx_tokens_user&quot;, columnList = &quot;user_id&quot;),
-        Index(name = &quot;idx_tokens_expiry&quot;, columnList = &quot;expiry_at&quot;)
-    ],
-    uniqueConstraints = [
-        UniqueConstraint(name = &quot;uk_tokens_user_client&quot;, columnNames = [&quot;user_id&quot;, &quot;client_id&quot;])
-    ]
-)
-data class Token(
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    override val id: Long = 0,
+<span class="nd">@Entity</span>
+<span class="nd">@Table</span><span class="p">(</span>
+<span class="w">    </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;tokens&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="n">indexes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">[</span>
+<span class="w">        </span><span class="n">Index</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;idx_tokens_user&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">columnList</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;user_id&quot;</span><span class="p">),</span>
+<span class="w">        </span><span class="n">Index</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;idx_tokens_expiry&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">columnList</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;expiry_at&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="o">]</span><span class="p">,</span>
+<span class="w">    </span><span class="n">uniqueConstraints</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">[</span>
+<span class="w">        </span><span class="n">UniqueConstraint</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;uk_tokens_user_client&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">columnNames</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">[</span><span class="s">&quot;user_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;client_id&quot;</span><span class="o">]</span><span class="p">)</span>
+<span class="w">    </span><span class="o">]</span>
+<span class="p">)</span>
+<span class="kd">data</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">Token</span><span class="p">(</span>
+<span class="w">    </span><span class="nd">@Id</span>
+<span class="w">    </span><span class="nd">@GeneratedValue</span><span class="p">(</span><span class="n">strategy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">GenerationType</span><span class="p">.</span><span class="na">IDENTITY</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">id</span><span class="p">:</span><span class="w"> </span><span class="kt">Long</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">0</span><span class="p">,</span>
 
-    @Column(name = &quot;user_id&quot;, nullable = false)
-    override val userId: Long = 0,
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;user_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">nullable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">userId</span><span class="p">:</span><span class="w"> </span><span class="kt">Long</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">0</span><span class="p">,</span>
 
-    @Column(name = &quot;client_id&quot;, nullable = false)
-    override val client: String = &quot;&quot;,
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;client_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">nullable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">client</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span>
 
-    @Column(name = &quot;token_hash&quot;, nullable = false)
-    override var token: String = &quot;&quot;,
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;token_hash&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">nullable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">token</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span>
 
-    @Column(name = &quot;token_type&quot;, nullable = false)
-    override val tokenType: String = &quot;APP&quot;,
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;token_type&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">nullable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">tokenType</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;APP&quot;</span><span class="p">,</span>
 
-    @Column(name = &quot;expiry_at&quot;, nullable = false)
-    override var expiryAt: Instant = Instant.now(),
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;expiry_at&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">nullable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">expiryAt</span><span class="p">:</span><span class="w"> </span><span class="n">Instant</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Instant</span><span class="p">.</span><span class="na">now</span><span class="p">(),</span>
 
-    @CreationTimestamp
-    @Column(name = &quot;created_at&quot;, nullable = false, updatable = false)
-    override val createdAt: Instant = Instant.now(),
+<span class="w">    </span><span class="nd">@CreationTimestamp</span>
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;created_at&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">nullable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w"> </span><span class="n">updatable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">createdAt</span><span class="p">:</span><span class="w"> </span><span class="n">Instant</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Instant</span><span class="p">.</span><span class="na">now</span><span class="p">(),</span>
 
-    @UpdateTimestamp
-    @Column(name = &quot;updated_at&quot;, nullable = false)
-    override val updatedAt: Instant = Instant.now(),
+<span class="w">    </span><span class="nd">@UpdateTimestamp</span>
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;updated_at&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">nullable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">updatedAt</span><span class="p">:</span><span class="w"> </span><span class="n">Instant</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Instant</span><span class="p">.</span><span class="na">now</span><span class="p">(),</span>
 
-    @Column(name = &quot;token_updated_at&quot;, nullable = false)
-    override var tokenUpdatedAt: Instant = Instant.now(),
-) : OgiriBaseToken()
-</code></pre>
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;token_updated_at&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">nullable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">tokenUpdatedAt</span><span class="p">:</span><span class="w"> </span><span class="n">Instant</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Instant</span><span class="p">.</span><span class="na">now</span><span class="p">(),</span>
+<span class="p">)</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">OgiriBaseToken</span><span class="p">()</span>
+</code></pre></div>
 <p><strong>Key Points:</strong>
 - All abstract properties from <code>OgiriBaseToken</code> must be implemented
 - Optional properties (<code>tokenSubtype</code>, <code>lastToken</code>, etc.) have defaults
 - <code>plainToken</code> is automatically managed as transient
 - JPA annotations handle persistence details</p>
 <h3 id="option-2-direct-interface-implementation-maximum-flexibility">Option 2: Direct Interface Implementation (Maximum Flexibility)</h3>
-<pre><code class="language-kotlin">import com.quantipixels.ogiri.security.tokens.OgiriToken
-import jakarta.persistence.*
-import java.time.Instant
-import org.hibernate.annotations.CreationTimestamp
-import org.hibernate.annotations.UpdateTimestamp
+<div class="highlight"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="nn">com.quantipixels.ogiri.security.tokens.OgiriToken</span>
+<span class="k">import</span><span class="w"> </span><span class="nn">jakarta.persistence.*</span>
+<span class="k">import</span><span class="w"> </span><span class="nn">java.time.Instant</span>
+<span class="k">import</span><span class="w"> </span><span class="nn">org.hibernate.annotations.CreationTimestamp</span>
+<span class="k">import</span><span class="w"> </span><span class="nn">org.hibernate.annotations.UpdateTimestamp</span>
 
-@Entity
-@Table(name = &quot;custom_tokens&quot;)
-data class CustomToken(
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    override val id: Long = 0,
+<span class="nd">@Entity</span>
+<span class="nd">@Table</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;custom_tokens&quot;</span><span class="p">)</span>
+<span class="kd">data</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">CustomToken</span><span class="p">(</span>
+<span class="w">    </span><span class="nd">@Id</span><span class="w"> </span><span class="nd">@GeneratedValue</span><span class="p">(</span><span class="n">strategy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">GenerationType</span><span class="p">.</span><span class="na">IDENTITY</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">id</span><span class="p">:</span><span class="w"> </span><span class="kt">Long</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">0</span><span class="p">,</span>
 
-    @Column(name = &quot;user_id&quot;, nullable = false)
-    override val userId: Long = 0,
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;user_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">nullable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">userId</span><span class="p">:</span><span class="w"> </span><span class="kt">Long</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">0</span><span class="p">,</span>
 
-    @Column(name = &quot;client_id&quot;, nullable = false)
-    override val client: String = &quot;&quot;,
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;client_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">nullable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">client</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span>
 
-    @Column(name = &quot;token_hash&quot;, nullable = false)
-    override var token: String = &quot;&quot;,
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;token_hash&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">nullable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">token</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span>
 
-    @Column(name = &quot;token_type&quot;, nullable = false)
-    override val tokenType: String = &quot;APP&quot;,
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;token_type&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">nullable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">tokenType</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;APP&quot;</span><span class="p">,</span>
 
-    @Column(name = &quot;expiry_at&quot;, nullable = false)
-    override var expiryAt: Instant = Instant.now(),
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;expiry_at&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">nullable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">expiryAt</span><span class="p">:</span><span class="w"> </span><span class="n">Instant</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Instant</span><span class="p">.</span><span class="na">now</span><span class="p">(),</span>
 
-    @CreationTimestamp
-    @Column(name = &quot;created_at&quot;, nullable = false, updatable = false)
-    override val createdAt: Instant = Instant.now(),
+<span class="w">    </span><span class="nd">@CreationTimestamp</span>
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;created_at&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">nullable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w"> </span><span class="n">updatable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">createdAt</span><span class="p">:</span><span class="w"> </span><span class="n">Instant</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Instant</span><span class="p">.</span><span class="na">now</span><span class="p">(),</span>
 
-    @UpdateTimestamp
-    @Column(name = &quot;updated_at&quot;, nullable = false)
-    override val updatedAt: Instant = Instant.now(),
+<span class="w">    </span><span class="nd">@UpdateTimestamp</span>
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;updated_at&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">nullable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">updatedAt</span><span class="p">:</span><span class="w"> </span><span class="n">Instant</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Instant</span><span class="p">.</span><span class="na">now</span><span class="p">(),</span>
 
-    @Column(name = &quot;token_updated_at&quot;, nullable = false)
-    override var tokenUpdatedAt: Instant = Instant.now(),
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;token_updated_at&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">nullable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">tokenUpdatedAt</span><span class="p">:</span><span class="w"> </span><span class="n">Instant</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Instant</span><span class="p">.</span><span class="na">now</span><span class="p">(),</span>
 
-    @Column(name = &quot;token_subtype&quot;)
-    override var tokenSubtype: String? = null,
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;token_subtype&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">tokenSubtype</span><span class="p">:</span><span class="w"> </span><span class="kt">String?</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
 
-    @Column(name = &quot;last_token_hash&quot;)
-    override var lastToken: String? = null,
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;last_token_hash&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">lastToken</span><span class="p">:</span><span class="w"> </span><span class="kt">String?</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
 
-    @Column(name = &quot;previous_token_hash&quot;)
-    override var previousToken: String? = null,
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;previous_token_hash&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">previousToken</span><span class="p">:</span><span class="w"> </span><span class="kt">String?</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
 
-    @Column(name = &quot;last_used_at&quot;)
-    override var lastUsedAt: Instant? = null,
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;last_used_at&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">lastUsedAt</span><span class="p">:</span><span class="w"> </span><span class="n">Instant? </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
 
-    // Your custom fields
-    @Column(name = &quot;device_id&quot;)
-    val deviceId: String? = null,
+<span class="w">    </span><span class="c1">// Your custom fields</span>
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;device_id&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">deviceId</span><span class="p">:</span><span class="w"> </span><span class="kt">String?</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
 
-    @Column(name = &quot;user_agent&quot;)
-    val userAgent: String? = null,
-) : OgiriToken {
-    @Transient
-    override var plainToken: String? = null
-}
-</code></pre>
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;user_agent&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">userAgent</span><span class="p">:</span><span class="w"> </span><span class="kt">String?</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="p">)</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">OgiriToken</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nd">@Transient</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">plainToken</span><span class="p">:</span><span class="w"> </span><span class="kt">String?</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span>
+<span class="p">}</span>
+</code></pre></div>
 <p><strong>Advantages:</strong>
 - Add custom columns freely (<code>deviceId</code>, <code>userAgent</code>)
 - Full control over the table structure
 - Can implement your own inheritance patterns</p>
 <h3 id="database-schema-requirements">Database Schema Requirements</h3>
 <p>Ogiri requires these columns for any token table:</p>
-<pre><code class="language-sql">CREATE TABLE tokens (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    user_id BIGINT NOT NULL,
-    client_id VARCHAR(255) NOT NULL,
-    token_hash VARCHAR(255) NOT NULL,
-    token_type VARCHAR(10) NOT NULL,
-    expiry_at TIMESTAMP NOT NULL,
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL,
-    token_updated_at TIMESTAMP NOT NULL,
-    token_subtype VARCHAR(50),
-    last_token_hash VARCHAR(255),
-    previous_token_hash VARCHAR(255),
-    last_used_at TIMESTAMP,
-    UNIQUE KEY uk_tokens_user_client (user_id, client_id),
-    INDEX idx_tokens_user (user_id),
-    INDEX idx_tokens_expiry (expiry_at)
-);
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">tokens</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">id</span><span class="w"> </span><span class="nb">BIGINT</span><span class="w"> </span><span class="k">PRIMARY</span><span class="w"> </span><span class="k">KEY</span><span class="w"> </span><span class="n">AUTO_INCREMENT</span><span class="p">,</span>
+<span class="w">    </span><span class="n">user_id</span><span class="w"> </span><span class="nb">BIGINT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">client_id</span><span class="w"> </span><span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">255</span><span class="p">)</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">token_hash</span><span class="w"> </span><span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">255</span><span class="p">)</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">token_type</span><span class="w"> </span><span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">expiry_at</span><span class="w"> </span><span class="k">TIMESTAMP</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">created_at</span><span class="w"> </span><span class="k">TIMESTAMP</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">updated_at</span><span class="w"> </span><span class="k">TIMESTAMP</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">token_updated_at</span><span class="w"> </span><span class="k">TIMESTAMP</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">token_subtype</span><span class="w"> </span><span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">50</span><span class="p">),</span>
+<span class="w">    </span><span class="n">last_token_hash</span><span class="w"> </span><span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">255</span><span class="p">),</span>
+<span class="w">    </span><span class="n">previous_token_hash</span><span class="w"> </span><span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">255</span><span class="p">),</span>
+<span class="w">    </span><span class="n">last_used_at</span><span class="w"> </span><span class="k">TIMESTAMP</span><span class="p">,</span>
+<span class="w">    </span><span class="k">UNIQUE</span><span class="w"> </span><span class="k">KEY</span><span class="w"> </span><span class="n">uk_tokens_user_client</span><span class="w"> </span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span><span class="w"> </span><span class="n">client_id</span><span class="p">),</span>
+<span class="w">    </span><span class="k">INDEX</span><span class="w"> </span><span class="n">idx_tokens_user</span><span class="w"> </span><span class="p">(</span><span class="n">user_id</span><span class="p">),</span>
+<span class="w">    </span><span class="k">INDEX</span><span class="w"> </span><span class="n">idx_tokens_expiry</span><span class="w"> </span><span class="p">(</span><span class="n">expiry_at</span><span class="p">)</span>
+<span class="p">);</span>
+</code></pre></div>
 <h2 id="repository-implementation">Repository Implementation</h2>
 <p>The <code>OgiriTokenRepository&lt;T&gt;</code> interface defines all persistence operations needed.</p>
 <h3 id="using-spring-data-jpa">Using Spring Data JPA</h3>
-<pre><code class="language-kotlin">import com.quantipixels.ogiri.security.tokens.OgiriTokenRepository
-import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.data.jpa.repository.Query
-import org.springframework.data.repository.query.Param
-import org.springframework.stereotype.Repository
-import java.time.Instant
+<div class="highlight"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="nn">com.quantipixels.ogiri.security.tokens.OgiriTokenRepository</span>
+<span class="k">import</span><span class="w"> </span><span class="nn">org.springframework.data.jpa.repository.JpaRepository</span>
+<span class="k">import</span><span class="w"> </span><span class="nn">org.springframework.data.jpa.repository.Query</span>
+<span class="k">import</span><span class="w"> </span><span class="nn">org.springframework.data.repository.query.Param</span>
+<span class="k">import</span><span class="w"> </span><span class="nn">org.springframework.stereotype.Repository</span>
+<span class="k">import</span><span class="w"> </span><span class="nn">java.time.Instant</span>
 
-@Repository
-interface TokenRepository : JpaRepository&lt;Token, Long&gt;, OgiriTokenRepository&lt;Token&gt; {
+<span class="nd">@Repository</span>
+<span class="kd">interface</span><span class="w"> </span><span class="nc">TokenRepository</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">JpaRepository</span><span class="o">&lt;</span><span class="n">Token</span><span class="p">,</span><span class="w"> </span><span class="kt">Long</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="n">OgiriTokenRepository</span><span class="o">&lt;</span><span class="n">Token</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
 
-    // Required by OgiriTokenRepository interface
+<span class="w">    </span><span class="c1">// Required by OgiriTokenRepository interface</span>
 
-    override fun findAllByUserId(userId: Long): List&lt;Token&gt; =
-        findAllByUserIdOrderByUpdatedAtDesc(userId)
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">findAllByUserId</span><span class="p">(</span><span class="n">userId</span><span class="p">:</span><span class="w"> </span><span class="kt">Long</span><span class="p">):</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="n">Token</span><span class="o">&gt;</span><span class="w"> </span><span class="o">=</span>
+<span class="w">        </span><span class="n">findAllByUserIdOrderByUpdatedAtDesc</span><span class="p">(</span><span class="n">userId</span><span class="p">)</span>
 
-    @Query(&quot;SELECT t FROM Token t WHERE t.userId = :userId ORDER BY t.updatedAt DESC&quot;)
-    fun findAllByUserIdOrderByUpdatedAtDesc(
-        @Param(&quot;userId&quot;) userId: Long
-    ): List&lt;Token&gt;
+<span class="w">    </span><span class="nd">@Query</span><span class="p">(</span><span class="s">&quot;SELECT t FROM Token t WHERE t.userId = :userId ORDER BY t.updatedAt DESC&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">findAllByUserIdOrderByUpdatedAtDesc</span><span class="p">(</span>
+<span class="w">        </span><span class="nd">@Param</span><span class="p">(</span><span class="s">&quot;userId&quot;</span><span class="p">)</span><span class="w"> </span><span class="n">userId</span><span class="p">:</span><span class="w"> </span><span class="kt">Long</span>
+<span class="w">    </span><span class="p">):</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="n">Token</span><span class="o">&gt;</span>
 
-    @Query(&quot;SELECT t FROM Token t WHERE t.userId = :userId AND t.client = :client&quot;)
-    override fun findByUserIdAndClient(
-        @Param(&quot;userId&quot;) userId: Long,
-        @Param(&quot;client&quot;) clientId: String
-    ): Token?
+<span class="w">    </span><span class="nd">@Query</span><span class="p">(</span><span class="s">&quot;SELECT t FROM Token t WHERE t.userId = :userId AND t.client = :client&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">findByUserIdAndClient</span><span class="p">(</span>
+<span class="w">        </span><span class="nd">@Param</span><span class="p">(</span><span class="s">&quot;userId&quot;</span><span class="p">)</span><span class="w"> </span><span class="n">userId</span><span class="p">:</span><span class="w"> </span><span class="kt">Long</span><span class="p">,</span>
+<span class="w">        </span><span class="nd">@Param</span><span class="p">(</span><span class="s">&quot;client&quot;</span><span class="p">)</span><span class="w"> </span><span class="n">clientId</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span>
+<span class="w">    </span><span class="p">):</span><span class="w"> </span><span class="n">Token?</span>
 
-    @Query(&quot;SELECT t FROM Token t WHERE t.userId = :userId AND t.tokenSubtype = :subtype ORDER BY t.updatedAt DESC&quot;)
-    override fun findAllByUserIdAndTokenSubtype(
-        @Param(&quot;userId&quot;) userId: Long,
-        @Param(&quot;subtype&quot;) tokenSubtype: String
-    ): List&lt;Token&gt;
+<span class="w">    </span><span class="nd">@Query</span><span class="p">(</span><span class="s">&quot;SELECT t FROM Token t WHERE t.userId = :userId AND t.tokenSubtype = :subtype ORDER BY t.updatedAt DESC&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">findAllByUserIdAndTokenSubtype</span><span class="p">(</span>
+<span class="w">        </span><span class="nd">@Param</span><span class="p">(</span><span class="s">&quot;userId&quot;</span><span class="p">)</span><span class="w"> </span><span class="n">userId</span><span class="p">:</span><span class="w"> </span><span class="kt">Long</span><span class="p">,</span>
+<span class="w">        </span><span class="nd">@Param</span><span class="p">(</span><span class="s">&quot;subtype&quot;</span><span class="p">)</span><span class="w"> </span><span class="n">tokenSubtype</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span>
+<span class="w">    </span><span class="p">):</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="n">Token</span><span class="o">&gt;</span>
 
-    @Query(&quot;SELECT t FROM Token t WHERE t.expiryAt &lt; :cutoff&quot;)
-    override fun findByExpiryAtBefore(
-        @Param(&quot;cutoff&quot;) cutoff: Instant
-    ): List&lt;Token&gt;
+<span class="w">    </span><span class="nd">@Query</span><span class="p">(</span><span class="s">&quot;SELECT t FROM Token t WHERE t.expiryAt &lt; :cutoff&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">findByExpiryAtBefore</span><span class="p">(</span>
+<span class="w">        </span><span class="nd">@Param</span><span class="p">(</span><span class="s">&quot;cutoff&quot;</span><span class="p">)</span><span class="w"> </span><span class="n">cutoff</span><span class="p">:</span><span class="w"> </span><span class="n">Instant</span>
+<span class="w">    </span><span class="p">):</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="n">Token</span><span class="o">&gt;</span>
 
-    override fun deleteByUserIdAndClient(userId: Long, clientId: String) {
-        val token = findByUserIdAndClient(userId, clientId)
-        token?.let { delete(it) }
-    }
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">deleteByUserIdAndClient</span><span class="p">(</span><span class="n">userId</span><span class="p">:</span><span class="w"> </span><span class="kt">Long</span><span class="p">,</span><span class="w"> </span><span class="n">clientId</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kd">val</span><span class="w"> </span><span class="nv">token</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">findByUserIdAndClient</span><span class="p">(</span><span class="n">userId</span><span class="p">,</span><span class="w"> </span><span class="n">clientId</span><span class="p">)</span>
+<span class="w">        </span><span class="n">token</span><span class="o">?.</span><span class="na">let</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">delete</span><span class="p">(</span><span class="nb">it</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
 
-    override fun deleteByUserIdAndClientIn(userId: Long, clientIds: Collection&lt;String&gt;) {
-        clientIds.forEach { clientId -&gt;
-            deleteByUserIdAndClient(userId, clientId)
-        }
-    }
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">deleteByUserIdAndClientIn</span><span class="p">(</span><span class="n">userId</span><span class="p">:</span><span class="w"> </span><span class="kt">Long</span><span class="p">,</span><span class="w"> </span><span class="n">clientIds</span><span class="p">:</span><span class="w"> </span><span class="n">Collection</span><span class="o">&lt;</span><span class="kt">String</span><span class="o">&gt;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">clientIds</span><span class="p">.</span><span class="na">forEach</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">clientId</span><span class="w"> </span><span class="o">-&gt;</span>
+<span class="w">            </span><span class="n">deleteByUserIdAndClient</span><span class="p">(</span><span class="n">userId</span><span class="p">,</span><span class="w"> </span><span class="n">clientId</span><span class="p">)</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
 
-    override fun deleteByUserId(userId: Long) {
-        findAllByUserId(userId).forEach { delete(it) }
-    }
-}
-</code></pre>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">deleteByUserId</span><span class="p">(</span><span class="n">userId</span><span class="p">:</span><span class="w"> </span><span class="kt">Long</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">findAllByUserId</span><span class="p">(</span><span class="n">userId</span><span class="p">).</span><span class="na">forEach</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">delete</span><span class="p">(</span><span class="nb">it</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
 <h3 id="using-jdbc-template">Using JDBC Template</h3>
-<pre><code class="language-kotlin">import com.quantipixels.ogiri.security.tokens.OgiriTokenRepository
-import org.springframework.jdbc.core.JdbcTemplate
-import org.springframework.stereotype.Repository
-import java.time.Instant
+<div class="highlight"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="nn">com.quantipixels.ogiri.security.tokens.OgiriTokenRepository</span>
+<span class="k">import</span><span class="w"> </span><span class="nn">org.springframework.jdbc.core.JdbcTemplate</span>
+<span class="k">import</span><span class="w"> </span><span class="nn">org.springframework.stereotype.Repository</span>
+<span class="k">import</span><span class="w"> </span><span class="nn">java.time.Instant</span>
 
-@Repository
-class TokenJdbcRepository(private val jdbcTemplate: JdbcTemplate) : OgiriTokenRepository&lt;Token&gt; {
+<span class="nd">@Repository</span>
+<span class="kd">class</span><span class="w"> </span><span class="nc">TokenJdbcRepository</span><span class="p">(</span><span class="kd">private</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">jdbcTemplate</span><span class="p">:</span><span class="w"> </span><span class="n">JdbcTemplate</span><span class="p">)</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">OgiriTokenRepository</span><span class="o">&lt;</span><span class="n">Token</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
 
-    override fun save(token: Token): Token {
-        if (token.id == 0L) {
-            // INSERT
-            val sql = &quot;&quot;&quot;
-                INSERT INTO tokens (user_id, client_id, token_hash, token_type,
-                    expiry_at, created_at, updated_at, token_updated_at,
-                    token_subtype, last_token_hash, previous_token_hash, last_used_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            &quot;&quot;&quot;.trimIndent()
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">save</span><span class="p">(</span><span class="n">token</span><span class="p">:</span><span class="w"> </span><span class="n">Token</span><span class="p">):</span><span class="w"> </span><span class="n">Token</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">token</span><span class="p">.</span><span class="na">id</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="m">0L</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="c1">// INSERT</span>
+<span class="w">            </span><span class="kd">val</span><span class="w"> </span><span class="nv">sql</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;&quot;</span>
+<span class="s">                INSERT INTO tokens (user_id, client_id, token_hash, token_type,</span>
+<span class="s">                    expiry_at, created_at, updated_at, token_updated_at,</span>
+<span class="s">                    token_subtype, last_token_hash, previous_token_hash, last_used_at)</span>
+<span class="s">                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)</span>
+<span class="s">            &quot;&quot;&quot;</span><span class="p">.</span><span class="na">trimIndent</span><span class="p">()</span>
 
-            jdbcTemplate.update(sql,
-                token.userId, token.client, token.token, token.tokenType,
-                token.expiryAt, token.createdAt, token.updatedAt, token.tokenUpdatedAt,
-                token.tokenSubtype, token.lastToken, token.previousToken, token.lastUsedAt
-            )
-            return token.copy(id = getLastInsertId())
-        } else {
-            // UPDATE
-            val sql = &quot;&quot;&quot;
-                UPDATE tokens SET token_hash = ?, expiry_at = ?, updated_at = ?,
-                    token_updated_at = ?, token_subtype = ?, last_token_hash = ?,
-                    previous_token_hash = ?, last_used_at = ?
-                WHERE id = ?
-            &quot;&quot;&quot;.trimIndent()
+<span class="w">            </span><span class="n">jdbcTemplate</span><span class="p">.</span><span class="na">update</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span>
+<span class="w">                </span><span class="n">token</span><span class="p">.</span><span class="na">userId</span><span class="p">,</span><span class="w"> </span><span class="n">token</span><span class="p">.</span><span class="na">client</span><span class="p">,</span><span class="w"> </span><span class="n">token</span><span class="p">.</span><span class="na">token</span><span class="p">,</span><span class="w"> </span><span class="n">token</span><span class="p">.</span><span class="na">tokenType</span><span class="p">,</span>
+<span class="w">                </span><span class="n">token</span><span class="p">.</span><span class="na">expiryAt</span><span class="p">,</span><span class="w"> </span><span class="n">token</span><span class="p">.</span><span class="na">createdAt</span><span class="p">,</span><span class="w"> </span><span class="n">token</span><span class="p">.</span><span class="na">updatedAt</span><span class="p">,</span><span class="w"> </span><span class="n">token</span><span class="p">.</span><span class="na">tokenUpdatedAt</span><span class="p">,</span>
+<span class="w">                </span><span class="n">token</span><span class="p">.</span><span class="na">tokenSubtype</span><span class="p">,</span><span class="w"> </span><span class="n">token</span><span class="p">.</span><span class="na">lastToken</span><span class="p">,</span><span class="w"> </span><span class="n">token</span><span class="p">.</span><span class="na">previousToken</span><span class="p">,</span><span class="w"> </span><span class="n">token</span><span class="p">.</span><span class="na">lastUsedAt</span>
+<span class="w">            </span><span class="p">)</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">token</span><span class="p">.</span><span class="na">copy</span><span class="p">(</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getLastInsertId</span><span class="p">())</span>
+<span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="c1">// UPDATE</span>
+<span class="w">            </span><span class="kd">val</span><span class="w"> </span><span class="nv">sql</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;&quot;</span>
+<span class="s">                UPDATE tokens SET token_hash = ?, expiry_at = ?, updated_at = ?,</span>
+<span class="s">                    token_updated_at = ?, token_subtype = ?, last_token_hash = ?,</span>
+<span class="s">                    previous_token_hash = ?, last_used_at = ?</span>
+<span class="s">                WHERE id = ?</span>
+<span class="s">            &quot;&quot;&quot;</span><span class="p">.</span><span class="na">trimIndent</span><span class="p">()</span>
 
-            jdbcTemplate.update(sql,
-                token.token, token.expiryAt, token.updatedAt, token.tokenUpdatedAt,
-                token.tokenSubtype, token.lastToken, token.previousToken, token.lastUsedAt,
-                token.id
-            )
-            return token
-        }
-    }
+<span class="w">            </span><span class="n">jdbcTemplate</span><span class="p">.</span><span class="na">update</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span>
+<span class="w">                </span><span class="n">token</span><span class="p">.</span><span class="na">token</span><span class="p">,</span><span class="w"> </span><span class="n">token</span><span class="p">.</span><span class="na">expiryAt</span><span class="p">,</span><span class="w"> </span><span class="n">token</span><span class="p">.</span><span class="na">updatedAt</span><span class="p">,</span><span class="w"> </span><span class="n">token</span><span class="p">.</span><span class="na">tokenUpdatedAt</span><span class="p">,</span>
+<span class="w">                </span><span class="n">token</span><span class="p">.</span><span class="na">tokenSubtype</span><span class="p">,</span><span class="w"> </span><span class="n">token</span><span class="p">.</span><span class="na">lastToken</span><span class="p">,</span><span class="w"> </span><span class="n">token</span><span class="p">.</span><span class="na">previousToken</span><span class="p">,</span><span class="w"> </span><span class="n">token</span><span class="p">.</span><span class="na">lastUsedAt</span><span class="p">,</span>
+<span class="w">                </span><span class="n">token</span><span class="p">.</span><span class="na">id</span>
+<span class="w">            </span><span class="p">)</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">token</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
 
-    override fun findById(id: Long): Token? {
-        // ... implement query
-        return null
-    }
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">findById</span><span class="p">(</span><span class="n">id</span><span class="p">:</span><span class="w"> </span><span class="kt">Long</span><span class="p">):</span><span class="w"> </span><span class="n">Token? </span><span class="p">{</span>
+<span class="w">        </span><span class="c1">// ... implement query</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="kc">null</span>
+<span class="w">    </span><span class="p">}</span>
 
-    // ... implement other methods
-}
-</code></pre>
+<span class="w">    </span><span class="c1">// ... implement other methods</span>
+<span class="p">}</span>
+</code></pre></div>
 <h2 id="service-configuration">Service Configuration</h2>
 <h3 id="create-your-token-service">Create Your Token Service</h3>
-<pre><code class="language-kotlin">import com.quantipixels.ogiri.security.tokens.OgiriTokenService
-import com.quantipixels.ogiri.security.tokens.OgiriTokenRepository
-import com.quantipixels.ogiri.security.tokens.TokenType
-import org.springframework.stereotype.Service
-import java.time.Instant
+<div class="highlight"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="nn">com.quantipixels.ogiri.security.tokens.OgiriTokenService</span>
+<span class="k">import</span><span class="w"> </span><span class="nn">com.quantipixels.ogiri.security.tokens.OgiriTokenRepository</span>
+<span class="k">import</span><span class="w"> </span><span class="nn">com.quantipixels.ogiri.security.tokens.TokenType</span>
+<span class="k">import</span><span class="w"> </span><span class="nn">org.springframework.stereotype.Service</span>
+<span class="k">import</span><span class="w"> </span><span class="nn">java.time.Instant</span>
 
-@Service
-class TokenService(
-    repository: OgiriTokenRepository&lt;Token&gt;,
-    passwordEncoder: PasswordEncoder,
-    userDirectory: OgiriUserDirectory,
-    identifierPolicy: IdentifierPolicy,
-    subTokenRegistry: SubTokenRegistry,
-    properties: OgiriConfigurationProperties,
-) : OgiriTokenService&lt;Token&gt;(
-    repository,
-    passwordEncoder,
-    userDirectory,
-    identifierPolicy,
-    subTokenRegistry,
-    properties,
-) {
-    /**
-     * Factory method to create token instances.
-     * Called by parent service during token creation.
-     */
-    override fun tokenFactory(
-        userId: Long,
-        client: String,
-        hashedToken: String,
-        tokenType: TokenType,
-        expiry: Instant,
-        tokenSubtype: String?,
-        plainTokenValue: String,
-    ): Token = Token(
-        userId = userId,
-        client = client,
-        token = hashedToken,
-        tokenType = tokenType.label,
-        expiryAt = expiry,
-        tokenSubtype = tokenSubtype,
-        plainToken = plainTokenValue
-    )
-}
-</code></pre>
+<span class="nd">@Service</span>
+<span class="kd">class</span><span class="w"> </span><span class="nc">TokenService</span><span class="p">(</span>
+<span class="w">    </span><span class="n">repository</span><span class="p">:</span><span class="w"> </span><span class="n">OgiriTokenRepository</span><span class="o">&lt;</span><span class="n">Token</span><span class="o">&gt;</span><span class="p">,</span>
+<span class="w">    </span><span class="n">passwordEncoder</span><span class="p">:</span><span class="w"> </span><span class="n">PasswordEncoder</span><span class="p">,</span>
+<span class="w">    </span><span class="n">userDirectory</span><span class="p">:</span><span class="w"> </span><span class="n">OgiriUserDirectory</span><span class="p">,</span>
+<span class="w">    </span><span class="n">identifierPolicy</span><span class="p">:</span><span class="w"> </span><span class="n">IdentifierPolicy</span><span class="p">,</span>
+<span class="w">    </span><span class="n">subTokenRegistry</span><span class="p">:</span><span class="w"> </span><span class="n">SubTokenRegistry</span><span class="p">,</span>
+<span class="w">    </span><span class="n">properties</span><span class="p">:</span><span class="w"> </span><span class="n">OgiriConfigurationProperties</span><span class="p">,</span>
+<span class="p">)</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">OgiriTokenService</span><span class="o">&lt;</span><span class="n">Token</span><span class="o">&gt;</span><span class="p">(</span>
+<span class="w">    </span><span class="n">repository</span><span class="p">,</span>
+<span class="w">    </span><span class="n">passwordEncoder</span><span class="p">,</span>
+<span class="w">    </span><span class="n">userDirectory</span><span class="p">,</span>
+<span class="w">    </span><span class="n">identifierPolicy</span><span class="p">,</span>
+<span class="w">    </span><span class="n">subTokenRegistry</span><span class="p">,</span>
+<span class="w">    </span><span class="n">properties</span><span class="p">,</span>
+<span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="cm">/**</span>
+<span class="cm">     * Factory method to create token instances.</span>
+<span class="cm">     * Called by parent service during token creation.</span>
+<span class="cm">     */</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">tokenFactory</span><span class="p">(</span>
+<span class="w">        </span><span class="n">userId</span><span class="p">:</span><span class="w"> </span><span class="kt">Long</span><span class="p">,</span>
+<span class="w">        </span><span class="n">client</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">,</span>
+<span class="w">        </span><span class="n">hashedToken</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">,</span>
+<span class="w">        </span><span class="n">tokenType</span><span class="p">:</span><span class="w"> </span><span class="n">TokenType</span><span class="p">,</span>
+<span class="w">        </span><span class="n">expiry</span><span class="p">:</span><span class="w"> </span><span class="n">Instant</span><span class="p">,</span>
+<span class="w">        </span><span class="n">tokenSubtype</span><span class="p">:</span><span class="w"> </span><span class="kt">String?</span><span class="p">,</span>
+<span class="w">        </span><span class="n">plainTokenValue</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">,</span>
+<span class="w">    </span><span class="p">):</span><span class="w"> </span><span class="n">Token</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Token</span><span class="p">(</span>
+<span class="w">        </span><span class="n">userId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">userId</span><span class="p">,</span>
+<span class="w">        </span><span class="n">client</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">client</span><span class="p">,</span>
+<span class="w">        </span><span class="n">token</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">hashedToken</span><span class="p">,</span>
+<span class="w">        </span><span class="n">tokenType</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tokenType</span><span class="p">.</span><span class="na">label</span><span class="p">,</span>
+<span class="w">        </span><span class="n">expiryAt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">expiry</span><span class="p">,</span>
+<span class="w">        </span><span class="n">tokenSubtype</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tokenSubtype</span><span class="p">,</span>
+<span class="w">        </span><span class="n">plainToken</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">plainTokenValue</span>
+<span class="w">    </span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
 <h2 id="user-directory-implementation">User Directory Implementation</h2>
 <p>The <code>OgiriUserDirectory</code> provides user lookup for authentication.</p>
-<pre><code class="language-kotlin">import com.quantipixels.ogiri.security.spi.OgiriUserDirectory
-import com.quantipixels.ogiri.security.spi.OgiriUser
-import org.springframework.security.core.userdetails.UserDetailsService
-import org.springframework.stereotype.Component
+<div class="highlight"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="nn">com.quantipixels.ogiri.security.spi.OgiriUserDirectory</span>
+<span class="k">import</span><span class="w"> </span><span class="nn">com.quantipixels.ogiri.security.spi.OgiriUser</span>
+<span class="k">import</span><span class="w"> </span><span class="nn">org.springframework.security.core.userdetails.UserDetailsService</span>
+<span class="k">import</span><span class="w"> </span><span class="nn">org.springframework.stereotype.Component</span>
 
-@Component
-class UserDirectoryImpl(private val userRepository: UserRepository) : OgiriUserDirectory {
+<span class="nd">@Component</span>
+<span class="kd">class</span><span class="w"> </span><span class="nc">UserDirectoryImpl</span><span class="p">(</span><span class="kd">private</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">userRepository</span><span class="p">:</span><span class="w"> </span><span class="n">UserRepository</span><span class="p">)</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">OgiriUserDirectory</span><span class="w"> </span><span class="p">{</span>
 
-    override fun loadUserByUsername(username: String): OgiriUser? =
-        userRepository.findByUsername(username)
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">loadUserByUsername</span><span class="p">(</span><span class="n">username</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">):</span><span class="w"> </span><span class="n">OgiriUser? </span><span class="o">=</span>
+<span class="w">        </span><span class="n">userRepository</span><span class="p">.</span><span class="na">findByUsername</span><span class="p">(</span><span class="n">username</span><span class="p">)</span>
 
-    override fun findById(id: Long): OgiriUser? =
-        userRepository.findById(id).orElse(null)
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">findById</span><span class="p">(</span><span class="n">id</span><span class="p">:</span><span class="w"> </span><span class="kt">Long</span><span class="p">):</span><span class="w"> </span><span class="n">OgiriUser? </span><span class="o">=</span>
+<span class="w">        </span><span class="n">userRepository</span><span class="p">.</span><span class="na">findById</span><span class="p">(</span><span class="n">id</span><span class="p">).</span><span class="na">orElse</span><span class="p">(</span><span class="kc">null</span><span class="p">)</span>
 
-    override fun findByEmail(email: String): OgiriUser? =
-        userRepository.findByEmail(email)
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">findByEmail</span><span class="p">(</span><span class="n">email</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">):</span><span class="w"> </span><span class="n">OgiriUser? </span><span class="o">=</span>
+<span class="w">        </span><span class="n">userRepository</span><span class="p">.</span><span class="na">findByEmail</span><span class="p">(</span><span class="n">email</span><span class="p">)</span>
 
-    override fun findByUsername(username: String): OgiriUser? =
-        userRepository.findByUsername(username)
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">findByUsername</span><span class="p">(</span><span class="n">username</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">):</span><span class="w"> </span><span class="n">OgiriUser? </span><span class="o">=</span>
+<span class="w">        </span><span class="n">userRepository</span><span class="p">.</span><span class="na">findByUsername</span><span class="p">(</span><span class="n">username</span><span class="p">)</span>
 
-    override fun recordSuccessfulLogin(userId: Long) {
-        val user = userRepository.findById(userId).orElse(null) ?: return
-        user.lastLoginAt = Instant.now()
-        userRepository.save(user)
-    }
-}
-</code></pre>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">recordSuccessfulLogin</span><span class="p">(</span><span class="n">userId</span><span class="p">:</span><span class="w"> </span><span class="kt">Long</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kd">val</span><span class="w"> </span><span class="nv">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">userRepository</span><span class="p">.</span><span class="na">findById</span><span class="p">(</span><span class="n">userId</span><span class="p">).</span><span class="na">orElse</span><span class="p">(</span><span class="kc">null</span><span class="p">)</span><span class="w"> </span><span class="o">?:</span><span class="w"> </span><span class="k">return</span>
+<span class="w">        </span><span class="n">user</span><span class="p">.</span><span class="na">lastLoginAt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Instant</span><span class="p">.</span><span class="na">now</span><span class="p">()</span>
+<span class="w">        </span><span class="n">userRepository</span><span class="p">.</span><span class="na">save</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
 <p>Your <code>User</code> entity should implement <code>OgiriUser</code>:</p>
-<pre><code class="language-kotlin">import com.quantipixels.ogiri.security.spi.OgiriUser
-import org.springframework.security.core.authority.SimpleGrantedAuthority
+<div class="highlight"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="nn">com.quantipixels.ogiri.security.spi.OgiriUser</span>
+<span class="k">import</span><span class="w"> </span><span class="nn">org.springframework.security.core.authority.SimpleGrantedAuthority</span>
 
-@Entity
-data class User(
-    @Id @GeneratedValue
-    override val userId: Long = 0,
+<span class="nd">@Entity</span>
+<span class="kd">data</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">User</span><span class="p">(</span>
+<span class="w">    </span><span class="nd">@Id</span><span class="w"> </span><span class="nd">@GeneratedValue</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">userId</span><span class="p">:</span><span class="w"> </span><span class="kt">Long</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">0</span><span class="p">,</span>
 
-    override var username: String = &quot;&quot;,
-    override var password: String = &quot;&quot;,
-    override var email: String = &quot;&quot;,
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">username</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">password</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">email</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span>
 
-    @Column(name = &quot;last_login_at&quot;)
-    var lastLoginAt: Instant? = null,
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;last_login_at&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">lastLoginAt</span><span class="p">:</span><span class="w"> </span><span class="n">Instant? </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
 
-    @ElementCollection
-    var roles: Set&lt;String&gt; = emptySet(),
-) : OgiriUser {
-    override fun getOgiriUserId(): Long = userId
+<span class="w">    </span><span class="nd">@ElementCollection</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">roles</span><span class="p">:</span><span class="w"> </span><span class="n">Set</span><span class="o">&lt;</span><span class="kt">String</span><span class="o">&gt;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">emptySet</span><span class="p">(),</span>
+<span class="p">)</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">OgiriUser</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">getOgiriUserId</span><span class="p">():</span><span class="w"> </span><span class="kt">Long</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">userId</span>
 
-    override fun getAuthorities() = roles.map { SimpleGrantedAuthority(it) }
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">getAuthorities</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">roles</span><span class="p">.</span><span class="na">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">SimpleGrantedAuthority</span><span class="p">(</span><span class="nb">it</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
 
-    override fun isAccountNonExpired() = true
-    override fun isAccountNonLocked() = true
-    override fun isCredentialsNonExpired() = true
-    override fun isEnabled() = true
-}
-</code></pre>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">isAccountNonExpired</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">isAccountNonLocked</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">isCredentialsNonExpired</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">isEnabled</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="p">}</span>
+</code></pre></div>
 <h2 id="integration-steps">Integration Steps</h2>
 <h3 id="step-1-add-dependencies">Step 1: Add Dependencies</h3>
-<pre><code class="language-gradle">dependencies {
-    implementation 'com.quantipixels:ogiri-security:2.0.0'
-    implementation 'org.springframework.boot:spring-boot-starter-security'
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.postgresql:postgresql:14.0'
+<div class="highlight"><pre><span></span><code>dependencies {
+    implementation &#39;com.quantipixels:ogiri-security:2.0.0&#39;
+    implementation &#39;org.springframework.boot:spring-boot-starter-security&#39;
+    implementation &#39;org.springframework.boot:spring-boot-starter-data-jpa&#39;
+    implementation &#39;org.postgresql:postgresql:14.0&#39;
 }
-</code></pre>
+</code></pre></div>
 <h3 id="step-2-configure-application-properties">Step 2: Configure Application Properties</h3>
-<pre><code class="language-yaml"># application.yml
-spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5432/myapp
-    username: postgres
-    password: password
-  jpa:
-    hibernate:
-      ddl-auto: validate
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
+<div class="highlight"><pre><span></span><code><span class="c1"># application.yml</span>
+<span class="nt">spring</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">datasource</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">jdbc:postgresql://localhost:5432/myapp</span>
+<span class="w">    </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">postgres</span>
+<span class="w">    </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">password</span>
+<span class="w">  </span><span class="nt">jpa</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">hibernate</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">ddl-auto</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">validate</span>
+<span class="w">    </span><span class="nt">database-platform</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">org.hibernate.dialect.PostgreSQLDialect</span>
 
-ogiri:
-  auth:
-    max-clients: 10              # Max concurrent clients per user
-    batch-grace-seconds: 5       # Grace period for batch requests
-    token-lifespan-days: 14      # Token validity duration
-  security:
-    register-filter: true        # Auto-register Ogiri filter
-  cleanup:
-    enabled: true
-    cron: &quot;0 0 * * * *&quot;          # Daily cleanup of expired tokens
-</code></pre>
+<span class="nt">ogiri</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">auth</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">max-clients</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span><span class="w">              </span><span class="c1"># Max concurrent clients per user</span>
+<span class="w">    </span><span class="nt">batch-grace-seconds</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span><span class="w">       </span><span class="c1"># Grace period for batch requests</span>
+<span class="w">    </span><span class="nt">token-lifespan-days</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">14</span><span class="w">      </span><span class="c1"># Token validity duration</span>
+<span class="w">  </span><span class="nt">security</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">register-filter</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w">        </span><span class="c1"># Auto-register Ogiri filter</span>
+<span class="w">  </span><span class="nt">cleanup</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">cron</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;0</span><span class="nv"> </span><span class="s">0</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">*&quot;</span><span class="w">          </span><span class="c1"># Daily cleanup of expired tokens</span>
+</code></pre></div>
 <h3 id="step-3-create-security-configuration">Step 3: Create Security Configuration</h3>
-<pre><code class="language-kotlin">import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-import org.springframework.security.crypto.password.PasswordEncoder
+<div class="highlight"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="nn">org.springframework.context.annotation.Bean</span>
+<span class="k">import</span><span class="w"> </span><span class="nn">org.springframework.context.annotation.Configuration</span>
+<span class="k">import</span><span class="w"> </span><span class="nn">org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder</span>
+<span class="k">import</span><span class="w"> </span><span class="nn">org.springframework.security.crypto.password.PasswordEncoder</span>
 
-@Configuration
-class SecurityConfig {
+<span class="nd">@Configuration</span>
+<span class="kd">class</span><span class="w"> </span><span class="nc">SecurityConfig</span><span class="w"> </span><span class="p">{</span>
 
-    @Bean
-    fun passwordEncoder(): PasswordEncoder = BCryptPasswordEncoder()
-}
-</code></pre>
+<span class="w">    </span><span class="nd">@Bean</span>
+<span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">passwordEncoder</span><span class="p">():</span><span class="w"> </span><span class="n">PasswordEncoder</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">BCryptPasswordEncoder</span><span class="p">()</span>
+<span class="p">}</span>
+</code></pre></div>
 <h3 id="step-4-define-public-routes">Step 4: Define Public Routes</h3>
-<pre><code class="language-kotlin">import com.quantipixels.ogiri.security.routes.OgiriRoute
-import com.quantipixels.ogiri.security.routes.OgiriRouteRegistry
-import org.springframework.http.HttpMethod
-import org.springframework.stereotype.Component
+<div class="highlight"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="nn">com.quantipixels.ogiri.security.routes.OgiriRoute</span>
+<span class="k">import</span><span class="w"> </span><span class="nn">com.quantipixels.ogiri.security.routes.OgiriRouteRegistry</span>
+<span class="k">import</span><span class="w"> </span><span class="nn">org.springframework.http.HttpMethod</span>
+<span class="k">import</span><span class="w"> </span><span class="nn">org.springframework.stereotype.Component</span>
 
-@Component
-class RouteRegistryImpl : OgiriRouteRegistry {
+<span class="nd">@Component</span>
+<span class="kd">class</span><span class="w"> </span><span class="nc">RouteRegistryImpl</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">OgiriRouteRegistry</span><span class="w"> </span><span class="p">{</span>
 
-    override fun routes(): List&lt;OgiriRoute&gt; = listOf(
-        OgiriRoute(HttpMethod.POST, &quot;/api/auth/login&quot;, true, false, null),
-        OgiriRoute(HttpMethod.GET, &quot;/api/health&quot;, true, false, null),
-        OgiriRoute(HttpMethod.GET, &quot;/swagger-ui/**&quot;, true, false, null),
-    )
-}
-</code></pre>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">routes</span><span class="p">():</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="n">OgiriRoute</span><span class="o">&gt;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">listOf</span><span class="p">(</span>
+<span class="w">        </span><span class="n">OgiriRoute</span><span class="p">(</span><span class="n">HttpMethod</span><span class="p">.</span><span class="na">POST</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;/api/auth/login&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">),</span>
+<span class="w">        </span><span class="n">OgiriRoute</span><span class="p">(</span><span class="n">HttpMethod</span><span class="p">.</span><span class="na">GET</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;/api/health&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">),</span>
+<span class="w">        </span><span class="n">OgiriRoute</span><span class="p">(</span><span class="n">HttpMethod</span><span class="p">.</span><span class="na">GET</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;/swagger-ui/**&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">),</span>
+<span class="w">    </span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
 <h3 id="step-5-create-a-login-endpoint">Step 5: Create a Login Endpoint</h3>
-<pre><code class="language-kotlin">import org.springframework.security.core.context.SecurityContextHolder
-import org.springframework.web.bind.annotation.*
+<div class="highlight"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="nn">org.springframework.security.core.context.SecurityContextHolder</span>
+<span class="k">import</span><span class="w"> </span><span class="nn">org.springframework.web.bind.annotation.*</span>
 
-@RestController
-@RequestMapping(&quot;/api/auth&quot;)
-class AuthController(private val tokenService: TokenService) {
+<span class="nd">@RestController</span>
+<span class="nd">@RequestMapping</span><span class="p">(</span><span class="s">&quot;/api/auth&quot;</span><span class="p">)</span>
+<span class="kd">class</span><span class="w"> </span><span class="nc">AuthController</span><span class="p">(</span><span class="kd">private</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">tokenService</span><span class="p">:</span><span class="w"> </span><span class="n">TokenService</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 
-    @PostMapping(&quot;/login&quot;)
-    fun login(
-        @RequestBody request: LoginRequest,
-        response: HttpServletResponse,
-    ): Map&lt;String, Any&gt; {
-        val authHeader = try {
-            tokenService.createNewAuthToken(
-                userId = authenticateUser(request.username, request.password),
-                client = request.deviceName
-            )
-        } catch (e: Exception) {
-            return mapOf(&quot;error&quot; to e.message)
-        }
+<span class="w">    </span><span class="nd">@PostMapping</span><span class="p">(</span><span class="s">&quot;/login&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">login</span><span class="p">(</span>
+<span class="w">        </span><span class="nd">@RequestBody</span><span class="w"> </span><span class="n">request</span><span class="p">:</span><span class="w"> </span><span class="n">LoginRequest</span><span class="p">,</span>
+<span class="w">        </span><span class="n">response</span><span class="p">:</span><span class="w"> </span><span class="n">HttpServletResponse</span><span class="p">,</span>
+<span class="w">    </span><span class="p">):</span><span class="w"> </span><span class="n">Map</span><span class="o">&lt;</span><span class="kt">String</span><span class="p">,</span><span class="w"> </span><span class="kt">Any</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kd">val</span><span class="w"> </span><span class="nv">authHeader</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">tokenService</span><span class="p">.</span><span class="na">createNewAuthToken</span><span class="p">(</span>
+<span class="w">                </span><span class="n">userId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">authenticateUser</span><span class="p">(</span><span class="n">request</span><span class="p">.</span><span class="na">username</span><span class="p">,</span><span class="w"> </span><span class="n">request</span><span class="p">.</span><span class="na">password</span><span class="p">),</span>
+<span class="w">                </span><span class="n">client</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">request</span><span class="p">.</span><span class="na">deviceName</span>
+<span class="w">            </span><span class="p">)</span>
+<span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">e</span><span class="p">:</span><span class="w"> </span><span class="n">Exception</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">mapOf</span><span class="p">(</span><span class="s">&quot;error&quot;</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="na">message</span><span class="p">)</span>
+<span class="w">        </span><span class="p">}</span>
 
-        // Append auth headers to response
-        response.appendAuthHeaders(authHeader)
+<span class="w">        </span><span class="c1">// Append auth headers to response</span>
+<span class="w">        </span><span class="n">response</span><span class="p">.</span><span class="na">appendAuthHeaders</span><span class="p">(</span><span class="n">authHeader</span><span class="p">)</span>
 
-        return mapOf(
-            &quot;accessToken&quot; to authHeader.accessToken,
-            &quot;client&quot; to authHeader.client,
-            &quot;expiry&quot; to authHeader.expiry
-        )
-    }
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">mapOf</span><span class="p">(</span>
+<span class="w">            </span><span class="s">&quot;accessToken&quot;</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">authHeader</span><span class="p">.</span><span class="na">accessToken</span><span class="p">,</span>
+<span class="w">            </span><span class="s">&quot;client&quot;</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">authHeader</span><span class="p">.</span><span class="na">client</span><span class="p">,</span>
+<span class="w">            </span><span class="s">&quot;expiry&quot;</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">authHeader</span><span class="p">.</span><span class="na">expiry</span>
+<span class="w">        </span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
 
-    private fun authenticateUser(username: String, password: String): Long {
-        // Implement authentication logic
-        return 1L
-    }
-}
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">authenticateUser</span><span class="p">(</span><span class="n">username</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">,</span><span class="w"> </span><span class="n">password</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">):</span><span class="w"> </span><span class="kt">Long</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="c1">// Implement authentication logic</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="m">1L</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
 
-data class LoginRequest(
-    val username: String,
-    val password: String,
-    val deviceName: String? = null,
-)
-</code></pre>
+<span class="kd">data</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">LoginRequest</span><span class="p">(</span>
+<span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">username</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">,</span>
+<span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">password</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">,</span>
+<span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">deviceName</span><span class="p">:</span><span class="w"> </span><span class="kt">String?</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
 <h2 id="testing">Testing</h2>
 <h3 id="unit-tests-with-in-memory-repository">Unit Tests with In-Memory Repository</h3>
-<pre><code class="language-kotlin">import com.quantipixels.ogiri.security.testutil.InMemoryTokenRepository
-import com.quantipixels.ogiri.security.testutil.TestToken
-import org.junit.jupiter.api.Test
+<div class="highlight"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="nn">com.quantipixels.ogiri.security.testutil.InMemoryTokenRepository</span>
+<span class="k">import</span><span class="w"> </span><span class="nn">com.quantipixels.ogiri.security.testutil.TestToken</span>
+<span class="k">import</span><span class="w"> </span><span class="nn">org.junit.jupiter.api.Test</span>
 
-class TokenServiceTest {
+<span class="kd">class</span><span class="w"> </span><span class="nc">TokenServiceTest</span><span class="w"> </span><span class="p">{</span>
 
-    private val repository = InMemoryTokenRepository()
-    private val passwordEncoder = MyPasswordEncoder()
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">repository</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">InMemoryTokenRepository</span><span class="p">()</span>
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">passwordEncoder</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MyPasswordEncoder</span><span class="p">()</span>
 
-    @Test
-    fun `should create token for user`() {
-        val service = TokenService(repository, passwordEncoder, /* ... */)
+<span class="w">    </span><span class="nd">@Test</span>
+<span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">`should create token for user`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kd">val</span><span class="w"> </span><span class="nv">service</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">TokenService</span><span class="p">(</span><span class="n">repository</span><span class="p">,</span><span class="w"> </span><span class="n">passwordEncoder</span><span class="p">,</span><span class="w"> </span><span class="cm">/* ... */</span><span class="p">)</span>
 
-        val token = service.createNewAuthToken(userId = 1L, client = &quot;web&quot;)
+<span class="w">        </span><span class="kd">val</span><span class="w"> </span><span class="nv">token</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">service</span><span class="p">.</span><span class="na">createNewAuthToken</span><span class="p">(</span><span class="n">userId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1L</span><span class="p">,</span><span class="w"> </span><span class="n">client</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;web&quot;</span><span class="p">)</span>
 
-        assert(token.accessToken.isNotEmpty())
-        assert(repository.getAllTokens().size == 1)
-    }
-}
-</code></pre>
+<span class="w">        </span><span class="n">assert</span><span class="p">(</span><span class="n">token</span><span class="p">.</span><span class="na">accessToken</span><span class="p">.</span><span class="na">isNotEmpty</span><span class="p">())</span>
+<span class="w">        </span><span class="n">assert</span><span class="p">(</span><span class="n">repository</span><span class="p">.</span><span class="na">getAllTokens</span><span class="p">().</span><span class="na">size</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="m">1</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
 <h3 id="integration-tests">Integration Tests</h3>
-<pre><code class="language-kotlin">import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.context.ActiveProfiles
+<div class="highlight"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="nn">org.springframework.boot.test.context.SpringBootTest</span>
+<span class="k">import</span><span class="w"> </span><span class="nn">org.springframework.test.context.ActiveProfiles</span>
 
-@SpringBootTest
-@ActiveProfiles(&quot;test&quot;)
-class AuthenticationIntegrationTest {
+<span class="nd">@SpringBootTest</span>
+<span class="nd">@ActiveProfiles</span><span class="p">(</span><span class="s">&quot;test&quot;</span><span class="p">)</span>
+<span class="kd">class</span><span class="w"> </span><span class="nc">AuthenticationIntegrationTest</span><span class="w"> </span><span class="p">{</span>
 
-    @Autowired lateinit var tokenService: TokenService
-    @Autowired lateinit var tokenRepository: TokenRepository
+<span class="w">    </span><span class="nd">@Autowired</span><span class="w"> </span><span class="kd">lateinit</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">tokenService</span><span class="p">:</span><span class="w"> </span><span class="n">TokenService</span>
+<span class="w">    </span><span class="nd">@Autowired</span><span class="w"> </span><span class="kd">lateinit</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">tokenRepository</span><span class="p">:</span><span class="w"> </span><span class="n">TokenRepository</span>
 
-    @Test
-    fun `should authenticate user and create tokens`() {
-        val authHeader = tokenService.createNewAuthToken(userId = 1L, client = &quot;web&quot;)
+<span class="w">    </span><span class="nd">@Test</span>
+<span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">`should authenticate user and create tokens`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kd">val</span><span class="w"> </span><span class="nv">authHeader</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tokenService</span><span class="p">.</span><span class="na">createNewAuthToken</span><span class="p">(</span><span class="n">userId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1L</span><span class="p">,</span><span class="w"> </span><span class="n">client</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;web&quot;</span><span class="p">)</span>
 
-        assert(authHeader.accessToken.isNotEmpty())
-        assert(authHeader.subTokens?.isNotEmpty() == true)
-    }
-}
-</code></pre>
+<span class="w">        </span><span class="n">assert</span><span class="p">(</span><span class="n">authHeader</span><span class="p">.</span><span class="na">accessToken</span><span class="p">.</span><span class="na">isNotEmpty</span><span class="p">())</span>
+<span class="w">        </span><span class="n">assert</span><span class="p">(</span><span class="n">authHeader</span><span class="p">.</span><span class="na">subTokens</span><span class="o">?.</span><span class="na">isNotEmpty</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
 <h2 id="common-issues">Common Issues</h2>
 <h3 id="issue-token-not-persisting">Issue: Token Not Persisting</h3>
 <p><strong>Cause:</strong> Repository not implementing all <code>OgiriTokenRepository</code> methods</p>
@@ -1847,6 +1847,8 @@ class AuthenticationIntegrationTest {
             </div>
           
           
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
         
@@ -1901,7 +1903,7 @@ class AuthenticationIntegrationTest {
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.top", "navigation.sections", "navigation.tabs", "toc.integrate", "content.code.copy"], "search": "../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.top", "navigation.sections", "navigation.tabs", "toc.integrate", "content.code.copy", "content.tabs.link"], "search": "../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
     
     
       <script src="../assets/javascripts/bundle.e71a0d61.min.js"></script>

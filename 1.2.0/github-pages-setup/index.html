@@ -954,18 +954,18 @@
 <p><strong>Duration:</strong> ~30 seconds</p>
 <h2 id="manual-deployment">Manual Deployment</h2>
 <p>Deploy docs manually for specific versions:</p>
-<pre><code class="language-bash"># Install dependencies (one-time)
-pip install mkdocs-material mkdocs-mike
+<div class="highlight"><pre><span></span><code><span class="c1"># Install dependencies (one-time)</span>
+pip<span class="w"> </span>install<span class="w"> </span>mkdocs-material<span class="w"> </span>mkdocs-mike
 
-# Deploy using current version from .ogiri-version
+<span class="c1"># Deploy using current version from .ogiri-version</span>
 ./scripts/publish-docs.sh
 
-# Deploy specific version
-./scripts/publish-docs.sh 1.1.0
+<span class="c1"># Deploy specific version</span>
+./scripts/publish-docs.sh<span class="w"> </span><span class="m">1</span>.1.0
 
-# Deploy as development version
-./scripts/publish-docs.sh dev
-</code></pre>
+<span class="c1"># Deploy as development version</span>
+./scripts/publish-docs.sh<span class="w"> </span>dev
+</code></pre></div>
 <p>The <code>publish-docs.sh</code> script:
 - Reads version from <code>.ogiri-version</code> by default
 - Builds documentation with mkdocs
@@ -974,19 +974,19 @@ pip install mkdocs-material mkdocs-mike
 <h2 id="version-management">Version Management</h2>
 <h3 id="how-versioning-works">How Versioning Works</h3>
 <p><strong>Version Source:</strong> <code>.ogiri-version</code> file</p>
-<p><strong>Deployment with Mike:</strong></p>
-<pre><code class="language-bash">mike deploy 1.1.0 latest
-</code></pre>
+<p><strong>Deployment with Mike:</strong>
+<div class="highlight"><pre><span></span><code>mike<span class="w"> </span>deploy<span class="w"> </span><span class="m">1</span>.1.0<span class="w"> </span>latest
+</code></pre></div></p>
 <p>This creates two deployments:
 - <code>1.1.0/</code> - Specific version archive
 - <code>latest/</code> - Alias pointing to latest version</p>
 <h3 id="accessing-versions">Accessing Versions</h3>
-<p><strong>Latest (root):</strong></p>
-<pre><code>https://mosobande.github.io/ogiri/
-</code></pre>
-<p><strong>Specific version:</strong></p>
-<pre><code>https://mosobande.github.io/ogiri/1.1.0/
-</code></pre>
+<p><strong>Latest (root):</strong>
+<div class="highlight"><pre><span></span><code>https://mosobande.github.io/ogiri/
+</code></pre></div></p>
+<p><strong>Specific version:</strong>
+<div class="highlight"><pre><span></span><code>https://mosobande.github.io/ogiri/1.1.0/
+</code></pre></div></p>
 <p><strong>Version switcher:</strong> Users can select versions from dropdown (Material theme)</p>
 <h2 id="github-repository-configuration">GitHub Repository Configuration</h2>
 <h3 id="enable-github-pages">Enable GitHub Pages</h3>
@@ -1008,15 +1008,15 @@ pip install mkdocs-material mkdocs-mike
 </ul>
 <h2 id="workflow-file-docsyml">Workflow File: docs.yml</h2>
 <p>Location: <code>.github/workflows/docs.yml</code></p>
-<pre><code class="language-yaml">name: Deploy Documentation
-on:
-  push:
-    branches: [main, ori]
-    paths:
-      - 'docs/**'
-      - 'mkdocs.yml'
-      - '.github/workflows/docs.yml'
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Deploy Documentation</span>
+<span class="nt">on</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">push</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">branches</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">main</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">ori</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">paths</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&#39;docs/**&#39;</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&#39;mkdocs.yml&#39;</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&#39;.github/workflows/docs.yml&#39;</span>
+</code></pre></div>
 <h3 id="key-features">Key Features</h3>
 <ul>
 <li><strong>Python 3.12</strong> runtime</li>
@@ -1027,14 +1027,14 @@ on:
 </ul>
 <h2 id="configuration-mkdocsyml">Configuration: mkdocs.yml</h2>
 <p>Key sections for documentation deployment:</p>
-<pre><code class="language-yaml">site_name: Ògiri Security
-site_url: https://mosobande.github.io/ogiri
-repo_url: https://github.com/mosobande/ogiri
+<div class="highlight"><pre><span></span><code><span class="nt">site_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Ògiri Security</span>
+<span class="nt">site_url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://mosobande.github.io/ogiri</span>
+<span class="nt">repo_url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://github.com/mosobande/ogiri</span>
 
-extra:
-  version:
-    provider: mike  # Multi-version support
-</code></pre>
+<span class="nt">extra</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">version</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">provider</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mike</span><span class="w">  </span><span class="c1"># Multi-version support</span>
+</code></pre></div>
 <h2 id="troubleshooting">Troubleshooting</h2>
 <h3 id="docs-not-deploying">Docs not deploying</h3>
 <ol>
@@ -1050,15 +1050,15 @@ extra:
 <li>Verify <code>.ogiri-version</code> file contains correct version</li>
 </ol>
 <h3 id="build-fails-locally">Build fails locally</h3>
-<pre><code class="language-bash"># Install exact dependencies
-pip install mkdocs-material==9.5.0 mkdocs-mike==2.0.0
+<div class="highlight"><pre><span></span><code><span class="c1"># Install exact dependencies</span>
+pip<span class="w"> </span>install<span class="w"> </span>mkdocs-material<span class="o">==</span><span class="m">9</span>.5.0<span class="w"> </span>mkdocs-mike<span class="o">==</span><span class="m">2</span>.0.0
 
-# Test build
-mkdocs build
+<span class="c1"># Test build</span>
+mkdocs<span class="w"> </span>build
 
-# Test serve
-mkdocs serve  # Visit http://localhost:8000
-</code></pre>
+<span class="c1"># Test serve</span>
+mkdocs<span class="w"> </span>serve<span class="w">  </span><span class="c1"># Visit http://localhost:8000</span>
+</code></pre></div>
 <h3 id="404-on-gh-pages-branch">404 on gh-pages branch</h3>
 <p>The <code>gh-pages</code> branch is created automatically by the workflow. If missing:</p>
 <ol>
@@ -1068,51 +1068,51 @@ mkdocs serve  # Visit http://localhost:8000
 </ol>
 <h2 id="local-testing">Local Testing</h2>
 <h3 id="preview-documentation-locally">Preview documentation locally</h3>
-<pre><code class="language-bash"># Install dependencies
-pip install mkdocs-material
+<div class="highlight"><pre><span></span><code><span class="c1"># Install dependencies</span>
+pip<span class="w"> </span>install<span class="w"> </span>mkdocs-material
 
-# Start development server
-mkdocs serve
+<span class="c1"># Start development server</span>
+mkdocs<span class="w"> </span>serve
 
-# Access at http://localhost:8000
-</code></pre>
+<span class="c1"># Access at http://localhost:8000</span>
+</code></pre></div>
 <h3 id="test-version-deployment-locally">Test version deployment locally</h3>
-<pre><code class="language-bash"># Install mike
-pip install mkdocs-mike
+<div class="highlight"><pre><span></span><code><span class="c1"># Install mike</span>
+pip<span class="w"> </span>install<span class="w"> </span>mkdocs-mike
 
-# Build and stage deployment
-mkdocs build
+<span class="c1"># Build and stage deployment</span>
+mkdocs<span class="w"> </span>build
 
-# (Don't run mike locally - requires git origin setup)
-</code></pre>
+<span class="c1"># (Don&#39;t run mike locally - requires git origin setup)</span>
+</code></pre></div>
 <h2 id="release-process">Release Process</h2>
 <h3 id="when-releasing-a-new-version">When releasing a new version</h3>
 <ol>
 <li>
 <p>Update <code>.ogiri-version</code> file:
-   <code>bash
-   echo "1.2.0" &gt; .ogiri-version</code></p>
+   <div class="highlight"><pre><span></span><code><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;1.2.0&quot;</span><span class="w"> </span>&gt;<span class="w"> </span>.ogiri-version
+</code></pre></div></p>
 </li>
 <li>
 <p>Commit and push:
-   <code>bash
-   git add .ogiri-version
-   git commit -m "chore: bump version to 1.2.0"
-   git push origin main</code></p>
+   <div class="highlight"><pre><span></span><code>git<span class="w"> </span>add<span class="w"> </span>.ogiri-version
+git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;chore: bump version to 1.2.0&quot;</span>
+git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>main
+</code></pre></div></p>
 </li>
 <li>
 <p>Documentation automatically deploys with new version</p>
 </li>
 <li>
 <p>Or manually deploy:
-   <code>bash
-   ./scripts/publish-docs.sh 1.2.0</code></p>
+   <div class="highlight"><pre><span></span><code>./scripts/publish-docs.sh<span class="w"> </span><span class="m">1</span>.2.0
+</code></pre></div></p>
 </li>
 </ol>
 <h3 id="version-aliases">Version Aliases</h3>
 <p>The <code>latest</code> alias always points to the most recent deployed version. Set manually:</p>
-<pre><code class="language-bash">mike alias latest 1.2.0
-</code></pre>
+<div class="highlight"><pre><span></span><code>mike<span class="w"> </span><span class="nb">alias</span><span class="w"> </span>latest<span class="w"> </span><span class="m">1</span>.2.0
+</code></pre></div>
 <h2 id="dependencies">Dependencies</h2>
 <h3 id="required-cicd">Required (CI/CD)</h3>
 <ul>
@@ -1125,8 +1125,8 @@ mkdocs build
 <li><code>pymdown-extensions</code> - Markdown extensions</li>
 </ul>
 <h3 id="installation">Installation</h3>
-<pre><code class="language-bash">pip install mkdocs-material mkdocs-mike
-</code></pre>
+<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>mkdocs-material<span class="w"> </span>mkdocs-mike
+</code></pre></div>
 <h2 id="monitoring">Monitoring</h2>
 <h3 id="view-deployment-history">View deployment history</h3>
 <ol>
@@ -1175,6 +1175,8 @@ A: Yes, edit <code>mkdocs.yml</code> <code>extra.version</code> section</p>
             </div>
           
           
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
         
@@ -1229,7 +1231,7 @@ A: Yes, edit <code>mkdocs.yml</code> <code>extra.version</code> section</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.top", "navigation.sections", "navigation.tabs", "toc.integrate", "content.code.copy"], "search": "../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.top", "navigation.sections", "navigation.tabs", "toc.integrate", "content.code.copy", "content.tabs.link"], "search": "../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
     
     
       <script src="../assets/javascripts/bundle.e71a0d61.min.js"></script>

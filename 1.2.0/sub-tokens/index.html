@@ -1205,40 +1205,41 @@
 </ul>
 <h2 id="creating-sub-tokens">Creating Sub-Tokens</h2>
 <p>Implement <code>OgiriSubTokenRegistration</code>:</p>
-<pre><code class="language-kotlin">@Bean
-fun deviceSubToken(): OgiriSubTokenRegistration = object : OgiriSubTokenRegistration {
-  override val name = &quot;device&quot;
-  override val includeByDefault = true  // Issued with every APP token
+<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Kotlin</label><label for="__tabbed_1_2">Java</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="nd">@Bean</span>
+<span class="kd">fun</span><span class="w"> </span><span class="nf">deviceSubToken</span><span class="p">():</span><span class="w"> </span><span class="n">OgiriSubTokenRegistration</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">object</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="nc">OgiriSubTokenRegistration</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">override</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;device&quot;</span>
+<span class="w">  </span><span class="kd">override</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">includeByDefault</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="w">  </span><span class="c1">// Issued with every APP token</span>
 
-  override fun clientIdFor(parentClientId: String): String =
-    &quot;$parentClientId.device&quot;
+<span class="w">  </span><span class="kd">override</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">clientIdFor</span><span class="p">(</span><span class="n">parentClientId</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">):</span><span class="w"> </span><span class="kt">String</span><span class="w"> </span><span class="o">=</span>
+<span class="w">    </span><span class="s">&quot;</span><span class="si">$</span><span class="n">parentClientId</span><span class="s">.device&quot;</span>
 
-  override fun expiry(parentExpiry: Instant): Instant =
-    minOf(parentExpiry, Instant.now().plus(12, ChronoUnit.HOURS))
-}
-</code></pre>
-<details>
-<summary>Java version</summary>
-
-
-<pre><code class="language-java">@Bean
-public OgiriSubTokenRegistration deviceSubToken() {
-  return new OgiriSubTokenRegistration() {
-    @Override public String getName() { return &quot;device&quot;; }
-    @Override public boolean isIncludeByDefault() { return true; }
-    @Override public String clientIdFor(String parentClientId) {
-      return parentClientId + &quot;.device&quot;;
-    }
-    @Override public Instant expiry(Instant parentExpiry) {
-      Instant limit = Instant.now().plus(Duration.ofHours(12));
-      return parentExpiry.isBefore(limit) ? parentExpiry : limit;
-    }
-  };
-}
-</code></pre>
-
-</details>
-
+<span class="w">  </span><span class="kd">override</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">expiry</span><span class="p">(</span><span class="n">parentExpiry</span><span class="p">:</span><span class="w"> </span><span class="n">Instant</span><span class="p">):</span><span class="w"> </span><span class="n">Instant</span><span class="w"> </span><span class="o">=</span>
+<span class="w">    </span><span class="n">minOf</span><span class="p">(</span><span class="n">parentExpiry</span><span class="p">,</span><span class="w"> </span><span class="n">Instant</span><span class="p">.</span><span class="na">now</span><span class="p">().</span><span class="na">plus</span><span class="p">(</span><span class="m">12</span><span class="p">,</span><span class="w"> </span><span class="n">ChronoUnit</span><span class="p">.</span><span class="na">HOURS</span><span class="p">))</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="nd">@Bean</span>
+<span class="kd">public</span><span class="w"> </span><span class="n">OgiriSubTokenRegistration</span><span class="w"> </span><span class="nf">deviceSubToken</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">OgiriSubTokenRegistration</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nd">@Override</span><span class="w"> </span><span class="kd">public</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="nf">getName</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="s">&quot;device&quot;</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">    </span><span class="nd">@Override</span><span class="w"> </span><span class="kd">public</span><span class="w"> </span><span class="kt">boolean</span><span class="w"> </span><span class="nf">isIncludeByDefault</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="kc">true</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">    </span><span class="nd">@Override</span><span class="w"> </span><span class="kd">public</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="nf">clientIdFor</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">parentClientId</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="n">parentClientId</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&quot;.device&quot;</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="nd">@Override</span><span class="w"> </span><span class="kd">public</span><span class="w"> </span><span class="n">Instant</span><span class="w"> </span><span class="nf">expiry</span><span class="p">(</span><span class="n">Instant</span><span class="w"> </span><span class="n">parentExpiry</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="n">Instant</span><span class="w"> </span><span class="n">limit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Instant</span><span class="p">.</span><span class="na">now</span><span class="p">().</span><span class="na">plus</span><span class="p">(</span><span class="n">Duration</span><span class="p">.</span><span class="na">ofHours</span><span class="p">(</span><span class="mi">12</span><span class="p">));</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="n">parentExpiry</span><span class="p">.</span><span class="na">isBefore</span><span class="p">(</span><span class="n">limit</span><span class="p">)</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">parentExpiry</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">limit</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">};</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+</div>
+</div>
 <h2 id="sub-token-properties">Sub-Token Properties</h2>
 <table>
 <thead>
@@ -1278,61 +1279,61 @@ public OgiriSubTokenRegistration deviceSubToken() {
 </table>
 <h2 id="header-format">Header Format</h2>
 <p>Sub-tokens are returned in the <code>sub-tokens</code> header as Base64-encoded JSON:</p>
-<pre><code>sub-tokens: eyJkZXZpY2UiOnsiY2xpZW50IjoiYXBwLmRldmljZSIsInRva2VuIjoiYWJjMTIzIiwiZXhwaXJ5IjoiMjAyNS0xMi0yNVQwMDowMDowMFoifX0=
-</code></pre>
-<p>Decoded:</p>
-<pre><code class="language-json">{
-  &quot;device&quot;: {
-    &quot;client&quot;: &quot;app.device&quot;,
-    &quot;token&quot;: &quot;abc123&quot;,
-    &quot;expiry&quot;: &quot;2025-12-25T00:00:00Z&quot;
-  }
-}
-</code></pre>
+<div class="highlight"><pre><span></span><code>sub-tokens: eyJkZXZpY2UiOnsiY2xpZW50IjoiYXBwLmRldmljZSIsInRva2VuIjoiYWJjMTIzIiwiZXhwaXJ5IjoiMjAyNS0xMi0yNVQwMDowMDowMFoifX0=
+</code></pre></div>
+<p>Decoded:
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;device&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;client&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;app.device&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;token&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;abc123&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;expiry&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2025-12-25T00:00:00Z&quot;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></p>
 <h2 id="managing-sub-tokens">Managing Sub-Tokens</h2>
 <h3 id="retrieve">Retrieve</h3>
-<pre><code class="language-kotlin">val deviceToken = tokenService.getSubToken(userId, &quot;device&quot;)
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="kd">val</span><span class="w"> </span><span class="nv">deviceToken</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tokenService</span><span class="p">.</span><span class="na">getSubToken</span><span class="p">(</span><span class="n">userId</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;device&quot;</span><span class="p">)</span>
+</code></pre></div>
 <h3 id="renew">Renew</h3>
-<pre><code class="language-kotlin">val newHeaders = tokenService.renewSubToken(userId, &quot;app&quot;, &quot;device&quot;)
-newHeaders?.let { response.appendAuthHeaders(it) }
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="kd">val</span><span class="w"> </span><span class="nv">newHeaders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tokenService</span><span class="p">.</span><span class="na">renewSubToken</span><span class="p">(</span><span class="n">userId</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;app&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;device&quot;</span><span class="p">)</span>
+<span class="n">newHeaders</span><span class="o">?.</span><span class="na">let</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">response</span><span class="p">.</span><span class="na">appendAuthHeaders</span><span class="p">(</span><span class="nb">it</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
 <h3 id="revoke">Revoke</h3>
-<pre><code class="language-kotlin">tokenService.revokeSubToken(userId, &quot;device&quot;)
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="n">tokenService</span><span class="p">.</span><span class="na">revokeSubToken</span><span class="p">(</span><span class="n">userId</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;device&quot;</span><span class="p">)</span>
+</code></pre></div>
 <h2 id="custom-validation">Custom Validation</h2>
 <p>Override <code>validate()</code> for custom token format validation:</p>
-<pre><code class="language-kotlin">@Bean
-fun xmppSubToken(): SubTokenRegistration = object : SubTokenRegistration {
-  override val name = &quot;xmpp&quot;
-  override val includeByDefault = false
+<div class="highlight"><pre><span></span><code><span class="nd">@Bean</span>
+<span class="kd">fun</span><span class="w"> </span><span class="nf">xmppSubToken</span><span class="p">():</span><span class="w"> </span><span class="n">SubTokenRegistration</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">object</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="nc">SubTokenRegistration</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">override</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;xmpp&quot;</span>
+<span class="w">  </span><span class="kd">override</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">includeByDefault</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
 
-  override fun clientIdFor(parentClientId: String) = &quot;$parentClientId.xmpp&quot;
-  override fun expiry(parentExpiry: Instant) = Instant.now().plus(4, ChronoUnit.HOURS)
+<span class="w">  </span><span class="kd">override</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">clientIdFor</span><span class="p">(</span><span class="n">parentClientId</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;</span><span class="si">$</span><span class="n">parentClientId</span><span class="s">.xmpp&quot;</span>
+<span class="w">  </span><span class="kd">override</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">expiry</span><span class="p">(</span><span class="n">parentExpiry</span><span class="p">:</span><span class="w"> </span><span class="n">Instant</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Instant</span><span class="p">.</span><span class="na">now</span><span class="p">().</span><span class="na">plus</span><span class="p">(</span><span class="m">4</span><span class="p">,</span><span class="w"> </span><span class="n">ChronoUnit</span><span class="p">.</span><span class="na">HOURS</span><span class="p">)</span>
 
-  override fun validate(plainToken: String): Boolean {
-    return plainToken.length &gt;= 32 &amp;&amp; plainToken.matches(Regex(&quot;^[a-z0-9]+$&quot;))
-  }
-}
-</code></pre>
+<span class="w">  </span><span class="kd">override</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">validate</span><span class="p">(</span><span class="n">plainToken</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">):</span><span class="w"> </span><span class="kt">Boolean</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">plainToken</span><span class="p">.</span><span class="na">length</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="m">32</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">plainToken</span><span class="p">.</span><span class="na">matches</span><span class="p">(</span><span class="n">Regex</span><span class="p">(</span><span class="s">&quot;^[a-z0-9]+</span><span class="err">$</span><span class="s">&quot;</span><span class="p">))</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
 <h2 id="client-side-usage">Client-Side Usage</h2>
 <h3 id="javascript">JavaScript</h3>
-<pre><code class="language-javascript">const response = await fetch('/api/auth/login', { method: 'POST', body: ... });
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">response</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">fetch</span><span class="p">(</span><span class="s1">&#39;/api/auth/login&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">method</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;POST&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">body</span><span class="o">:</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">});</span>
 
-const subTokensBase64 = response.headers.get('sub-tokens');
-const subTokens = JSON.parse(atob(subTokensBase64));
+<span class="kd">const</span><span class="w"> </span><span class="nx">subTokensBase64</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">response</span><span class="p">.</span><span class="nx">headers</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;sub-tokens&#39;</span><span class="p">);</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">subTokens</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">atob</span><span class="p">(</span><span class="nx">subTokensBase64</span><span class="p">));</span>
 
-const deviceToken = subTokens.device.token;
-const deviceClient = subTokens.device.client;
-</code></pre>
+<span class="kd">const</span><span class="w"> </span><span class="nx">deviceToken</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">subTokens</span><span class="p">.</span><span class="nx">device</span><span class="p">.</span><span class="nx">token</span><span class="p">;</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">deviceClient</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">subTokens</span><span class="p">.</span><span class="nx">device</span><span class="p">.</span><span class="nx">client</span><span class="p">;</span>
+</code></pre></div>
 <h3 id="sending-sub-tokens">Sending Sub-Tokens</h3>
-<pre><code class="language-javascript">fetch('/api/device/action', {
-  headers: {
-    'Authorization': `Bearer ${deviceToken}`,
-    'client': deviceClient
-  }
-});
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="nx">fetch</span><span class="p">(</span><span class="s1">&#39;/api/device/action&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">headers</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="s1">&#39;Authorization&#39;</span><span class="o">:</span><span class="w"> </span><span class="sb">`Bearer </span><span class="si">${</span><span class="nx">deviceToken</span><span class="si">}</span><span class="sb">`</span><span class="p">,</span>
+<span class="w">    </span><span class="s1">&#39;client&#39;</span><span class="o">:</span><span class="w"> </span><span class="nx">deviceClient</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">});</span>
+</code></pre></div>
 <h2 id="rotation-behavior">Rotation Behavior</h2>
 <p>Sub-tokens follow the APP token lifecycle:</p>
 <ul>
@@ -1342,26 +1343,26 @@ const deviceClient = subTokens.device.client;
 </ul>
 <h2 id="examples">Examples</h2>
 <h3 id="api-token-opt-in">API Token (Opt-In)</h3>
-<pre><code class="language-kotlin">@Bean
-fun apiSubToken(): SubTokenRegistration = object : SubTokenRegistration {
-  override val name = &quot;api&quot;
-  override val includeByDefault = false  // User must request explicitly
+<div class="highlight"><pre><span></span><code><span class="nd">@Bean</span>
+<span class="kd">fun</span><span class="w"> </span><span class="nf">apiSubToken</span><span class="p">():</span><span class="w"> </span><span class="n">SubTokenRegistration</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">object</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="nc">SubTokenRegistration</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">override</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;api&quot;</span>
+<span class="w">  </span><span class="kd">override</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">includeByDefault</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="w">  </span><span class="c1">// User must request explicitly</span>
 
-  override fun clientIdFor(parentClientId: String) = &quot;$parentClientId.api&quot;
-  override fun expiry(parentExpiry: Instant) = Instant.now().plus(7, ChronoUnit.DAYS)
-}
-</code></pre>
+<span class="w">  </span><span class="kd">override</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">clientIdFor</span><span class="p">(</span><span class="n">parentClientId</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;</span><span class="si">$</span><span class="n">parentClientId</span><span class="s">.api&quot;</span>
+<span class="w">  </span><span class="kd">override</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">expiry</span><span class="p">(</span><span class="n">parentExpiry</span><span class="p">:</span><span class="w"> </span><span class="n">Instant</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Instant</span><span class="p">.</span><span class="na">now</span><span class="p">().</span><span class="na">plus</span><span class="p">(</span><span class="m">7</span><span class="p">,</span><span class="w"> </span><span class="n">ChronoUnit</span><span class="p">.</span><span class="na">DAYS</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
 <h3 id="chat-token-short-lived">Chat Token (Short-Lived)</h3>
-<pre><code class="language-kotlin">@Bean
-fun chatSubToken(): SubTokenRegistration = object : SubTokenRegistration {
-  override val name = &quot;chat&quot;
-  override val includeByDefault = true
+<div class="highlight"><pre><span></span><code><span class="nd">@Bean</span>
+<span class="kd">fun</span><span class="w"> </span><span class="nf">chatSubToken</span><span class="p">():</span><span class="w"> </span><span class="n">SubTokenRegistration</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">object</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="nc">SubTokenRegistration</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">override</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;chat&quot;</span>
+<span class="w">  </span><span class="kd">override</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">includeByDefault</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
 
-  override fun clientIdFor(parentClientId: String) = &quot;$parentClientId.chat&quot;
-  override fun expiry(parentExpiry: Instant) =
-    minOf(parentExpiry, Instant.now().plus(2, ChronoUnit.HOURS))
-}
-</code></pre>
+<span class="w">  </span><span class="kd">override</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">clientIdFor</span><span class="p">(</span><span class="n">parentClientId</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;</span><span class="si">$</span><span class="n">parentClientId</span><span class="s">.chat&quot;</span>
+<span class="w">  </span><span class="kd">override</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">expiry</span><span class="p">(</span><span class="n">parentExpiry</span><span class="p">:</span><span class="w"> </span><span class="n">Instant</span><span class="p">)</span><span class="w"> </span><span class="o">=</span>
+<span class="w">    </span><span class="n">minOf</span><span class="p">(</span><span class="n">parentExpiry</span><span class="p">,</span><span class="w"> </span><span class="n">Instant</span><span class="p">.</span><span class="na">now</span><span class="p">().</span><span class="na">plus</span><span class="p">(</span><span class="m">2</span><span class="p">,</span><span class="w"> </span><span class="n">ChronoUnit</span><span class="p">.</span><span class="na">HOURS</span><span class="p">))</span>
+<span class="p">}</span>
+</code></pre></div>
 <h2 id="troubleshooting">Troubleshooting</h2>
 <table>
 <thead>
@@ -1411,6 +1412,8 @@ fun chatSubToken(): SubTokenRegistration = object : SubTokenRegistration {
             </div>
           
           
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
         
@@ -1465,7 +1468,7 @@ fun chatSubToken(): SubTokenRegistration = object : SubTokenRegistration {
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.top", "navigation.sections", "navigation.tabs", "toc.integrate", "content.code.copy"], "search": "../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.top", "navigation.sections", "navigation.tabs", "toc.integrate", "content.code.copy", "content.tabs.link"], "search": "../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
     
     
       <script src="../assets/javascripts/bundle.e71a0d61.min.js"></script>

@@ -1292,37 +1292,37 @@
 <h2 id="core-interfaces">Core Interfaces</h2>
 <h3 id="ogiritoken">OgiriToken</h3>
 <p>The primary contract for all token implementations.</p>
-<pre><code class="language-kotlin">interface OgiriToken {
-    val id: Long
-    val userId: Long
-    val client: String
-    var token: String
-    val tokenType: String
-    var expiryAt: Instant
-    val createdAt: Instant
-    val updatedAt: Instant
-    var tokenUpdatedAt: Instant
-    var tokenSubtype: String?
-    var lastToken: String?
-    var previousToken: String?
-    var lastUsedAt: Instant?
-    var plainToken: String?
+<div class="highlight"><pre><span></span><code><span class="kd">interface</span><span class="w"> </span><span class="nc">OgiriToken</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">id</span><span class="p">:</span><span class="w"> </span><span class="kt">Long</span>
+<span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">userId</span><span class="p">:</span><span class="w"> </span><span class="kt">Long</span>
+<span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">client</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">token</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span>
+<span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">tokenType</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">expiryAt</span><span class="p">:</span><span class="w"> </span><span class="n">Instant</span>
+<span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">createdAt</span><span class="p">:</span><span class="w"> </span><span class="n">Instant</span>
+<span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">updatedAt</span><span class="p">:</span><span class="w"> </span><span class="n">Instant</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">tokenUpdatedAt</span><span class="p">:</span><span class="w"> </span><span class="n">Instant</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">tokenSubtype</span><span class="p">:</span><span class="w"> </span><span class="kt">String?</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">lastToken</span><span class="p">:</span><span class="w"> </span><span class="kt">String?</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">previousToken</span><span class="p">:</span><span class="w"> </span><span class="kt">String?</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">lastUsedAt</span><span class="p">:</span><span class="w"> </span><span class="n">Instant?</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">plainToken</span><span class="p">:</span><span class="w"> </span><span class="kt">String?</span>
 
-    fun isExpired(now: Instant = Instant.now()): Boolean = expiryAt.isBefore(now)
-}
-</code></pre>
+<span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">isExpired</span><span class="p">(</span><span class="n">now</span><span class="p">:</span><span class="w"> </span><span class="n">Instant</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Instant</span><span class="p">.</span><span class="na">now</span><span class="p">()):</span><span class="w"> </span><span class="kt">Boolean</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">expiryAt</span><span class="p">.</span><span class="na">isBefore</span><span class="p">(</span><span class="n">now</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
 <p><strong>No implementation required</strong> - you just declare which interface you implement.</p>
 <h3 id="ogiritokenrepositoryt-ogiritoken">OgiriTokenRepository\&lt;T : OgiriToken&gt;</h3>
 <p>Database-agnostic persistence contract.</p>
-<pre><code class="language-kotlin">interface OgiriTokenRepository&lt;T : OgiriToken&gt; {
-    fun save(token: T): T
-    fun findById(id: Long): T?
-    fun deleteById(id: Long)
-    fun findAllByUserId(userId: Long): List&lt;T&gt;
-    fun findByUserIdAndClient(userId: Long, clientId: String): T?
-    // ... and more
-}
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="kd">interface</span><span class="w"> </span><span class="nc">OgiriTokenRepository</span><span class="o">&lt;</span><span class="n">T</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">OgiriToken</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">save</span><span class="p">(</span><span class="n">token</span><span class="p">:</span><span class="w"> </span><span class="n">T</span><span class="p">):</span><span class="w"> </span><span class="n">T</span>
+<span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">findById</span><span class="p">(</span><span class="n">id</span><span class="p">:</span><span class="w"> </span><span class="kt">Long</span><span class="p">):</span><span class="w"> </span><span class="n">T?</span>
+<span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">deleteById</span><span class="p">(</span><span class="n">id</span><span class="p">:</span><span class="w"> </span><span class="kt">Long</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">findAllByUserId</span><span class="p">(</span><span class="n">userId</span><span class="p">:</span><span class="w"> </span><span class="kt">Long</span><span class="p">):</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span>
+<span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">findByUserIdAndClient</span><span class="p">(</span><span class="n">userId</span><span class="p">:</span><span class="w"> </span><span class="kt">Long</span><span class="p">,</span><span class="w"> </span><span class="n">clientId</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">):</span><span class="w"> </span><span class="n">T?</span>
+<span class="w">    </span><span class="c1">// ... and more</span>
+<span class="p">}</span>
+</code></pre></div>
 <p>Implement with:
 - Spring Data JPA
 - JDBC Template
@@ -1331,44 +1331,44 @@
 - Any persistence layer you prefer</p>
 <h3 id="ogiritokenservicet-ogiritoken">OgiriTokenService\&lt;T : OgiriToken&gt;</h3>
 <p>Core token orchestration service.</p>
-<pre><code class="language-kotlin">open class OgiriTokenService&lt;T : OgiriToken&gt;(
-    private val repository: OgiriTokenRepository&lt;T&gt;,
-    private val passwordEncoder: PasswordEncoder,
-    private val userDirectory: OgiriUserDirectory,
-    private val identifierPolicy: IdentifierPolicy,
-    private val subTokenRegistry: SubTokenRegistry,
-    protected val properties: OgiriConfigurationProperties,
-)
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="kd">open</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">OgiriTokenService</span><span class="o">&lt;</span><span class="n">T</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">OgiriToken</span><span class="o">&gt;</span><span class="p">(</span>
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">repository</span><span class="p">:</span><span class="w"> </span><span class="n">OgiriTokenRepository</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="p">,</span>
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">passwordEncoder</span><span class="p">:</span><span class="w"> </span><span class="n">PasswordEncoder</span><span class="p">,</span>
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">userDirectory</span><span class="p">:</span><span class="w"> </span><span class="n">OgiriUserDirectory</span><span class="p">,</span>
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">identifierPolicy</span><span class="p">:</span><span class="w"> </span><span class="n">IdentifierPolicy</span><span class="p">,</span>
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">subTokenRegistry</span><span class="p">:</span><span class="w"> </span><span class="n">SubTokenRegistry</span><span class="p">,</span>
+<span class="w">    </span><span class="kd">protected</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">properties</span><span class="p">:</span><span class="w"> </span><span class="n">OgiriConfigurationProperties</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
 <p>Works with any <code>OgiriToken</code> implementation. No need to extend - just provide a token that implements the interface.</p>
 <h2 id="implementation-patterns">Implementation Patterns</h2>
 <h3 id="pattern-1-direct-interface-implementation-maximum-flexibility">Pattern 1: Direct Interface Implementation (Maximum Flexibility)</h3>
 <p>For complete control over your token structure:</p>
-<pre><code class="language-kotlin">@Entity
-@Table(name = &quot;user_tokens&quot;)
-data class MyToken(
-    @Id @GeneratedValue override val id: Long = 0,
-    @Column(name = &quot;user_id&quot;) override val userId: Long,
-    @Column(name = &quot;client_id&quot;) override val client: String,
-    @Column(name = &quot;token_hash&quot;) override var token: String,
-    @Column(name = &quot;token_type&quot;) override val tokenType: String,
-    @Column(name = &quot;expiry_at&quot;) override var expiryAt: Instant,
-    @CreationTimestamp override val createdAt: Instant = Instant.now(),
-    @UpdateTimestamp override val updatedAt: Instant = Instant.now(),
-    @Column(name = &quot;token_updated_at&quot;) override var tokenUpdatedAt: Instant,
-    @Column(name = &quot;token_subtype&quot;) override var tokenSubtype: String? = null,
-    @Column(name = &quot;last_token_hash&quot;) override var lastToken: String? = null,
-    @Column(name = &quot;previous_token_hash&quot;) override var previousToken: String? = null,
-    @Column(name = &quot;last_used_at&quot;) override var lastUsedAt: Instant? = null,
+<div class="highlight"><pre><span></span><code><span class="nd">@Entity</span>
+<span class="nd">@Table</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;user_tokens&quot;</span><span class="p">)</span>
+<span class="kd">data</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">MyToken</span><span class="p">(</span>
+<span class="w">    </span><span class="nd">@Id</span><span class="w"> </span><span class="nd">@GeneratedValue</span><span class="w"> </span><span class="kd">override</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">id</span><span class="p">:</span><span class="w"> </span><span class="kt">Long</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">0</span><span class="p">,</span>
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;user_id&quot;</span><span class="p">)</span><span class="w"> </span><span class="kd">override</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">userId</span><span class="p">:</span><span class="w"> </span><span class="kt">Long</span><span class="p">,</span>
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;client_id&quot;</span><span class="p">)</span><span class="w"> </span><span class="kd">override</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">client</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">,</span>
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;token_hash&quot;</span><span class="p">)</span><span class="w"> </span><span class="kd">override</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">token</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">,</span>
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;token_type&quot;</span><span class="p">)</span><span class="w"> </span><span class="kd">override</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">tokenType</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">,</span>
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;expiry_at&quot;</span><span class="p">)</span><span class="w"> </span><span class="kd">override</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">expiryAt</span><span class="p">:</span><span class="w"> </span><span class="n">Instant</span><span class="p">,</span>
+<span class="w">    </span><span class="nd">@CreationTimestamp</span><span class="w"> </span><span class="kd">override</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">createdAt</span><span class="p">:</span><span class="w"> </span><span class="n">Instant</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Instant</span><span class="p">.</span><span class="na">now</span><span class="p">(),</span>
+<span class="w">    </span><span class="nd">@UpdateTimestamp</span><span class="w"> </span><span class="kd">override</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">updatedAt</span><span class="p">:</span><span class="w"> </span><span class="n">Instant</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Instant</span><span class="p">.</span><span class="na">now</span><span class="p">(),</span>
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;token_updated_at&quot;</span><span class="p">)</span><span class="w"> </span><span class="kd">override</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">tokenUpdatedAt</span><span class="p">:</span><span class="w"> </span><span class="n">Instant</span><span class="p">,</span>
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;token_subtype&quot;</span><span class="p">)</span><span class="w"> </span><span class="kd">override</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">tokenSubtype</span><span class="p">:</span><span class="w"> </span><span class="kt">String?</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;last_token_hash&quot;</span><span class="p">)</span><span class="w"> </span><span class="kd">override</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">lastToken</span><span class="p">:</span><span class="w"> </span><span class="kt">String?</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;previous_token_hash&quot;</span><span class="p">)</span><span class="w"> </span><span class="kd">override</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">previousToken</span><span class="p">:</span><span class="w"> </span><span class="kt">String?</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;last_used_at&quot;</span><span class="p">)</span><span class="w"> </span><span class="kd">override</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">lastUsedAt</span><span class="p">:</span><span class="w"> </span><span class="n">Instant? </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
 
-    // Your custom fields
-    @Column(name = &quot;device_id&quot;) val deviceId: String? = null,
-    @Column(name = &quot;ip_address&quot;) val ipAddress: String? = null,
-) : OgiriToken {
-    @Transient
-    override var plainToken: String? = null
-}
-</code></pre>
+<span class="w">    </span><span class="c1">// Your custom fields</span>
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;device_id&quot;</span><span class="p">)</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">deviceId</span><span class="p">:</span><span class="w"> </span><span class="kt">String?</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;ip_address&quot;</span><span class="p">)</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">ipAddress</span><span class="p">:</span><span class="w"> </span><span class="kt">String?</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="p">)</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">OgiriToken</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nd">@Transient</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">plainToken</span><span class="p">:</span><span class="w"> </span><span class="kt">String?</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span>
+<span class="p">}</span>
+</code></pre></div>
 <p><strong>Advantages:</strong>
 - Complete flexibility over token structure
 - Can add custom fields freely
@@ -1376,20 +1376,20 @@ data class MyToken(
 - Works exactly like before</p>
 <h3 id="pattern-2-extend-ogiribasetoken-convenience">Pattern 2: Extend OgiriBaseToken (Convenience)</h3>
 <p>For straightforward implementations:</p>
-<pre><code class="language-kotlin">@Entity
-@Table(name = &quot;user_tokens&quot;)
-data class MyToken(
-    @Id @GeneratedValue override val id: Long = 0,
-    @Column(name = &quot;user_id&quot;) override val userId: Long,
-    @Column(name = &quot;client_id&quot;) override val client: String,
-    @Column(name = &quot;token_hash&quot;) override var token: String,
-    @Column(name = &quot;token_type&quot;) override val tokenType: String,
-    @Column(name = &quot;expiry_at&quot;) override var expiryAt: Instant,
-    @CreationTimestamp override val createdAt: Instant = Instant.now(),
-    @UpdateTimestamp override val updatedAt: Instant = Instant.now(),
-    @Column(name = &quot;token_updated_at&quot;) override var tokenUpdatedAt: Instant,
-) : OgiriBaseToken()
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="nd">@Entity</span>
+<span class="nd">@Table</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;user_tokens&quot;</span><span class="p">)</span>
+<span class="kd">data</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">MyToken</span><span class="p">(</span>
+<span class="w">    </span><span class="nd">@Id</span><span class="w"> </span><span class="nd">@GeneratedValue</span><span class="w"> </span><span class="kd">override</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">id</span><span class="p">:</span><span class="w"> </span><span class="kt">Long</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">0</span><span class="p">,</span>
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;user_id&quot;</span><span class="p">)</span><span class="w"> </span><span class="kd">override</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">userId</span><span class="p">:</span><span class="w"> </span><span class="kt">Long</span><span class="p">,</span>
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;client_id&quot;</span><span class="p">)</span><span class="w"> </span><span class="kd">override</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">client</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">,</span>
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;token_hash&quot;</span><span class="p">)</span><span class="w"> </span><span class="kd">override</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">token</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">,</span>
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;token_type&quot;</span><span class="p">)</span><span class="w"> </span><span class="kd">override</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">tokenType</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">,</span>
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;expiry_at&quot;</span><span class="p">)</span><span class="w"> </span><span class="kd">override</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">expiryAt</span><span class="p">:</span><span class="w"> </span><span class="n">Instant</span><span class="p">,</span>
+<span class="w">    </span><span class="nd">@CreationTimestamp</span><span class="w"> </span><span class="kd">override</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">createdAt</span><span class="p">:</span><span class="w"> </span><span class="n">Instant</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Instant</span><span class="p">.</span><span class="na">now</span><span class="p">(),</span>
+<span class="w">    </span><span class="nd">@UpdateTimestamp</span><span class="w"> </span><span class="kd">override</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">updatedAt</span><span class="p">:</span><span class="w"> </span><span class="n">Instant</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Instant</span><span class="p">.</span><span class="na">now</span><span class="p">(),</span>
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;token_updated_at&quot;</span><span class="p">)</span><span class="w"> </span><span class="kd">override</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">tokenUpdatedAt</span><span class="p">:</span><span class="w"> </span><span class="n">Instant</span><span class="p">,</span>
+<span class="p">)</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">OgiriBaseToken</span><span class="p">()</span>
+</code></pre></div>
 <p><strong>Advantages:</strong>
 - Sensible defaults for optional properties
 - Less boilerplate code
@@ -1397,76 +1397,76 @@ data class MyToken(
 - Clear inheritance hierarchy</p>
 <h2 id="repository-implementation">Repository Implementation</h2>
 <h3 id="using-spring-data-jpa">Using Spring Data JPA</h3>
-<pre><code class="language-kotlin">@Repository
-interface MyTokenRepository : JpaRepository&lt;MyToken, Long&gt;, OgiriTokenRepository&lt;MyToken&gt; {
-    override fun findAllByUserId(userId: Long): List&lt;MyToken&gt; =
-        findAllByUserIdOrderByUpdatedAtDesc(userId)
+<div class="highlight"><pre><span></span><code><span class="nd">@Repository</span>
+<span class="kd">interface</span><span class="w"> </span><span class="nc">MyTokenRepository</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">JpaRepository</span><span class="o">&lt;</span><span class="n">MyToken</span><span class="p">,</span><span class="w"> </span><span class="kt">Long</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="n">OgiriTokenRepository</span><span class="o">&lt;</span><span class="n">MyToken</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">findAllByUserId</span><span class="p">(</span><span class="n">userId</span><span class="p">:</span><span class="w"> </span><span class="kt">Long</span><span class="p">):</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="n">MyToken</span><span class="o">&gt;</span><span class="w"> </span><span class="o">=</span>
+<span class="w">        </span><span class="n">findAllByUserIdOrderByUpdatedAtDesc</span><span class="p">(</span><span class="n">userId</span><span class="p">)</span>
 
-    fun findAllByUserIdOrderByUpdatedAtDesc(userId: Long): List&lt;MyToken&gt;
+<span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">findAllByUserIdOrderByUpdatedAtDesc</span><span class="p">(</span><span class="n">userId</span><span class="p">:</span><span class="w"> </span><span class="kt">Long</span><span class="p">):</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="n">MyToken</span><span class="o">&gt;</span>
 
-    @Query(&quot;SELECT t FROM MyToken t WHERE t.userId = :userId AND t.client = :client&quot;)
-    override fun findByUserIdAndClient(
-        @Param(&quot;userId&quot;) userId: Long,
-        @Param(&quot;client&quot;) clientId: String
-    ): MyToken?
+<span class="w">    </span><span class="nd">@Query</span><span class="p">(</span><span class="s">&quot;SELECT t FROM MyToken t WHERE t.userId = :userId AND t.client = :client&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">findByUserIdAndClient</span><span class="p">(</span>
+<span class="w">        </span><span class="nd">@Param</span><span class="p">(</span><span class="s">&quot;userId&quot;</span><span class="p">)</span><span class="w"> </span><span class="n">userId</span><span class="p">:</span><span class="w"> </span><span class="kt">Long</span><span class="p">,</span>
+<span class="w">        </span><span class="nd">@Param</span><span class="p">(</span><span class="s">&quot;client&quot;</span><span class="p">)</span><span class="w"> </span><span class="n">clientId</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span>
+<span class="w">    </span><span class="p">):</span><span class="w"> </span><span class="n">MyToken?</span>
 
-    // ... implement other OgiriTokenRepository methods
-}
-</code></pre>
+<span class="w">    </span><span class="c1">// ... implement other OgiriTokenRepository methods</span>
+<span class="p">}</span>
+</code></pre></div>
 <h3 id="using-plain-jdbc">Using Plain JDBC</h3>
-<pre><code class="language-kotlin">@Repository
-class MyTokenRepository(private val jdbcTemplate: JdbcTemplate) : OgiriTokenRepository&lt;MyToken&gt; {
-    override fun save(token: MyToken): MyToken {
-        // INSERT or UPDATE logic
-        return token
-    }
+<div class="highlight"><pre><span></span><code><span class="nd">@Repository</span>
+<span class="kd">class</span><span class="w"> </span><span class="nc">MyTokenRepository</span><span class="p">(</span><span class="kd">private</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">jdbcTemplate</span><span class="p">:</span><span class="w"> </span><span class="n">JdbcTemplate</span><span class="p">)</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">OgiriTokenRepository</span><span class="o">&lt;</span><span class="n">MyToken</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">save</span><span class="p">(</span><span class="n">token</span><span class="p">:</span><span class="w"> </span><span class="n">MyToken</span><span class="p">):</span><span class="w"> </span><span class="n">MyToken</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="c1">// INSERT or UPDATE logic</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">token</span>
+<span class="w">    </span><span class="p">}</span>
 
-    override fun findById(id: Long): MyToken? {
-        // SELECT logic
-        return null
-    }
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">findById</span><span class="p">(</span><span class="n">id</span><span class="p">:</span><span class="w"> </span><span class="kt">Long</span><span class="p">):</span><span class="w"> </span><span class="n">MyToken? </span><span class="p">{</span>
+<span class="w">        </span><span class="c1">// SELECT logic</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="kc">null</span>
+<span class="w">    </span><span class="p">}</span>
 
-    // ... implement other methods
-}
-</code></pre>
+<span class="w">    </span><span class="c1">// ... implement other methods</span>
+<span class="p">}</span>
+</code></pre></div>
 <h2 id="service-implementation">Service Implementation</h2>
 <h3 id="custom-token-factory">Custom Token Factory</h3>
 <p>Extend <code>OgiriTokenService</code> and provide a custom token factory:</p>
-<pre><code class="language-kotlin">@Service
-class MyTokenService(
-    repository: OgiriTokenRepository&lt;MyToken&gt;,
-    passwordEncoder: PasswordEncoder,
-    userDirectory: OgiriUserDirectory,
-    identifierPolicy: IdentifierPolicy,
-    subTokenRegistry: SubTokenRegistry,
-    properties: OgiriConfigurationProperties,
-) : OgiriTokenService&lt;MyToken&gt;(
-    repository,
-    passwordEncoder,
-    userDirectory,
-    identifierPolicy,
-    subTokenRegistry,
-    properties,
-) {
-    override fun tokenFactory(
-        userId: Long,
-        client: String,
-        hashedToken: String,
-        tokenType: TokenType,
-        expiry: Instant,
-        tokenSubtype: String?,
-        plainTokenValue: String,
-    ): MyToken = MyToken(
-        userId = userId,
-        client = client,
-        token = hashedToken,
-        tokenType = tokenType.label,
-        expiryAt = expiry,
-        tokenSubtype = tokenSubtype,
-        plainToken = plainTokenValue
-    )
-}
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="nd">@Service</span>
+<span class="kd">class</span><span class="w"> </span><span class="nc">MyTokenService</span><span class="p">(</span>
+<span class="w">    </span><span class="n">repository</span><span class="p">:</span><span class="w"> </span><span class="n">OgiriTokenRepository</span><span class="o">&lt;</span><span class="n">MyToken</span><span class="o">&gt;</span><span class="p">,</span>
+<span class="w">    </span><span class="n">passwordEncoder</span><span class="p">:</span><span class="w"> </span><span class="n">PasswordEncoder</span><span class="p">,</span>
+<span class="w">    </span><span class="n">userDirectory</span><span class="p">:</span><span class="w"> </span><span class="n">OgiriUserDirectory</span><span class="p">,</span>
+<span class="w">    </span><span class="n">identifierPolicy</span><span class="p">:</span><span class="w"> </span><span class="n">IdentifierPolicy</span><span class="p">,</span>
+<span class="w">    </span><span class="n">subTokenRegistry</span><span class="p">:</span><span class="w"> </span><span class="n">SubTokenRegistry</span><span class="p">,</span>
+<span class="w">    </span><span class="n">properties</span><span class="p">:</span><span class="w"> </span><span class="n">OgiriConfigurationProperties</span><span class="p">,</span>
+<span class="p">)</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">OgiriTokenService</span><span class="o">&lt;</span><span class="n">MyToken</span><span class="o">&gt;</span><span class="p">(</span>
+<span class="w">    </span><span class="n">repository</span><span class="p">,</span>
+<span class="w">    </span><span class="n">passwordEncoder</span><span class="p">,</span>
+<span class="w">    </span><span class="n">userDirectory</span><span class="p">,</span>
+<span class="w">    </span><span class="n">identifierPolicy</span><span class="p">,</span>
+<span class="w">    </span><span class="n">subTokenRegistry</span><span class="p">,</span>
+<span class="w">    </span><span class="n">properties</span><span class="p">,</span>
+<span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">tokenFactory</span><span class="p">(</span>
+<span class="w">        </span><span class="n">userId</span><span class="p">:</span><span class="w"> </span><span class="kt">Long</span><span class="p">,</span>
+<span class="w">        </span><span class="n">client</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">,</span>
+<span class="w">        </span><span class="n">hashedToken</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">,</span>
+<span class="w">        </span><span class="n">tokenType</span><span class="p">:</span><span class="w"> </span><span class="n">TokenType</span><span class="p">,</span>
+<span class="w">        </span><span class="n">expiry</span><span class="p">:</span><span class="w"> </span><span class="n">Instant</span><span class="p">,</span>
+<span class="w">        </span><span class="n">tokenSubtype</span><span class="p">:</span><span class="w"> </span><span class="kt">String?</span><span class="p">,</span>
+<span class="w">        </span><span class="n">plainTokenValue</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">,</span>
+<span class="w">    </span><span class="p">):</span><span class="w"> </span><span class="n">MyToken</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MyToken</span><span class="p">(</span>
+<span class="w">        </span><span class="n">userId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">userId</span><span class="p">,</span>
+<span class="w">        </span><span class="n">client</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">client</span><span class="p">,</span>
+<span class="w">        </span><span class="n">token</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">hashedToken</span><span class="p">,</span>
+<span class="w">        </span><span class="n">tokenType</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tokenType</span><span class="p">.</span><span class="na">label</span><span class="p">,</span>
+<span class="w">        </span><span class="n">expiryAt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">expiry</span><span class="p">,</span>
+<span class="w">        </span><span class="n">tokenSubtype</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tokenSubtype</span><span class="p">,</span>
+<span class="w">        </span><span class="n">plainToken</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">plainTokenValue</span>
+<span class="w">    </span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
 <h2 id="design-benefits">Design Benefits</h2>
 <h3 id="1-flexibility">1. Flexibility</h3>
 <ul>
@@ -1495,99 +1495,99 @@ class MyTokenService(
 </ul>
 <h2 id="complete-example">Complete Example</h2>
 <h3 id="token-entity-direct-implementation">Token Entity (Direct Implementation)</h3>
-<pre><code class="language-kotlin">@Entity
-@Table(
-    name = &quot;user_tokens&quot;,
-    indexes = [
-        Index(name = &quot;idx_tokens_user_id&quot;, columnList = &quot;user_id&quot;),
-        Index(name = &quot;idx_tokens_expiry&quot;, columnList = &quot;expiry_at&quot;)
-    ],
-    uniqueConstraints = [
-        UniqueConstraint(name = &quot;uk_tokens_user_client&quot;, columnNames = [&quot;user_id&quot;, &quot;client_id&quot;])
-    ]
-)
-data class UserToken(
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    override val id: Long = 0,
+<div class="highlight"><pre><span></span><code><span class="nd">@Entity</span>
+<span class="nd">@Table</span><span class="p">(</span>
+<span class="w">    </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;user_tokens&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="n">indexes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">[</span>
+<span class="w">        </span><span class="n">Index</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;idx_tokens_user_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">columnList</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;user_id&quot;</span><span class="p">),</span>
+<span class="w">        </span><span class="n">Index</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;idx_tokens_expiry&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">columnList</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;expiry_at&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="o">]</span><span class="p">,</span>
+<span class="w">    </span><span class="n">uniqueConstraints</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">[</span>
+<span class="w">        </span><span class="n">UniqueConstraint</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;uk_tokens_user_client&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">columnNames</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">[</span><span class="s">&quot;user_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;client_id&quot;</span><span class="o">]</span><span class="p">)</span>
+<span class="w">    </span><span class="o">]</span>
+<span class="p">)</span>
+<span class="kd">data</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">UserToken</span><span class="p">(</span>
+<span class="w">    </span><span class="nd">@Id</span><span class="w"> </span><span class="nd">@GeneratedValue</span><span class="p">(</span><span class="n">strategy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">GenerationType</span><span class="p">.</span><span class="na">IDENTITY</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">id</span><span class="p">:</span><span class="w"> </span><span class="kt">Long</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">0</span><span class="p">,</span>
 
-    @Column(name = &quot;user_id&quot;, nullable = false)
-    override val userId: Long,
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;user_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">nullable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">userId</span><span class="p">:</span><span class="w"> </span><span class="kt">Long</span><span class="p">,</span>
 
-    @Column(name = &quot;client_id&quot;, nullable = false)
-    override val client: String,
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;client_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">nullable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">client</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">,</span>
 
-    @Column(name = &quot;token_hash&quot;, nullable = false)
-    override var token: String,
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;token_hash&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">nullable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">token</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">,</span>
 
-    @Column(name = &quot;token_type&quot;, nullable = false)
-    override val tokenType: String = &quot;APP&quot;,
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;token_type&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">nullable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">tokenType</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;APP&quot;</span><span class="p">,</span>
 
-    @Column(name = &quot;expiry_at&quot;, nullable = false)
-    override var expiryAt: Instant,
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;expiry_at&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">nullable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">expiryAt</span><span class="p">:</span><span class="w"> </span><span class="n">Instant</span><span class="p">,</span>
 
-    @CreationTimestamp @Column(name = &quot;created_at&quot;, nullable = false, updatable = false)
-    override val createdAt: Instant = Instant.now(),
+<span class="w">    </span><span class="nd">@CreationTimestamp</span><span class="w"> </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;created_at&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">nullable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w"> </span><span class="n">updatable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">createdAt</span><span class="p">:</span><span class="w"> </span><span class="n">Instant</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Instant</span><span class="p">.</span><span class="na">now</span><span class="p">(),</span>
 
-    @UpdateTimestamp @Column(name = &quot;updated_at&quot;, nullable = false)
-    override val updatedAt: Instant = Instant.now(),
+<span class="w">    </span><span class="nd">@UpdateTimestamp</span><span class="w"> </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;updated_at&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">nullable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">updatedAt</span><span class="p">:</span><span class="w"> </span><span class="n">Instant</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Instant</span><span class="p">.</span><span class="na">now</span><span class="p">(),</span>
 
-    @Column(name = &quot;token_updated_at&quot;, nullable = false)
-    override var tokenUpdatedAt: Instant = Instant.now(),
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;token_updated_at&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">nullable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">tokenUpdatedAt</span><span class="p">:</span><span class="w"> </span><span class="n">Instant</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Instant</span><span class="p">.</span><span class="na">now</span><span class="p">(),</span>
 
-    @Column(name = &quot;token_subtype&quot;)
-    override var tokenSubtype: String? = null,
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;token_subtype&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">tokenSubtype</span><span class="p">:</span><span class="w"> </span><span class="kt">String?</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
 
-    @Column(name = &quot;last_token_hash&quot;)
-    override var lastToken: String? = null,
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;last_token_hash&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">lastToken</span><span class="p">:</span><span class="w"> </span><span class="kt">String?</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
 
-    @Column(name = &quot;previous_token_hash&quot;)
-    override var previousToken: String? = null,
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;previous_token_hash&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">previousToken</span><span class="p">:</span><span class="w"> </span><span class="kt">String?</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
 
-    @Column(name = &quot;last_used_at&quot;)
-    override var lastUsedAt: Instant? = null,
-) : OgiriToken {
-    @Transient
-    override var plainToken: String? = null
-}
-</code></pre>
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;last_used_at&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">lastUsedAt</span><span class="p">:</span><span class="w"> </span><span class="n">Instant? </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="p">)</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">OgiriToken</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nd">@Transient</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">plainToken</span><span class="p">:</span><span class="w"> </span><span class="kt">String?</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span>
+<span class="p">}</span>
+</code></pre></div>
 <h3 id="repository">Repository</h3>
-<pre><code class="language-kotlin">@Repository
-interface UserTokenRepository : JpaRepository&lt;UserToken, Long&gt;, OgiriTokenRepository&lt;UserToken&gt; {
-    // ... implement required methods
-}
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="nd">@Repository</span>
+<span class="kd">interface</span><span class="w"> </span><span class="nc">UserTokenRepository</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">JpaRepository</span><span class="o">&lt;</span><span class="n">UserToken</span><span class="p">,</span><span class="w"> </span><span class="kt">Long</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="n">OgiriTokenRepository</span><span class="o">&lt;</span><span class="n">UserToken</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// ... implement required methods</span>
+<span class="p">}</span>
+</code></pre></div>
 <h3 id="service">Service</h3>
-<pre><code class="language-kotlin">@Service
-class UserTokenService(
-    repository: OgiriTokenRepository&lt;UserToken&gt;,
-    passwordEncoder: PasswordEncoder,
-    userDirectory: OgiriUserDirectory,
-    identifierPolicy: IdentifierPolicy,
-    subTokenRegistry: SubTokenRegistry,
-    properties: OgiriConfigurationProperties,
-) : OgiriTokenService&lt;UserToken&gt;(
-    repository, passwordEncoder, userDirectory,
-    identifierPolicy, subTokenRegistry, properties
-) {
-    override fun tokenFactory(
-        userId: Long,
-        client: String,
-        hashedToken: String,
-        tokenType: TokenType,
-        expiry: Instant,
-        tokenSubtype: String?,
-        plainTokenValue: String,
-    ): UserToken = UserToken(
-        userId = userId,
-        client = client,
-        token = hashedToken,
-        tokenType = tokenType.label,
-        expiryAt = expiry,
-        tokenSubtype = tokenSubtype,
-        plainToken = plainTokenValue
-    )
-}
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="nd">@Service</span>
+<span class="kd">class</span><span class="w"> </span><span class="nc">UserTokenService</span><span class="p">(</span>
+<span class="w">    </span><span class="n">repository</span><span class="p">:</span><span class="w"> </span><span class="n">OgiriTokenRepository</span><span class="o">&lt;</span><span class="n">UserToken</span><span class="o">&gt;</span><span class="p">,</span>
+<span class="w">    </span><span class="n">passwordEncoder</span><span class="p">:</span><span class="w"> </span><span class="n">PasswordEncoder</span><span class="p">,</span>
+<span class="w">    </span><span class="n">userDirectory</span><span class="p">:</span><span class="w"> </span><span class="n">OgiriUserDirectory</span><span class="p">,</span>
+<span class="w">    </span><span class="n">identifierPolicy</span><span class="p">:</span><span class="w"> </span><span class="n">IdentifierPolicy</span><span class="p">,</span>
+<span class="w">    </span><span class="n">subTokenRegistry</span><span class="p">:</span><span class="w"> </span><span class="n">SubTokenRegistry</span><span class="p">,</span>
+<span class="w">    </span><span class="n">properties</span><span class="p">:</span><span class="w"> </span><span class="n">OgiriConfigurationProperties</span><span class="p">,</span>
+<span class="p">)</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">OgiriTokenService</span><span class="o">&lt;</span><span class="n">UserToken</span><span class="o">&gt;</span><span class="p">(</span>
+<span class="w">    </span><span class="n">repository</span><span class="p">,</span><span class="w"> </span><span class="n">passwordEncoder</span><span class="p">,</span><span class="w"> </span><span class="n">userDirectory</span><span class="p">,</span>
+<span class="w">    </span><span class="n">identifierPolicy</span><span class="p">,</span><span class="w"> </span><span class="n">subTokenRegistry</span><span class="p">,</span><span class="w"> </span><span class="n">properties</span>
+<span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">tokenFactory</span><span class="p">(</span>
+<span class="w">        </span><span class="n">userId</span><span class="p">:</span><span class="w"> </span><span class="kt">Long</span><span class="p">,</span>
+<span class="w">        </span><span class="n">client</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">,</span>
+<span class="w">        </span><span class="n">hashedToken</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">,</span>
+<span class="w">        </span><span class="n">tokenType</span><span class="p">:</span><span class="w"> </span><span class="n">TokenType</span><span class="p">,</span>
+<span class="w">        </span><span class="n">expiry</span><span class="p">:</span><span class="w"> </span><span class="n">Instant</span><span class="p">,</span>
+<span class="w">        </span><span class="n">tokenSubtype</span><span class="p">:</span><span class="w"> </span><span class="kt">String?</span><span class="p">,</span>
+<span class="w">        </span><span class="n">plainTokenValue</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">,</span>
+<span class="w">    </span><span class="p">):</span><span class="w"> </span><span class="n">UserToken</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">UserToken</span><span class="p">(</span>
+<span class="w">        </span><span class="n">userId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">userId</span><span class="p">,</span>
+<span class="w">        </span><span class="n">client</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">client</span><span class="p">,</span>
+<span class="w">        </span><span class="n">token</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">hashedToken</span><span class="p">,</span>
+<span class="w">        </span><span class="n">tokenType</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tokenType</span><span class="p">.</span><span class="na">label</span><span class="p">,</span>
+<span class="w">        </span><span class="n">expiryAt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">expiry</span><span class="p">,</span>
+<span class="w">        </span><span class="n">tokenSubtype</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tokenSubtype</span><span class="p">,</span>
+<span class="w">        </span><span class="n">plainToken</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">plainTokenValue</span>
+<span class="w">    </span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
 <h2 id="summary">Summary</h2>
 <p>The interface-first design gives you:</p>
 <p>✅ <strong>Maximum flexibility</strong> - Implement the interfaces your way
@@ -1613,6 +1613,8 @@ class UserTokenService(
             </div>
           
           
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
         
@@ -1667,7 +1669,7 @@ class UserTokenService(
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.top", "navigation.sections", "navigation.tabs", "toc.integrate", "content.code.copy"], "search": "../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.top", "navigation.sections", "navigation.tabs", "toc.integrate", "content.code.copy", "content.tabs.link"], "search": "../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
     
     
       <script src="../assets/javascripts/bundle.e71a0d61.min.js"></script>
