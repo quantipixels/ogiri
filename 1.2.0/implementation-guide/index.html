@@ -1,0 +1,1911 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Token-based authentication for Spring Boot with pluggable sub-tokens.">
+      
+      
+      
+        <link rel="canonical" href="https://mosobande.github.io/ogiri/1.2.0/implementation-guide/">
+      
+      
+        <link rel="prev" href="../interface-first-design/">
+      
+      
+        <link rel="next" href="../sub-tokens/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+    
+    
+      
+        <title>Implementation - Ògiri Security</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.618322db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#implementation-and-integration-guide" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Ògiri Security" class="md-header__button md-logo" aria-label="Ògiri Security" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Ògiri Security
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Implementation
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/mosobande/ogiri" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    mosobande/ogiri
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../quickstart/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Quickstart
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../interface-first-design/" class="md-tabs__link">
+          
+  
+  
+  Core Concepts
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../configuration.md" class="md-tabs__link">
+          
+  
+  
+  Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../development/" class="md-tabs__link">
+          
+  
+  
+  Contributing
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../changelog/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Changelog
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Ògiri Security" class="md-nav__button md-logo" aria-label="Ògiri Security" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Ògiri Security
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/mosobande/ogiri" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    mosobande/ogiri
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core Concepts
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Core Concepts
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../interface-first-design/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interface Design
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Implementation
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Implementation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#table-of-contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Table of Contents
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#token-entity-implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Token Entity Implementation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Token Entity Implementation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#core-contract-ogiritoken" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core Contract: OgiriToken
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-1-extend-ogiribasetoken-recommended-for-simple-cases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option 1: Extend OgiriBaseToken (Recommended for Simple Cases)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-2-direct-interface-implementation-maximum-flexibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option 2: Direct Interface Implementation (Maximum Flexibility)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#database-schema-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Database Schema Requirements
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#repository-implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Repository Implementation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Repository Implementation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#using-spring-data-jpa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using Spring Data JPA
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-jdbc-template" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using JDBC Template
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#service-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Service Configuration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Service Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#create-your-token-service" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Create Your Token Service
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#user-directory-implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        User Directory Implementation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#integration-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Integration Steps
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Integration Steps">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-add-dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 1: Add Dependencies
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-configure-application-properties" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 2: Configure Application Properties
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-create-security-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 3: Create Security Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-4-define-public-routes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 4: Define Public Routes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-5-create-a-login-endpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 5: Create a Login Endpoint
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Testing
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Testing">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#unit-tests-with-in-memory-repository" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unit Tests with In-Memory Repository
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#integration-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Integration Tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common Issues
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Common Issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#issue-token-not-persisting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Token Not Persisting
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-expired-tokens-not-being-cleaned" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Expired Tokens Not Being Cleaned
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-token-rotation-not-working" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Token Rotation Not Working
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../database.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Database Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sub-tokens/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sub-tokens
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../authentication.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Authentication Flow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../migration-guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Migration Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Contributing
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing Guidelines
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security Policy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../code-of-conduct/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code of Conduct
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="implementation-and-integration-guide">Implementation and Integration Guide</h1>
+<p>This guide walks you through implementing and integrating Ogiri token authentication into your Spring Boot application.</p>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol>
+<li><a href="#token-entity-implementation">Token Entity Implementation</a></li>
+<li><a href="#repository-implementation">Repository Implementation</a></li>
+<li><a href="#service-configuration">Service Configuration</a></li>
+<li><a href="#user-directory-implementation">User Directory Implementation</a></li>
+<li><a href="#integration-steps">Integration Steps</a></li>
+<li><a href="#testing">Testing</a></li>
+</ol>
+<h2 id="token-entity-implementation">Token Entity Implementation</h2>
+<h3 id="core-contract-ogiritoken">Core Contract: OgiriToken</h3>
+<p>Every token in Ogiri must implement the <code>OgiriToken</code> interface. This defines all properties the library needs to manage tokens.</p>
+<h3 id="option-1-extend-ogiribasetoken-recommended-for-simple-cases">Option 1: Extend OgiriBaseToken (Recommended for Simple Cases)</h3>
+<pre><code class="language-kotlin">import com.quantipixels.ogiri.security.tokens.OgiriBaseToken
+import jakarta.persistence.*
+import java.time.Instant
+import org.hibernate.annotations.CreationTimestamp
+import org.hibernate.annotations.UpdateTimestamp
+
+@Entity
+@Table(
+    name = &quot;tokens&quot;,
+    indexes = [
+        Index(name = &quot;idx_tokens_user&quot;, columnList = &quot;user_id&quot;),
+        Index(name = &quot;idx_tokens_expiry&quot;, columnList = &quot;expiry_at&quot;)
+    ],
+    uniqueConstraints = [
+        UniqueConstraint(name = &quot;uk_tokens_user_client&quot;, columnNames = [&quot;user_id&quot;, &quot;client_id&quot;])
+    ]
+)
+data class Token(
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    override val id: Long = 0,
+
+    @Column(name = &quot;user_id&quot;, nullable = false)
+    override val userId: Long = 0,
+
+    @Column(name = &quot;client_id&quot;, nullable = false)
+    override val client: String = &quot;&quot;,
+
+    @Column(name = &quot;token_hash&quot;, nullable = false)
+    override var token: String = &quot;&quot;,
+
+    @Column(name = &quot;token_type&quot;, nullable = false)
+    override val tokenType: String = &quot;APP&quot;,
+
+    @Column(name = &quot;expiry_at&quot;, nullable = false)
+    override var expiryAt: Instant = Instant.now(),
+
+    @CreationTimestamp
+    @Column(name = &quot;created_at&quot;, nullable = false, updatable = false)
+    override val createdAt: Instant = Instant.now(),
+
+    @UpdateTimestamp
+    @Column(name = &quot;updated_at&quot;, nullable = false)
+    override val updatedAt: Instant = Instant.now(),
+
+    @Column(name = &quot;token_updated_at&quot;, nullable = false)
+    override var tokenUpdatedAt: Instant = Instant.now(),
+) : OgiriBaseToken()
+</code></pre>
+<p><strong>Key Points:</strong>
+- All abstract properties from <code>OgiriBaseToken</code> must be implemented
+- Optional properties (<code>tokenSubtype</code>, <code>lastToken</code>, etc.) have defaults
+- <code>plainToken</code> is automatically managed as transient
+- JPA annotations handle persistence details</p>
+<h3 id="option-2-direct-interface-implementation-maximum-flexibility">Option 2: Direct Interface Implementation (Maximum Flexibility)</h3>
+<pre><code class="language-kotlin">import com.quantipixels.ogiri.security.tokens.OgiriToken
+import jakarta.persistence.*
+import java.time.Instant
+import org.hibernate.annotations.CreationTimestamp
+import org.hibernate.annotations.UpdateTimestamp
+
+@Entity
+@Table(name = &quot;custom_tokens&quot;)
+data class CustomToken(
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    override val id: Long = 0,
+
+    @Column(name = &quot;user_id&quot;, nullable = false)
+    override val userId: Long = 0,
+
+    @Column(name = &quot;client_id&quot;, nullable = false)
+    override val client: String = &quot;&quot;,
+
+    @Column(name = &quot;token_hash&quot;, nullable = false)
+    override var token: String = &quot;&quot;,
+
+    @Column(name = &quot;token_type&quot;, nullable = false)
+    override val tokenType: String = &quot;APP&quot;,
+
+    @Column(name = &quot;expiry_at&quot;, nullable = false)
+    override var expiryAt: Instant = Instant.now(),
+
+    @CreationTimestamp
+    @Column(name = &quot;created_at&quot;, nullable = false, updatable = false)
+    override val createdAt: Instant = Instant.now(),
+
+    @UpdateTimestamp
+    @Column(name = &quot;updated_at&quot;, nullable = false)
+    override val updatedAt: Instant = Instant.now(),
+
+    @Column(name = &quot;token_updated_at&quot;, nullable = false)
+    override var tokenUpdatedAt: Instant = Instant.now(),
+
+    @Column(name = &quot;token_subtype&quot;)
+    override var tokenSubtype: String? = null,
+
+    @Column(name = &quot;last_token_hash&quot;)
+    override var lastToken: String? = null,
+
+    @Column(name = &quot;previous_token_hash&quot;)
+    override var previousToken: String? = null,
+
+    @Column(name = &quot;last_used_at&quot;)
+    override var lastUsedAt: Instant? = null,
+
+    // Your custom fields
+    @Column(name = &quot;device_id&quot;)
+    val deviceId: String? = null,
+
+    @Column(name = &quot;user_agent&quot;)
+    val userAgent: String? = null,
+) : OgiriToken {
+    @Transient
+    override var plainToken: String? = null
+}
+</code></pre>
+<p><strong>Advantages:</strong>
+- Add custom columns freely (<code>deviceId</code>, <code>userAgent</code>)
+- Full control over the table structure
+- Can implement your own inheritance patterns</p>
+<h3 id="database-schema-requirements">Database Schema Requirements</h3>
+<p>Ogiri requires these columns for any token table:</p>
+<pre><code class="language-sql">CREATE TABLE tokens (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    client_id VARCHAR(255) NOT NULL,
+    token_hash VARCHAR(255) NOT NULL,
+    token_type VARCHAR(10) NOT NULL,
+    expiry_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL,
+    token_updated_at TIMESTAMP NOT NULL,
+    token_subtype VARCHAR(50),
+    last_token_hash VARCHAR(255),
+    previous_token_hash VARCHAR(255),
+    last_used_at TIMESTAMP,
+    UNIQUE KEY uk_tokens_user_client (user_id, client_id),
+    INDEX idx_tokens_user (user_id),
+    INDEX idx_tokens_expiry (expiry_at)
+);
+</code></pre>
+<h2 id="repository-implementation">Repository Implementation</h2>
+<p>The <code>OgiriTokenRepository&lt;T&gt;</code> interface defines all persistence operations needed.</p>
+<h3 id="using-spring-data-jpa">Using Spring Data JPA</h3>
+<pre><code class="language-kotlin">import com.quantipixels.ogiri.security.tokens.OgiriTokenRepository
+import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.query.Param
+import org.springframework.stereotype.Repository
+import java.time.Instant
+
+@Repository
+interface TokenRepository : JpaRepository&lt;Token, Long&gt;, OgiriTokenRepository&lt;Token&gt; {
+
+    // Required by OgiriTokenRepository interface
+
+    override fun findAllByUserId(userId: Long): List&lt;Token&gt; =
+        findAllByUserIdOrderByUpdatedAtDesc(userId)
+
+    @Query(&quot;SELECT t FROM Token t WHERE t.userId = :userId ORDER BY t.updatedAt DESC&quot;)
+    fun findAllByUserIdOrderByUpdatedAtDesc(
+        @Param(&quot;userId&quot;) userId: Long
+    ): List&lt;Token&gt;
+
+    @Query(&quot;SELECT t FROM Token t WHERE t.userId = :userId AND t.client = :client&quot;)
+    override fun findByUserIdAndClient(
+        @Param(&quot;userId&quot;) userId: Long,
+        @Param(&quot;client&quot;) clientId: String
+    ): Token?
+
+    @Query(&quot;SELECT t FROM Token t WHERE t.userId = :userId AND t.tokenSubtype = :subtype ORDER BY t.updatedAt DESC&quot;)
+    override fun findAllByUserIdAndTokenSubtype(
+        @Param(&quot;userId&quot;) userId: Long,
+        @Param(&quot;subtype&quot;) tokenSubtype: String
+    ): List&lt;Token&gt;
+
+    @Query(&quot;SELECT t FROM Token t WHERE t.expiryAt &lt; :cutoff&quot;)
+    override fun findByExpiryAtBefore(
+        @Param(&quot;cutoff&quot;) cutoff: Instant
+    ): List&lt;Token&gt;
+
+    override fun deleteByUserIdAndClient(userId: Long, clientId: String) {
+        val token = findByUserIdAndClient(userId, clientId)
+        token?.let { delete(it) }
+    }
+
+    override fun deleteByUserIdAndClientIn(userId: Long, clientIds: Collection&lt;String&gt;) {
+        clientIds.forEach { clientId -&gt;
+            deleteByUserIdAndClient(userId, clientId)
+        }
+    }
+
+    override fun deleteByUserId(userId: Long) {
+        findAllByUserId(userId).forEach { delete(it) }
+    }
+}
+</code></pre>
+<h3 id="using-jdbc-template">Using JDBC Template</h3>
+<pre><code class="language-kotlin">import com.quantipixels.ogiri.security.tokens.OgiriTokenRepository
+import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.stereotype.Repository
+import java.time.Instant
+
+@Repository
+class TokenJdbcRepository(private val jdbcTemplate: JdbcTemplate) : OgiriTokenRepository&lt;Token&gt; {
+
+    override fun save(token: Token): Token {
+        if (token.id == 0L) {
+            // INSERT
+            val sql = &quot;&quot;&quot;
+                INSERT INTO tokens (user_id, client_id, token_hash, token_type,
+                    expiry_at, created_at, updated_at, token_updated_at,
+                    token_subtype, last_token_hash, previous_token_hash, last_used_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            &quot;&quot;&quot;.trimIndent()
+
+            jdbcTemplate.update(sql,
+                token.userId, token.client, token.token, token.tokenType,
+                token.expiryAt, token.createdAt, token.updatedAt, token.tokenUpdatedAt,
+                token.tokenSubtype, token.lastToken, token.previousToken, token.lastUsedAt
+            )
+            return token.copy(id = getLastInsertId())
+        } else {
+            // UPDATE
+            val sql = &quot;&quot;&quot;
+                UPDATE tokens SET token_hash = ?, expiry_at = ?, updated_at = ?,
+                    token_updated_at = ?, token_subtype = ?, last_token_hash = ?,
+                    previous_token_hash = ?, last_used_at = ?
+                WHERE id = ?
+            &quot;&quot;&quot;.trimIndent()
+
+            jdbcTemplate.update(sql,
+                token.token, token.expiryAt, token.updatedAt, token.tokenUpdatedAt,
+                token.tokenSubtype, token.lastToken, token.previousToken, token.lastUsedAt,
+                token.id
+            )
+            return token
+        }
+    }
+
+    override fun findById(id: Long): Token? {
+        // ... implement query
+        return null
+    }
+
+    // ... implement other methods
+}
+</code></pre>
+<h2 id="service-configuration">Service Configuration</h2>
+<h3 id="create-your-token-service">Create Your Token Service</h3>
+<pre><code class="language-kotlin">import com.quantipixels.ogiri.security.tokens.OgiriTokenService
+import com.quantipixels.ogiri.security.tokens.OgiriTokenRepository
+import com.quantipixels.ogiri.security.tokens.TokenType
+import org.springframework.stereotype.Service
+import java.time.Instant
+
+@Service
+class TokenService(
+    repository: OgiriTokenRepository&lt;Token&gt;,
+    passwordEncoder: PasswordEncoder,
+    userDirectory: OgiriUserDirectory,
+    identifierPolicy: IdentifierPolicy,
+    subTokenRegistry: SubTokenRegistry,
+    properties: OgiriConfigurationProperties,
+) : OgiriTokenService&lt;Token&gt;(
+    repository,
+    passwordEncoder,
+    userDirectory,
+    identifierPolicy,
+    subTokenRegistry,
+    properties,
+) {
+    /**
+     * Factory method to create token instances.
+     * Called by parent service during token creation.
+     */
+    override fun tokenFactory(
+        userId: Long,
+        client: String,
+        hashedToken: String,
+        tokenType: TokenType,
+        expiry: Instant,
+        tokenSubtype: String?,
+        plainTokenValue: String,
+    ): Token = Token(
+        userId = userId,
+        client = client,
+        token = hashedToken,
+        tokenType = tokenType.label,
+        expiryAt = expiry,
+        tokenSubtype = tokenSubtype,
+        plainToken = plainTokenValue
+    )
+}
+</code></pre>
+<h2 id="user-directory-implementation">User Directory Implementation</h2>
+<p>The <code>OgiriUserDirectory</code> provides user lookup for authentication.</p>
+<pre><code class="language-kotlin">import com.quantipixels.ogiri.security.spi.OgiriUserDirectory
+import com.quantipixels.ogiri.security.spi.OgiriUser
+import org.springframework.security.core.userdetails.UserDetailsService
+import org.springframework.stereotype.Component
+
+@Component
+class UserDirectoryImpl(private val userRepository: UserRepository) : OgiriUserDirectory {
+
+    override fun loadUserByUsername(username: String): OgiriUser? =
+        userRepository.findByUsername(username)
+
+    override fun findById(id: Long): OgiriUser? =
+        userRepository.findById(id).orElse(null)
+
+    override fun findByEmail(email: String): OgiriUser? =
+        userRepository.findByEmail(email)
+
+    override fun findByUsername(username: String): OgiriUser? =
+        userRepository.findByUsername(username)
+
+    override fun recordSuccessfulLogin(userId: Long) {
+        val user = userRepository.findById(userId).orElse(null) ?: return
+        user.lastLoginAt = Instant.now()
+        userRepository.save(user)
+    }
+}
+</code></pre>
+<p>Your <code>User</code> entity should implement <code>OgiriUser</code>:</p>
+<pre><code class="language-kotlin">import com.quantipixels.ogiri.security.spi.OgiriUser
+import org.springframework.security.core.authority.SimpleGrantedAuthority
+
+@Entity
+data class User(
+    @Id @GeneratedValue
+    override val userId: Long = 0,
+
+    override var username: String = &quot;&quot;,
+    override var password: String = &quot;&quot;,
+    override var email: String = &quot;&quot;,
+
+    @Column(name = &quot;last_login_at&quot;)
+    var lastLoginAt: Instant? = null,
+
+    @ElementCollection
+    var roles: Set&lt;String&gt; = emptySet(),
+) : OgiriUser {
+    override fun getOgiriUserId(): Long = userId
+
+    override fun getAuthorities() = roles.map { SimpleGrantedAuthority(it) }
+
+    override fun isAccountNonExpired() = true
+    override fun isAccountNonLocked() = true
+    override fun isCredentialsNonExpired() = true
+    override fun isEnabled() = true
+}
+</code></pre>
+<h2 id="integration-steps">Integration Steps</h2>
+<h3 id="step-1-add-dependencies">Step 1: Add Dependencies</h3>
+<pre><code class="language-gradle">dependencies {
+    implementation 'com.quantipixels:ogiri-security:2.0.0'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.postgresql:postgresql:14.0'
+}
+</code></pre>
+<h3 id="step-2-configure-application-properties">Step 2: Configure Application Properties</h3>
+<pre><code class="language-yaml"># application.yml
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/myapp
+    username: postgres
+    password: password
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+ogiri:
+  auth:
+    max-clients: 10              # Max concurrent clients per user
+    batch-grace-seconds: 5       # Grace period for batch requests
+    token-lifespan-days: 14      # Token validity duration
+  security:
+    register-filter: true        # Auto-register Ogiri filter
+  cleanup:
+    enabled: true
+    cron: &quot;0 0 * * * *&quot;          # Daily cleanup of expired tokens
+</code></pre>
+<h3 id="step-3-create-security-configuration">Step 3: Create Security Configuration</h3>
+<pre><code class="language-kotlin">import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import org.springframework.security.crypto.password.PasswordEncoder
+
+@Configuration
+class SecurityConfig {
+
+    @Bean
+    fun passwordEncoder(): PasswordEncoder = BCryptPasswordEncoder()
+}
+</code></pre>
+<h3 id="step-4-define-public-routes">Step 4: Define Public Routes</h3>
+<pre><code class="language-kotlin">import com.quantipixels.ogiri.security.routes.OgiriRoute
+import com.quantipixels.ogiri.security.routes.OgiriRouteRegistry
+import org.springframework.http.HttpMethod
+import org.springframework.stereotype.Component
+
+@Component
+class RouteRegistryImpl : OgiriRouteRegistry {
+
+    override fun routes(): List&lt;OgiriRoute&gt; = listOf(
+        OgiriRoute(HttpMethod.POST, &quot;/api/auth/login&quot;, true, false, null),
+        OgiriRoute(HttpMethod.GET, &quot;/api/health&quot;, true, false, null),
+        OgiriRoute(HttpMethod.GET, &quot;/swagger-ui/**&quot;, true, false, null),
+    )
+}
+</code></pre>
+<h3 id="step-5-create-a-login-endpoint">Step 5: Create a Login Endpoint</h3>
+<pre><code class="language-kotlin">import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.web.bind.annotation.*
+
+@RestController
+@RequestMapping(&quot;/api/auth&quot;)
+class AuthController(private val tokenService: TokenService) {
+
+    @PostMapping(&quot;/login&quot;)
+    fun login(
+        @RequestBody request: LoginRequest,
+        response: HttpServletResponse,
+    ): Map&lt;String, Any&gt; {
+        val authHeader = try {
+            tokenService.createNewAuthToken(
+                userId = authenticateUser(request.username, request.password),
+                client = request.deviceName
+            )
+        } catch (e: Exception) {
+            return mapOf(&quot;error&quot; to e.message)
+        }
+
+        // Append auth headers to response
+        response.appendAuthHeaders(authHeader)
+
+        return mapOf(
+            &quot;accessToken&quot; to authHeader.accessToken,
+            &quot;client&quot; to authHeader.client,
+            &quot;expiry&quot; to authHeader.expiry
+        )
+    }
+
+    private fun authenticateUser(username: String, password: String): Long {
+        // Implement authentication logic
+        return 1L
+    }
+}
+
+data class LoginRequest(
+    val username: String,
+    val password: String,
+    val deviceName: String? = null,
+)
+</code></pre>
+<h2 id="testing">Testing</h2>
+<h3 id="unit-tests-with-in-memory-repository">Unit Tests with In-Memory Repository</h3>
+<pre><code class="language-kotlin">import com.quantipixels.ogiri.security.testutil.InMemoryTokenRepository
+import com.quantipixels.ogiri.security.testutil.TestToken
+import org.junit.jupiter.api.Test
+
+class TokenServiceTest {
+
+    private val repository = InMemoryTokenRepository()
+    private val passwordEncoder = MyPasswordEncoder()
+
+    @Test
+    fun `should create token for user`() {
+        val service = TokenService(repository, passwordEncoder, /* ... */)
+
+        val token = service.createNewAuthToken(userId = 1L, client = &quot;web&quot;)
+
+        assert(token.accessToken.isNotEmpty())
+        assert(repository.getAllTokens().size == 1)
+    }
+}
+</code></pre>
+<h3 id="integration-tests">Integration Tests</h3>
+<pre><code class="language-kotlin">import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.context.ActiveProfiles
+
+@SpringBootTest
+@ActiveProfiles(&quot;test&quot;)
+class AuthenticationIntegrationTest {
+
+    @Autowired lateinit var tokenService: TokenService
+    @Autowired lateinit var tokenRepository: TokenRepository
+
+    @Test
+    fun `should authenticate user and create tokens`() {
+        val authHeader = tokenService.createNewAuthToken(userId = 1L, client = &quot;web&quot;)
+
+        assert(authHeader.accessToken.isNotEmpty())
+        assert(authHeader.subTokens?.isNotEmpty() == true)
+    }
+}
+</code></pre>
+<h2 id="common-issues">Common Issues</h2>
+<h3 id="issue-token-not-persisting">Issue: Token Not Persisting</h3>
+<p><strong>Cause:</strong> Repository not implementing all <code>OgiriTokenRepository</code> methods</p>
+<p><strong>Solution:</strong> Ensure all interface methods are implemented. Use IDE code generation.</p>
+<h3 id="issue-expired-tokens-not-being-cleaned">Issue: Expired Tokens Not Being Cleaned</h3>
+<p><strong>Cause:</strong> <code>cleanup.enabled</code> is false or cron schedule not firing</p>
+<p><strong>Solution:</strong> Check <code>application.yml</code> configuration and verify Spring task scheduling is enabled with <code>@EnableScheduling</code>.</p>
+<h3 id="issue-token-rotation-not-working">Issue: Token Rotation Not Working</h3>
+<p><strong>Cause:</strong> <code>batch-grace-seconds</code> is too high</p>
+<p><strong>Solution:</strong> Adjust to an appropriate value (typically 5 seconds) to allow batch requests but still rotate tokens.</p>
+<hr />
+<p>For more details, see:
+- <a href="../interface-first-design/">Interface-First Design</a>
+- <a href="configuration.md">Configuration Guide</a>
+- <a href="database.md">Database Integration</a></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/mosobande/ogiri" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.top", "navigation.sections", "navigation.tabs", "toc.integrate", "content.code.copy"], "search": "../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      
+    
+  </body>
+</html>
