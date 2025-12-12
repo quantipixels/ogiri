@@ -12,8 +12,13 @@ theme:
     - navigation.top
     - navigation.sections
     - navigation.tabs
+    - navigation.indexes
+    - navigation.footer
     - toc.integrate
+    - search.suggest
+    - search.highlight
     - content.code.copy
+    - content.code.annotate
     - content.tabs.link
 
 markdown_extensions:
@@ -24,6 +29,7 @@ markdown_extensions:
       alternate_style: true
 
 extra:
+  ogiri_version: 1.2.1
   version:
     provider: mike
     default: latest
@@ -33,16 +39,15 @@ extra:
 
 plugins:
   - search:
-      # Language configuration - optimizes tokenization and stemming
       lang: en
-
-      # Advanced configuration for word tokenization
-      # Splits on whitespace, hyphens, and underscores (useful for kebab-case terms)
       separator: '[\s\-_]+'
-
-      # Exclude certain pages from the search index (optional - uncomment to use)
-      # exclude:
-      #   - search/index.md
+  - macros
+  - minify:
+      minify_html: true
+  - git-revision-date-localized:
+      enable_creation_date: true
+  - redirects:
+      redirect_maps: {}
 
 nav:
   - Home: index.md

@@ -6,12 +6,12 @@ Get ogiri integrated into your Spring Boot application in 5 minutes.
 
 **Gradle (Kotlin DSL):**
 ```kotlin
-implementation("com.quantipixels.ogiri:ogiri-core:1.2.0")
+implementation("com.quantipixels.ogiri:ogiri-core:{{ config.extra.ogiri_version }}")
 ```
 
 **Gradle (Groovy):**
 ```groovy
-implementation 'com.quantipixels.ogiri:ogiri-core:1.2.0'
+implementation 'com.quantipixels.ogiri:ogiri-core:{{ config.extra.ogiri_version }}'
 ```
 
 **Maven:**
@@ -19,7 +19,7 @@ implementation 'com.quantipixels.ogiri:ogiri-core:1.2.0'
 <dependency>
   <groupId>com.quantipixels.ogiri</groupId>
   <artifactId>ogiri-core</artifactId>
-  <version>1.2.0</version>
+  <version>{{ config.extra.ogiri_version }}</version>
 </dependency>
 ```
 

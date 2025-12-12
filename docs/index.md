@@ -17,7 +17,7 @@ Add the dependency and implement two interfaces:
 
     ```kotlin
     // 1. Add dependency
-    implementation("com.quantipixels.ogiri:ogiri-core:1.2.0")
+    implementation("com.quantipixels.ogiri:ogiri-core:{{ config.extra.ogiri_version }}")
 
     // 2. Connect to your user system
     @Component
@@ -40,7 +40,7 @@ Add the dependency and implement two interfaces:
 
     ```java
     // 1. Add dependency
-    // implementation("com.quantipixels.ogiri:ogiri-core:1.2.0")
+    // implementation("com.quantipixels.ogiri:ogiri-core:{{ config.extra.ogiri_version }}")
 
     // 2. Connect to your user system
     @Component

@@ -23,7 +23,7 @@ Reusable Spring Boot security components for token-based authentication with plu
 
 **Gradle:**
 ```kotlin
-implementation("com.quantipixels.ogiri:ogiri-core:1.2.0")
+implementation("com.quantipixels.ogiri:ogiri-core:1.2.1")
 ```
 
 **Maven:**
@@ -31,7 +31,7 @@ implementation("com.quantipixels.ogiri:ogiri-core:1.2.0")
 <dependency>
   <groupId>com.quantipixels.ogiri</groupId>
   <artifactId>ogiri-core</artifactId>
-  <version>1.2.0</version>
+  <version>1.2.1</version>
 </dependency>
 ```
 
@@ -82,7 +82,7 @@ See the [full Quickstart Guide](https://mosobande.github.io/ogiri/quickstart/) f
 | [Database Integration](https://mosobande.github.io/ogiri/guides/database-integration/) | JPA, MongoDB, Redis examples |
 | [Sub-tokens](https://mosobande.github.io/ogiri/guides/sub-tokens/) | Device, chat, API tokens |
 | [Authentication Flow](https://mosobande.github.io/ogiri/guides/authentication-flow/) | Request lifecycle, headers |
-| [Migration Guide](https://mosobande.github.io/ogiri/guides/migration-guide/) | Upgrade from v1.1.1 to v1.2.0 |
+| [Migration Guide](https://mosobande.github.io/ogiri/guides/migration-guide/) | Upgrade guide (see docs for version notes) |
 | [Sample Applications](https://github.com/mosobande/ogiri/tree/main/sample) | Java and Kotlin examples |
 
 ## Development
