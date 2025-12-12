@@ -64,6 +64,7 @@ jobs:
             VERSION=$(cat .ogiri-version)
             echo "Deploying dev docs: $VERSION (latest)"
             mike deploy --push --update-aliases "$VERSION" latest
+            mike set-default --push latest
           fi
 
       - name: Verify deployment
