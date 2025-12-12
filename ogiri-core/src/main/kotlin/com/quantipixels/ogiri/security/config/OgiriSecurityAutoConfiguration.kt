@@ -60,8 +60,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableConfigurationProperties(OgiriConfigurationProperties::class)
 class OgiriSecurityAutoConfiguration {
   @Bean
-  @ConditionalOnMissingBean(IdentifierPolicy::class)
-  fun identifierPolicy(): IdentifierPolicy = DefaultIdentifierPolicy()
+  @ConditionalOnMissingBean(DefaultIdentifierPolicy::class)
+  fun identifierPolicy(): DefaultIdentifierPolicy = DefaultIdentifierPolicy()
 
   @Bean
   @ConditionalOnMissingBean(OgiriRouteCatalog::class)
@@ -74,10 +74,11 @@ class OgiriSecurityAutoConfiguration {
       AuthenticationBypassDecider(routeCatalog)
 
   @Bean
-  @ConditionalOnMissingBean(OgiriSubTokenRegistry::class)
+  @ConditionalOnMissingBean(DefaultOgiriSubTokenRegistry::class)
   fun subTokenRegistry(
       registrations: ObjectProvider<OgiriSubTokenRegistration>
-  ): OgiriSubTokenRegistry = DefaultOgiriSubTokenRegistry(registrations.orderedStream().toList())
+  ): DefaultOgiriSubTokenRegistry =
+      DefaultOgiriSubTokenRegistry(registrations.orderedStream().toList())
 
   @Bean
   @ConditionalOnMissingBean(OgiriTokenService::class)
@@ -107,17 +108,17 @@ class OgiriSecurityAutoConfiguration {
           as OgiriTokenService<*>
 
   @Bean
-  @ConditionalOnMissingBean(OgiriTokenServiceResolver::class)
+  @ConditionalOnMissingBean(DefaultOgiriTokenServiceResolver::class)
   fun ogiriTokenServiceResolver(
       tokenServices: Map<String, OgiriTokenService<*>>,
       properties: OgiriConfigurationProperties,
       beanFactory: ConfigurableListableBeanFactory,
-  ): OgiriTokenServiceResolver =
+  ): DefaultOgiriTokenServiceResolver =
       DefaultOgiriTokenServiceResolver(tokenServices, properties, beanFactory)
 
   @Bean
-  @ConditionalOnMissingBean(AuthenticationEntryPoint::class)
-  fun ogiriAuthenticationEntryPoint(messageSource: MessageSource): AuthenticationEntryPoint =
+  @ConditionalOnMissingBean(OgiriAuthenticationEntryPoint::class)
+  fun ogiriAuthenticationEntryPoint(messageSource: MessageSource): OgiriAuthenticationEntryPoint =
       OgiriAuthenticationEntryPoint(messageSource)
 
   @Bean
