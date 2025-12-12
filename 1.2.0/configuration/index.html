@@ -1217,6 +1217,11 @@
 <td><code>14</code></td>
 <td>Token lifetime in days</td>
 </tr>
+<tr>
+<td><code>ogiri.auth.register-token-service</code></td>
+<td><code>true</code></td>
+<td>Auto-register default OgiriTokenService</td>
+</tr>
 </tbody>
 </table>
 <h3 id="token-rotation">Token Rotation</h3>
@@ -1257,9 +1262,9 @@
 <td>Enable scheduled cleanup job</td>
 </tr>
 <tr>
-<td><code>ogiri.cleanup.cron</code></td>
-<td><code>0 0 * * * *</code></td>
-<td>Cleanup schedule (daily at midnight)</td>
+<td><code>ogiri.cleanup.interval-ms</code></td>
+<td><code>21600000</code></td>
+<td>Cleanup interval in milliseconds (default: 6 hours)</td>
 </tr>
 </tbody>
 </table>
@@ -1272,8 +1277,10 @@
 <span class="w">    </span><span class="nt">max-clients</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">24</span>
 <span class="w">    </span><span class="nt">batch-grace-seconds</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
 <span class="w">    </span><span class="nt">token-lifespan-days</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">14</span>
+<span class="w">    </span><span class="nt">register-token-service</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 <span class="w">  </span><span class="nt">cleanup</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">interval-ms</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">21600000</span><span class="w">  </span><span class="c1"># 6 hours</span>
 </code></pre></div>
 <h3 id="high-security">High Security</h3>
 <p>Frequent rotation, short tokens, strict limits:</p>
@@ -1285,7 +1292,7 @@
 <span class="w">    </span><span class="nt">rotate-on-write-only</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
 <span class="w">    </span><span class="nt">rotate-stale-seconds</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3600</span><span class="w">  </span><span class="c1"># Force rotation every hour</span>
 <span class="w">  </span><span class="nt">cleanup</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">cron</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;0</span><span class="nv"> </span><span class="s">0</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">*&quot;</span>
+<span class="w">    </span><span class="nt">interval-ms</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3600000</span><span class="w">  </span><span class="c1"># 1 hour</span>
 </code></pre></div>
 <h3 id="high-performance">High Performance</h3>
 <p>Longer tokens, less rotation:</p>
@@ -1309,6 +1316,9 @@
 </code></pre></div>
 <h2 id="custom-beans">Custom Beans</h2>
 <h3 id="custom-ogiritokenservice">Custom OgiriTokenService</h3>
+<p>If you provide your own <code>OgiriTokenService</code>, Ògiri will not create its default token service.</p>
+<p>If you intentionally have multiple <code>OgiriTokenService</code> beans, mark exactly one as <code>@Primary</code> or
+inject by <code>@Qualifier</code> to avoid ambiguity.</p>
 <div class="highlight"><pre><span></span><code><span class="nd">@Configuration</span>
 <span class="kd">class</span><span class="w"> </span><span class="nc">CustomConfig</span><span class="p">(</span><span class="kd">private</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">properties</span><span class="p">:</span><span class="w"> </span><span class="n">OgiriConfigurationProperties</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 
@@ -1356,8 +1366,9 @@
 <span class="na">ogiri.auth.token-lifespan-days</span><span class="o">=</span><span class="s">14</span>
 <span class="na">ogiri.auth.rotate-on-write-only</span><span class="o">=</span><span class="s">false</span>
 <span class="na">ogiri.auth.rotate-stale-seconds</span><span class="o">=</span><span class="s">0</span>
+<span class="na">ogiri.auth.register-token-service</span><span class="o">=</span><span class="s">true</span>
 <span class="na">ogiri.cleanup.enabled</span><span class="o">=</span><span class="s">true</span>
-<span class="na">ogiri.cleanup.cron</span><span class="o">=</span><span class="s">0 0 * * * *</span>
+<span class="na">ogiri.cleanup.interval-ms</span><span class="o">=</span><span class="s">21600000</span>
 </code></pre></div>
 <h2 id="troubleshooting">Troubleshooting</h2>
 <table>
