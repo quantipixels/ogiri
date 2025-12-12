@@ -17,13 +17,13 @@ import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 
 class OgiriTokenCleanupJob(
-    private val tokenService: OgiriTokenService<*>,
+    private val tokenServiceResolver: OgiriTokenServiceResolver,
 ) {
   private val logger = LoggerFactory.getLogger(OgiriTokenCleanupJob::class.java)
 
-  @Scheduled(fixedDelayString = "\${ogiri.auth.tokens.cleanup-interval-ms:900000}")
+  @Scheduled(fixedDelayString = "\${ogiri.cleanup.interval-ms:21600000}")
   fun cleanupExpiredTokens() {
-    val deleted = tokenService.cleanupExpiredTokens(Instant.now())
+    val deleted = tokenServiceResolver.resolve().cleanupExpiredTokens(Instant.now())
     if (deleted > 0) {
       logger.info("Expired user tokens removed count={}", deleted)
     }

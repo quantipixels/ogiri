@@ -17,6 +17,7 @@ All ogiri properties are prefixed with `ogiri`.
 | `ogiri.auth.max-clients` | `24` | Max active tokens per user |
 | `ogiri.auth.batch-grace-seconds` | `5` | Grace period before rotation |
 | `ogiri.auth.token-lifespan-days` | `14` | Token lifetime in days |
+| `ogiri.auth.register-token-service` | `true` | Auto-register default OgiriTokenService |
 
 ### Token Rotation
 
@@ -30,7 +31,7 @@ All ogiri properties are prefixed with `ogiri`.
 | Property | Default | Description |
 |----------|---------|-------------|
 | `ogiri.cleanup.enabled` | `true` | Enable scheduled cleanup job |
-| `ogiri.cleanup.cron` | `0 0 * * * *` | Cleanup schedule (daily at midnight) |
+| `ogiri.cleanup.interval-ms` | `21600000` | Cleanup interval in milliseconds (default: 6 hours) |
 
 ## Configuration Examples
 
@@ -44,8 +45,10 @@ ogiri:
     max-clients: 24
     batch-grace-seconds: 5
     token-lifespan-days: 14
+    register-token-service: true
   cleanup:
     enabled: true
+    interval-ms: 21600000  # 6 hours
 ```
 
 ### High Security
@@ -61,7 +64,7 @@ ogiri:
     rotate-on-write-only: false
     rotate-stale-seconds: 3600  # Force rotation every hour
   cleanup:
-    cron: "0 0 * * * *"
+    interval-ms: 3600000  # 1 hour
 ```
 
 ### High Performance
@@ -95,6 +98,11 @@ ogiri:
 ## Custom Beans
 
 ### Custom OgiriTokenService
+
+If you provide your own `OgiriTokenService`, Ògiri will not create its default token service.
+
+If you intentionally have multiple `OgiriTokenService` beans, mark exactly one as `@Primary` or
+inject by `@Qualifier` to avoid ambiguity.
 
 ```kotlin
 @Configuration
@@ -154,8 +162,9 @@ ogiri.auth.batch-grace-seconds=5
 ogiri.auth.token-lifespan-days=14
 ogiri.auth.rotate-on-write-only=false
 ogiri.auth.rotate-stale-seconds=0
+ogiri.auth.register-token-service=true
 ogiri.cleanup.enabled=true
-ogiri.cleanup.cron=0 0 * * * *
+ogiri.cleanup.interval-ms=21600000
 ```
 
 ## Troubleshooting

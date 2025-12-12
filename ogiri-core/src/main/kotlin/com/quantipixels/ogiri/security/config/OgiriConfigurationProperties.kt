@@ -37,6 +37,7 @@ import org.springframework.validation.annotation.Validated
  *     token-lifespan-days: 14
  *     rotate-on-write-only: false
  *     rotate-stale-seconds: 0
+ *     register-token-service: true
  *   cleanup:
  *     enabled: true
  *     cron: "0 0 * * * *"
@@ -83,6 +84,18 @@ open class OgiriConfigurationProperties {
    * sourced from application configuration and NOT from TokenService constructor arguments.
    */
   open class AuthProperties {
+    /**
+     * Enable auto-registration of the default
+     * [com.quantipixels.ogiri.security.tokens.OgiriTokenService].
+     *
+     * Set to false if your application provides its own
+     * [com.quantipixels.ogiri.security.tokens.OgiriTokenService] (or you want to fully customize
+     * how token services are wired).
+     *
+     * Default: true
+     */
+    var registerTokenService: Boolean = true
+
     /**
      * Maximum number of active APP tokens per user.
      *
@@ -191,8 +204,8 @@ open class OgiriConfigurationProperties {
     /**
      * Enable the scheduled OgiriTokenCleanupJob.
      *
-     * When true, the cleanup job runs according to the cron schedule and deletes all tokens where
-     * expiryAt < now(). When false, the cleanup job is not registered or executed.
+     * When true, the cleanup job runs at a fixed interval and deletes all tokens where expiryAt <
+     * now(). When false, the cleanup job is not registered or executed.
      *
      * Default: true Valid Values: true, false
      *
@@ -204,15 +217,20 @@ open class OgiriConfigurationProperties {
     var enabled: Boolean = true
 
     /**
-     * Cron expression for the cleanup job schedule.
+     * Interval in milliseconds between cleanup job executions.
      *
-     * Standard Spring cron format: second minute hour day-of-month month day-of-week (6 fields:
-     * second through day-of-week).
+     * The cleanup job uses a fixed delay, meaning the next execution starts after the specified
+     * interval has elapsed since the previous execution completed.
      *
-     * Default: "0 0 * * * *" (daily at midnight)
+     * Default: 21600000 (6 hours)
      *
-     * See Spring CronTrigger documentation for complete syntax. Only used if [enabled] is true.
+     * Examples:
+     * - 21600000 (6 hours) - default, good for most production use cases
+     * - 3600000 (1 hour) - for higher-traffic applications
+     * - 43200000 (12 hours) - for lower-traffic applications
+     *
+     * Only used if [enabled] is true.
      */
-    var cron: String = "0 0 * * * *"
+    var intervalMs: Long = 21600000
   }
 }

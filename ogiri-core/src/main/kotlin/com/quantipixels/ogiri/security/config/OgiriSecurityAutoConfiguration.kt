@@ -19,15 +19,18 @@ import com.quantipixels.ogiri.security.routes.OgiriRouteCatalog
 import com.quantipixels.ogiri.security.routes.OgiriRouteRegistry
 import com.quantipixels.ogiri.security.spi.OgiriUserDirectory
 import com.quantipixels.ogiri.security.tokens.DefaultOgiriSubTokenRegistry
+import com.quantipixels.ogiri.security.tokens.DefaultOgiriTokenServiceResolver
 import com.quantipixels.ogiri.security.tokens.OgiriSubTokenRegistration
 import com.quantipixels.ogiri.security.tokens.OgiriSubTokenRegistry
 import com.quantipixels.ogiri.security.tokens.OgiriToken
 import com.quantipixels.ogiri.security.tokens.OgiriTokenCleanupJob
 import com.quantipixels.ogiri.security.tokens.OgiriTokenRepository
 import com.quantipixels.ogiri.security.tokens.OgiriTokenService
+import com.quantipixels.ogiri.security.tokens.OgiriTokenServiceResolver
 import com.quantipixels.ogiri.security.web.OgiriAuthenticationEntryPoint
 import com.quantipixels.ogiri.security.web.OgiriTokenAuthenticationFilter
 import org.springframework.beans.factory.ObjectProvider
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
@@ -35,7 +38,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.MessageSource
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Import
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.AuthenticationEntryPoint
@@ -55,31 +57,36 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  * beans are registered with @ConditionalOnMissingBean for easy override.
  */
 @Configuration
-@Import(OgiriTokenCleanupJob::class)
 @EnableConfigurationProperties(OgiriConfigurationProperties::class)
 class OgiriSecurityAutoConfiguration {
   @Bean
-  @ConditionalOnMissingBean
+  @ConditionalOnMissingBean(IdentifierPolicy::class)
   fun identifierPolicy(): IdentifierPolicy = DefaultIdentifierPolicy()
 
   @Bean
-  @ConditionalOnMissingBean
+  @ConditionalOnMissingBean(OgiriRouteCatalog::class)
   fun routeCatalog(registries: ObjectProvider<OgiriRouteRegistry>): OgiriRouteCatalog =
       OgiriRouteCatalog(registries.orderedStream().toList())
 
   @Bean
-  @ConditionalOnMissingBean
+  @ConditionalOnMissingBean(AuthenticationBypassDecider::class)
   fun authenticationBypassDecider(routeCatalog: OgiriRouteCatalog): AuthenticationBypassDecider =
       AuthenticationBypassDecider(routeCatalog)
 
   @Bean
-  @ConditionalOnMissingBean
+  @ConditionalOnMissingBean(OgiriSubTokenRegistry::class)
   fun subTokenRegistry(
       registrations: ObjectProvider<OgiriSubTokenRegistration>
   ): OgiriSubTokenRegistry = DefaultOgiriSubTokenRegistry(registrations.orderedStream().toList())
 
   @Bean
-  @ConditionalOnMissingBean
+  @ConditionalOnMissingBean(OgiriTokenService::class)
+  @ConditionalOnProperty(
+      prefix = "ogiri.auth",
+      name = ["register-token-service"],
+      havingValue = "true",
+      matchIfMissing = true,
+  )
   fun ogiriTokenService(
       repository: OgiriTokenRepository<*>,
       passwordEncoder: PasswordEncoder,
@@ -100,15 +107,24 @@ class OgiriSecurityAutoConfiguration {
           as OgiriTokenService<*>
 
   @Bean
-  @ConditionalOnMissingBean
+  @ConditionalOnMissingBean(OgiriTokenServiceResolver::class)
+  fun ogiriTokenServiceResolver(
+      tokenServices: Map<String, OgiriTokenService<*>>,
+      properties: OgiriConfigurationProperties,
+      beanFactory: ConfigurableListableBeanFactory,
+  ): OgiriTokenServiceResolver =
+      DefaultOgiriTokenServiceResolver(tokenServices, properties, beanFactory)
+
+  @Bean
+  @ConditionalOnMissingBean(AuthenticationEntryPoint::class)
   fun ogiriAuthenticationEntryPoint(messageSource: MessageSource): AuthenticationEntryPoint =
       OgiriAuthenticationEntryPoint(messageSource)
 
   @Bean
-  @ConditionalOnMissingBean
+  @ConditionalOnMissingBean(OgiriTokenAuthenticationFilter::class)
   fun ogiriTokenAuthenticationFilter(
       ogiriUserDirectory: OgiriUserDirectory,
-      tokenService: OgiriTokenService<*>,
+      tokenServiceResolver: OgiriTokenServiceResolver,
       authenticationEntryPoint: AuthenticationEntryPoint,
       authenticationBypassDecider: AuthenticationBypassDecider,
       identifierPolicy: IdentifierPolicy,
@@ -116,12 +132,23 @@ class OgiriSecurityAutoConfiguration {
   ): OgiriTokenAuthenticationFilter =
       OgiriTokenAuthenticationFilter(
           ogiriUserDirectory,
-          tokenService,
+          tokenServiceResolver.resolve(),
           authenticationEntryPoint,
           authenticationBypassDecider,
           identifierPolicy,
           properties,
       )
+
+  @Bean
+  @ConditionalOnMissingBean(OgiriTokenCleanupJob::class)
+  @ConditionalOnProperty(
+      prefix = "ogiri.cleanup",
+      name = ["enabled"],
+      havingValue = "true",
+      matchIfMissing = true,
+  )
+  fun ogiriTokenCleanupJob(tokenServiceResolver: OgiriTokenServiceResolver): OgiriTokenCleanupJob =
+      OgiriTokenCleanupJob(tokenServiceResolver)
 
   @Bean(name = ["ogiriSecurityFilterChain"])
   @ConditionalOnMissingBean(name = ["ogiriSecurityFilterChain"])
