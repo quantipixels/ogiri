@@ -20,7 +20,6 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -32,7 +31,6 @@ import org.springframework.transaction.annotation.Transactional;
  * <p>All query methods use explicit @Query annotations to avoid Spring Data's method name parsing
  * which can be error-prone with complex property names.
  */
-@Repository
 public interface SampleTokenRepository extends JpaRepository<SampleToken, Long> {
 
   /**

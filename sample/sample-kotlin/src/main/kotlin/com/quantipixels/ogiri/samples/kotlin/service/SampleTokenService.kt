@@ -21,6 +21,7 @@ import com.quantipixels.ogiri.security.tokens.OgiriSubTokenRegistry
 import com.quantipixels.ogiri.security.tokens.OgiriTokenService
 import com.quantipixels.ogiri.security.tokens.OgiriTokenType
 import java.time.Instant
+import org.springframework.context.annotation.Primary
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 
@@ -37,6 +38,7 @@ import org.springframework.stereotype.Service
  * authentication, token rotation, and sub-token generation.
  */
 @Service
+@Primary
 class SampleTokenService(
     private val sampleTokenRepository: SampleTokenRepository,
     passwordEncoder: PasswordEncoder,

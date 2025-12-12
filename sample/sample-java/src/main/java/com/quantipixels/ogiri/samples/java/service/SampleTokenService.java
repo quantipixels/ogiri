@@ -21,6 +21,7 @@ import com.quantipixels.ogiri.security.tokens.OgiriSubTokenRegistry;
 import com.quantipixels.ogiri.security.tokens.OgiriTokenService;
 import com.quantipixels.ogiri.security.tokens.OgiriTokenType;
 import java.time.Instant;
+import org.springframework.context.annotation.Primary;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -37,6 +38,7 @@ import org.springframework.stereotype.Service;
  * authentication, token rotation, and sub-token generation.
  */
 @Service
+@Primary
 public class SampleTokenService extends OgiriTokenService<SampleToken> {
 
   /** Constructor - injects all dependencies needed by TokenService. */
@@ -88,7 +90,7 @@ public class SampleTokenService extends OgiriTokenService<SampleToken> {
     SampleToken token = new SampleToken(userId, client, hashedToken, expiry);
 
     // Set token type (convert enum to string: "APP" or "SUB")
-    token.setOgiriTokenType(tokenType.name());
+    token.setTokenType(tokenType.name());
 
     // Set optional sub-token type
     if (tokenSubtype != null) {

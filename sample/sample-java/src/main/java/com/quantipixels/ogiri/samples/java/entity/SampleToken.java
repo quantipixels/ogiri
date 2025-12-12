@@ -146,7 +146,7 @@ public class SampleToken extends OgiriBaseToken {
     return token;
   }
 
-  public String getOgiriTokenType() {
+  public String getTokenType() {
     return tokenType;
   }
 
@@ -200,7 +200,7 @@ public class SampleToken extends OgiriBaseToken {
     this.token = token;
   }
 
-  public void setOgiriTokenType(String tokenType) {
+  public void setTokenType(String tokenType) {
     this.tokenType = tokenType;
   }
 
