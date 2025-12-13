@@ -90,17 +90,18 @@ fun HttpServletResponse.appendAuthHeaders(authHeaders: AuthHeader?) {
   authHeaders.subTokens
       ?.takeIf { it.isNotEmpty() }
       ?.let { subs ->
-        val payload =
-            subs.mapValues { (_, token) ->
+        subs.forEach { (key, token) ->
+          val payload =
               mapOf(
                   "client" to token.client,
                   "token" to token.token,
                   "expiry" to token.expiry,
               )
-            }
-        val json = mapper.writeValueAsString(payload)
-        val encoded = Base64.getEncoder().encodeToString(json.toByteArray(Charsets.UTF_8))
-        setHeader("sub-tokens", encoded)
+          val json = mapper.writeValueAsString(payload)
+          val encoded = Base64.getEncoder().encodeToString(json.toByteArray(Charsets.UTF_8))
+          setHeader(key, token.token)
+          setHeader("$key-authorization", encoded)
+        }
       }
 
   if (!authHeaders.accessToken.isNullOrBlank()) {

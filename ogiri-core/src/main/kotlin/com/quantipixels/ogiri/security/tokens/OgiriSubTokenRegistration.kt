@@ -22,7 +22,7 @@ import java.time.Instant
  * mapping, expiry policy, and whether creation should be forced on every issuance.
  *
  * Implementations may also provide custom validation logic via [validate] for format-specific
- * checks (e.g., XMPP token signature verification, device fingerprint validation).
+ * checks (e.g., service token signature verification, device fingerprint validation).
  */
 interface OgiriSubTokenRegistration {
   /** Unique name for the sub-token (e.g., "device", "chat"). */
@@ -52,7 +52,6 @@ interface OgiriSubTokenRegistration {
    * for custom format-specific validation that the generic token service cannot perform.
    *
    * Examples:
-   * - XMPP: Verify JID format, SASL mechanism, or signature
    * - Device: Verify device fingerprint against request headers
    * - Chat: Verify chat server connectivity or message digest
    *

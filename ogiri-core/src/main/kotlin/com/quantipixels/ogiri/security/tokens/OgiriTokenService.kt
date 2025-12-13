@@ -662,7 +662,7 @@ open class OgiriTokenService<T : OgiriToken>(
    * stored hash, expiry, or client identifiers without depending on a concrete token class.
    *
    * @param userId User ID
-   * @param subtype Sub-token identifier (e.g., "device", "chat", "xmpp")
+   * @param subtype Sub-token identifier (e.g., "device", "chat", "notification")
    * @return The sub-token entity, or null if not found, expired, or not registered
    */
   @Transactional(readOnly = true)

@@ -104,11 +104,11 @@ Override `validate()` for custom token format validation:
 
 ```kotlin
 @Bean
-fun xmppSubToken(): SubTokenRegistration = object : SubTokenRegistration {
-  override val name = "xmpp"
+fun notificationSubToken(): SubTokenRegistration = object : SubTokenRegistration {
+  override val name = "notification"
   override val includeByDefault = false
 
-  override fun clientIdFor(parentClientId: String) = "$parentClientId.xmpp"
+  override fun clientIdFor(parentClientId: String) = "$parentClientId.notification"
   override fun expiry(parentExpiry: Instant) = Instant.now().plus(4, ChronoUnit.HOURS)
 
   override fun validate(plainToken: String): Boolean {

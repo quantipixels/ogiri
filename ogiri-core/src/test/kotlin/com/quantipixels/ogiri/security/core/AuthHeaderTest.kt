@@ -15,7 +15,6 @@ package com.quantipixels.ogiri.security.core
 import java.util.Base64
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 import org.springframework.mock.web.MockHttpServletRequest
 import org.springframework.mock.web.MockHttpServletResponse
@@ -46,8 +45,7 @@ class AuthHeaderTest {
 
     assertEquals("token-123", response.getHeader(ACCESS_TOKEN))
     assertNotNull(response.getHeader("Authorization"))
-    assertNotNull(response.getHeader("sub-tokens"))
-    assertNull(response.getHeader("xmpp-password"))
+    assertNotNull(response.getHeader("device"))
   }
 
   @Test

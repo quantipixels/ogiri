@@ -165,7 +165,7 @@ class TokenServiceSubTokenTest {
     tokenService.renewSubToken(user.getOgiriUserId(), req, res, "device")
 
     assertNotNull(repository.findByUserIdAndClient(user.getOgiriUserId(), "web.device"))
-    assertNotNull(res.getHeader("sub-tokens"))
+    assertNotNull(res.getHeader("chat"))
   }
 
   @Test
