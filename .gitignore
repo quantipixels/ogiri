@@ -1,5 +1,6 @@
 HELP.md
 .gradle
+.gradle-home/
 .gradle-local/
 build/
 !gradle/wrapper/gradle-wrapper.jar
@@ -46,4 +47,3 @@ out/
 logs/
 .DS_Store
 site/
-
