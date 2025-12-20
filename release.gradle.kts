@@ -22,6 +22,8 @@ tasks.register("release") {
   group = "release"
   description = "Release the project to Maven Central"
 
+  finalizedBy("publish")
+
   doLast {
     val version = project.findProperty("version")?.toString() ?: "0.1.0"
     val isSnapshot = version.endsWith("-SNAPSHOT")
@@ -29,9 +31,6 @@ tasks.register("release") {
     println("📦 Releasing version: $version")
     println("🔐 Snapshot: $isSnapshot")
     println("✅ Ready to publish to Maven Central")
-
-    // Execute publish task
-    project.exec { commandLine("./gradlew", "publish") }
   }
 }
 
@@ -63,7 +62,12 @@ fun bumpPatchVersion(version: String): String {
   val sanitized = version.replace("-SNAPSHOT", "")
   val parts = sanitized.split(".")
   return if (parts.size >= 3) {
-    "${parts[0]}.${parts[1]}.${parts[2].toInt() + 1}-SNAPSHOT"
+    val patch =
+        parts[2].toIntOrNull()
+            ?: throw IllegalArgumentException(
+                "Invalid version format for auto-bumping: '$version'. " +
+                    "Patch segment '${parts[2]}' is not a number. Please provide newVersion manually.")
+    "${parts[0]}.${parts[1]}.${patch + 1}-SNAPSHOT"
   } else {
     "$sanitized.1-SNAPSHOT"
   }
@@ -76,7 +80,12 @@ fun updateVersionInFile(file: File, oldVersion: String, newVersion: String) {
   }
 
   val content = file.readText()
-  val updated = content.replace(oldVersion, newVersion)
+  val versionRegex =
+      Regex("""^(\s*(?:project\.)?version\s*=\s*["'])$oldVersion(["'])""", RegexOption.MULTILINE)
+  val updated =
+      versionRegex.replace(content) { matchResult ->
+        "${matchResult.groupValues[1]}$newVersion${matchResult.groupValues[2]}"
+      }
 
   if (content != updated) {
     file.writeText(updated)

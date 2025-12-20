@@ -6,31 +6,31 @@ All ogiri properties are prefixed with `ogiri`.
 
 ### Security Filter
 
-| Property | Default | Description |
-|----------|---------|-------------|
-| `ogiri.security.register-filter` | `true` | Auto-register SecurityFilterChain |
+| Property                         | Default | Description                       |
+| -------------------------------- | ------- | --------------------------------- |
+| `ogiri.security.register-filter` | `true`  | Auto-register SecurityFilterChain |
 
 ### Token Behavior
 
-| Property | Default | Description |
-|----------|---------|-------------|
-| `ogiri.auth.max-clients` | `24` | Max active tokens per user |
-| `ogiri.auth.batch-grace-seconds` | `5` | Grace period before rotation |
-| `ogiri.auth.token-lifespan-days` | `14` | Token lifetime in days |
-| `ogiri.auth.register-token-service` | `true` | Auto-register default OgiriTokenService |
+| Property                            | Default | Description                             |
+| ----------------------------------- | ------- | --------------------------------------- |
+| `ogiri.auth.max-clients`            | `24`    | Max active tokens per user              |
+| `ogiri.auth.batch-grace-seconds`    | `5`     | Grace period before rotation            |
+| `ogiri.auth.token-lifespan-days`    | `14`    | Token lifetime in days                  |
+| `ogiri.auth.register-token-service` | `true`  | Auto-register default OgiriTokenService |
 
 ### Token Rotation
 
-| Property | Default | Description |
-|----------|---------|-------------|
-| `ogiri.auth.rotate-on-write-only` | `false` | Only rotate on POST/PUT/DELETE |
-| `ogiri.auth.rotate-stale-seconds` | `0` | Force rotation after N seconds (0 = disabled) |
+| Property                          | Default | Description                                   |
+| --------------------------------- | ------- | --------------------------------------------- |
+| `ogiri.auth.rotate-on-write-only` | `false` | Only rotate on POST/PUT/DELETE                |
+| `ogiri.auth.rotate-stale-seconds` | `0`     | Force rotation after N seconds (0 = disabled) |
 
 ### Token Cleanup
 
-| Property | Default | Description |
-|----------|---------|-------------|
-| `ogiri.cleanup.enabled` | `true` | Enable scheduled cleanup job |
+| Property                    | Default    | Description                                         |
+| --------------------------- | ---------- | --------------------------------------------------- |
+| `ogiri.cleanup.enabled`     | `true`     | Enable scheduled cleanup job                        |
 | `ogiri.cleanup.interval-ms` | `21600000` | Cleanup interval in milliseconds (default: 6 hours) |
 
 ## Configuration Examples
@@ -48,7 +48,7 @@ ogiri:
     register-token-service: true
   cleanup:
     enabled: true
-    interval-ms: 21600000  # 6 hours
+    interval-ms: 21600000 # 6 hours
 ```
 
 ### High Security
@@ -62,9 +62,9 @@ ogiri:
     batch-grace-seconds: 1
     token-lifespan-days: 7
     rotate-on-write-only: false
-    rotate-stale-seconds: 3600  # Force rotation every hour
+    rotate-stale-seconds: 3600 # Force rotation every hour
   cleanup:
-    interval-ms: 3600000  # 1 hour
+    interval-ms: 3600000 # 1 hour
 ```
 
 ### High Performance
@@ -77,8 +77,8 @@ ogiri:
     max-clients: 50
     batch-grace-seconds: 30
     token-lifespan-days: 30
-    rotate-on-write-only: true   # Only rotate on writes
-    rotate-stale-seconds: 0      # No forced rotation
+    rotate-on-write-only: true # Only rotate on writes
+    rotate-stale-seconds: 0 # No forced rotation
 ```
 
 ### Development
@@ -92,7 +92,7 @@ ogiri:
     batch-grace-seconds: 60
     token-lifespan-days: 30
   cleanup:
-    enabled: false  # Keep test tokens
+    enabled: false # Keep test tokens
 ```
 
 ## Custom Beans
@@ -169,9 +169,9 @@ ogiri.cleanup.interval-ms=21600000
 
 ## Troubleshooting
 
-| Issue                            | Solution                                           |
-|----------------------------------|----------------------------------------------------|
-| Token expires immediately        | Increase `token-lifespan-days`                     |
-| Tokens rotate too frequently     | Increase `batch-grace-seconds`                     |
-| Too many active tokens           | Decrease `max-clients`                             |
-| Tests fail with token mismatch   | Set `ogiri.cleanup.enabled=false` in test profile  |
+| Issue                          | Solution                                          |
+| ------------------------------ | ------------------------------------------------- |
+| Token expires immediately      | Increase `token-lifespan-days`                    |
+| Tokens rotate too frequently   | Increase `batch-grace-seconds`                    |
+| Too many active tokens         | Decrease `max-clients`                            |
+| Tests fail with token mismatch | Set `ogiri.cleanup.enabled=false` in test profile |

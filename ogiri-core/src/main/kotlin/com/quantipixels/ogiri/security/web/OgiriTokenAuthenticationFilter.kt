@@ -136,7 +136,7 @@ open class OgiriTokenAuthenticationFilter(
    * 3. Validate client and uid identifiers using [IdentifierPolicy]
    * 4. Verify token is APP token (not sub-token)
    * 5. Load user from [OgiriUserDirectory], throw if not found
-   * 6. Validate token hash matches stored token via [TokenService.validToken]
+   * 6. Validate token hash matches stored token via [OgiriTokenService.validToken]
    * 7. Detect batch requests and decide token rotation
    *
    * **Batch detection:**

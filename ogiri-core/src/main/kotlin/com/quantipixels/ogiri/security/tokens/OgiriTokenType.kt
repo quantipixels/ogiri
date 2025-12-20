@@ -15,8 +15,8 @@ package com.quantipixels.ogiri.security.tokens
 /**
  * Token type classifier enumeration.
  *
- * Used to distinguish between primary application tokens (APP) and sub-tokens (SUB) for specialized
- * use cases (e.g., device tokens, chat tokens).
+ * Used to distinguish between primary application tokens ("app") and sub-tokens ("sub") for
+ * specialized use cases (e.g., device tokens, chat tokens).
  *
  * Implementations can persist this as:
  * - A string column (storing the label: "app" or "sub")
@@ -28,14 +28,14 @@ package com.quantipixels.ogiri.security.tokens
  * @Entity
  * class MyToken : OgiriBaseToken() {
  *   @Column(name = "token_type", nullable = false)
- *   val tokenType: String = "APP"  // or use @Enumerated(EnumType.STRING)
+ *   val tokenType: String = "app"  // or use @Enumerated(EnumType.STRING)
  * }
  * ```
  *
  * Example - JDBC Token with manual conversion:
  * ```kotlin
  * data class JdbcToken(
- *   override val tokenType: String,  // stored as "APP" or "SUB"
+ *   override val tokenType: String,  // stored as "app" or "sub"
  * ) : OgiriBaseToken()
  * ```
  */
@@ -60,14 +60,21 @@ enum class OgiriTokenType(val label: String) {
             ?: throw IllegalArgumentException("Invalid token type: $label")
 
     /**
-     * Parse a OgiriTokenType from a string, with fallback to APP type if invalid.
+     * Parse a OgiriTokenType from a string, with fallback to APP type if null.
      *
-     * Useful for database conversions where null/missing values should default to APP.
+     * This function is strict: it only allows valid labels ("app", "sub") or null. If a non-null
+     * but invalid label is provided, it throws an exception to prevent silent data corruption.
      *
-     * @param label The token type label ("app" or "sub")
-     * @return The corresponding OgiriTokenType, or APP if label is null or invalid
+     * @param label The token type label ("app" or "sub"), or null for default APP
+     * @return The corresponding OgiriTokenType, or APP if label is null
+     * @throws IllegalArgumentException if label is non-null and doesn't match any type
      */
-    fun ofOrDefault(label: String?): OgiriTokenType = label?.let { ofNullable(it) } ?: APP
+    fun ofOrDefault(label: String?): OgiriTokenType {
+      // Use strict semantics: null defaults to APP, but invalid non-null labels are errors.
+      if (label == null) return APP
+      return entries.firstOrNull { it.label.equals(label, ignoreCase = true) }
+          ?: throw IllegalArgumentException("Invalid token type label: $label")
+    }
 
     /**
      * Parse a OgiriTokenType from a nullable string label.

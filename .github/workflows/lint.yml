@@ -2,9 +2,9 @@ name: Lint
 
 on:
   push:
-    branches: [ ori ]
+    branches: [ori]
   pull_request:
-    branches: [ ori ]
+    branches: [ori]
 
 jobs:
   lint:
@@ -18,7 +18,7 @@ jobs:
         uses: actions/setup-java@v5
         with:
           java-version: 17
-          distribution: 'temurin'
+          distribution: "temurin"
           cache: gradle
 
       - name: Check code formatting with Spotless

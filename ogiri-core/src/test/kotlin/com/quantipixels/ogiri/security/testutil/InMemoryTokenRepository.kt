@@ -28,6 +28,7 @@ import java.util.concurrent.atomic.AtomicLong
 class InMemoryTokenRepository : OgiriTokenRepository<TestToken> {
   private val tokens = mutableListOf<TestToken>()
   private val idSequence = AtomicLong(1L)
+  private var clock: Instant = Instant.now()
 
   /** Clear all tokens from the repository. Useful for test cleanup. */
   fun clear() {
@@ -48,6 +49,11 @@ class InMemoryTokenRepository : OgiriTokenRepository<TestToken> {
     }
   }
 
+  /** Advance the repository's internal clock for deterministic testing. */
+  fun incrementClock() {
+    synchronized(tokens) { clock = clock.plusSeconds(1) }
+  }
+
   /**
    * Save or update a token. If id is 0, generates a new ID and inserts. If id > 0, updates existing
    * token.
@@ -58,11 +64,13 @@ class InMemoryTokenRepository : OgiriTokenRepository<TestToken> {
         // Insert: generate new ID and preserve transient plainToken
         val newToken = token.copy(id = idSequence.getAndIncrement())
         newToken.plainToken = token.plainToken // Preserve transient property
+        newToken.updatedAt = clock // Use repository's clock for deterministic testing
         tokens.add(newToken)
         newToken
       } else {
         // Update: remove old, add new
         tokens.removeIf { it.id == token.id }
+        token.updatedAt = clock // Use repository's clock for deterministic testing
         tokens.add(token)
         token
       }

@@ -25,7 +25,8 @@ class DefaultOgiriTokenServiceResolver(
       val tokenServiceIsEnabled = properties.auth.registerTokenService
       if (tokenServiceIsEnabled) {
         error(
-            "No OgiriTokenService bean found. Provide a custom OgiriTokenService or enable the default via ogiri.auth.register-token-service=true.")
+            "No OgiriTokenService bean found despite ogiri.auth.register-token-service=true. " +
+                "Ensure a valid OgiriTokenRepository bean exists, or provide a custom OgiriTokenService implementation.")
       }
       error(
           "No OgiriTokenService bean found. Provide a custom OgiriTokenService (default creation disabled via ogiri.auth.register-token-service=false).")

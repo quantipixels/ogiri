@@ -27,11 +27,11 @@ The following classes have been renamed. You will need to update your imports an
 
 The following supporting classes were also renamed for consistency:
 
-| Old Name               | New Name                    |
-| :--------------------- | :-------------------------- |
-| `RouteRegistry`        | `OgiriRouteRegistry`        |
-| `SubTokenRegistration` | `OgiriSubTokenRegistration` |
-| `SubTokenRegistry`     | `OgiriSubTokenRegistry`     |
+| Old Name                    | New Name                    |
+| :-------------------------- | :-------------------------- |
+| `RouteRegistry`             | `OgiriRouteRegistry`        |
+| `OgiriSubTokenRegistration` | `OgiriSubTokenRegistration` |
+| `SubTokenRegistry`          | `OgiriSubTokenRegistry`     |
 
 ### Migration Steps
 
@@ -53,6 +53,7 @@ Perform a global find-and-replace in your project to update the class names.
 If you were extending `BaseToken`, change it to extend `OgiriBaseToken`.
 
 **Before:**
+
 ```kotlin
 @Entity
 data class MyToken(
@@ -61,6 +62,7 @@ data class MyToken(
 ```
 
 **After:**
+
 ```kotlin
 @Entity
 data class MyToken(
@@ -75,11 +77,13 @@ Alternatively, you can now implement the `OgiriToken` interface directly if you 
 Update your repository interface to extend `OgiriTokenRepository`.
 
 **Before:**
+
 ```kotlin
 interface MyTokenRepository : TokenRepository<MyToken>
 ```
 
 **After:**
+
 ```kotlin
 interface MyTokenRepository : OgiriTokenRepository<MyToken>
 ```
@@ -89,6 +93,7 @@ interface MyTokenRepository : OgiriTokenRepository<MyToken>
 Update where you inject the token service.
 
 **Before:**
+
 ```kotlin
 class MyController(
     private val tokenService: TokenService<MyToken>
@@ -96,6 +101,7 @@ class MyController(
 ```
 
 **After:**
+
 ```kotlin
 class MyController(
     private val tokenService: OgiriTokenService<MyToken>
@@ -117,5 +123,6 @@ fun <T : OgiriToken> doSomething(token: T) { ... }
 ### Verification
 
 After making these changes:
-1.  Run your compilation build to ensure all references are updated.
-2.  Run your test suite. The logic remains backward compatible, so tests should pass without functional changes.
+
+1. Run your build to ensure all references are updated.
+2. Run your test suite. The logic remains backward compatible, so tests should pass without functional changes.

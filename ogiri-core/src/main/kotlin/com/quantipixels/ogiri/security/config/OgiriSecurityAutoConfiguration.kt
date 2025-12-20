@@ -39,6 +39,7 @@ import org.springframework.context.MessageSource
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
+import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.AuthenticationEntryPoint
 import org.springframework.security.web.SecurityFilterChain
@@ -88,24 +89,22 @@ class OgiriSecurityAutoConfiguration {
       havingValue = "true",
       matchIfMissing = true,
   )
-  fun ogiriTokenService(
-      repository: OgiriTokenRepository<*>,
+  fun <T : OgiriToken> ogiriTokenService(
+      repository: OgiriTokenRepository<T>,
       passwordEncoder: PasswordEncoder,
       ogiriUserDirectory: OgiriUserDirectory,
       identifierPolicy: IdentifierPolicy,
       subTokenRegistry: OgiriSubTokenRegistry,
       properties: OgiriConfigurationProperties,
-  ): OgiriTokenService<*> =
-      @Suppress("UNCHECKED_CAST")
+  ): OgiriTokenService<T> =
       OgiriTokenService(
-          repository as OgiriTokenRepository<OgiriToken>,
+          repository,
           passwordEncoder,
           ogiriUserDirectory,
           identifierPolicy,
           subTokenRegistry,
           properties,
       )
-          as OgiriTokenService<*>
 
   @Bean
   @ConditionalOnMissingBean(DefaultOgiriTokenServiceResolver::class)
@@ -167,8 +166,12 @@ class OgiriSecurityAutoConfiguration {
   ): SecurityFilterChain =
       http
           .csrf { it.disable() }
+          .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
           .exceptionHandling { it.authenticationEntryPoint(authenticationEntryPoint) }
           .addFilterBefore(
               ogiriTokenAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
+          // NOTE: Callers must configure their own authorizeHttpRequests() rules if needed.
+          // By default, this chain only configures token-based authentication and stateless
+          // sessions.
           .build()
 }

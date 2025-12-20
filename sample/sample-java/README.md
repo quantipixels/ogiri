@@ -5,6 +5,7 @@ A complete example demonstrating how to integrate the **ogiri** token-based auth
 ## Overview
 
 This sample application showcases:
+
 - Token-based authentication with JWT-like tokens
 - Token rotation and batch grace windows
 - Sub-token management (extensible for device-specific tokens, etc.)
@@ -48,11 +49,11 @@ The library is auto-configured in `com.quantipixels.ogiri.samples.java.config.Se
 ```yaml
 ogiri:
   auth:
-    max-clients: 24              # Max concurrent clients per user
-    batch-grace-seconds: 5       # Grace period for token batch requests
-    token-lifespan-days: 14      # Token expiration in days
+    max-clients: 24 # Max concurrent clients per user
+    batch-grace-seconds: 5 # Grace period for token batch requests
+    token-lifespan-days: 14 # Token expiration in days
   security:
-    register-filter: true        # Auto-register authentication filter
+    register-filter: true # Auto-register authentication filter
 ```
 
 ## Running the Application
@@ -80,6 +81,7 @@ The application starts on `http://localhost:8080`
 ### Public Endpoints (No Authentication Required)
 
 - **POST /api/auth/login** - Authenticate and obtain tokens
+
   ```bash
   curl -X POST http://localhost:8080/api/auth/login \
     -H "Content-Type: application/json" \
@@ -99,6 +101,7 @@ The application starts on `http://localhost:8080`
   ```
 
 Include these headers with authenticated requests:
+
 - `access-token`: The access token
 - `client`: The client identifier
 - `uid`: The user ID
@@ -107,17 +110,21 @@ Include these headers with authenticated requests:
 ## Key Components
 
 ### Entity
+
 - **SampleToken** - JPA entity extending `OgiriBaseToken`
 
 ### Repository
+
 - **SampleTokenRepository** - Spring Data JPA + ogiri `OgiriTokenRepository` interface
 
 ### Security
+
 - **SampleOgiriUserDirectory** - Implements `OgiriUserDirectory` for user lookup
 - **SampleRouteRegistry** - Declares public routes via `OgiriRouteRegistry`
 - **SecurityConfig** - Spring Security configuration
 
 ### Service
+
 - **SampleTokenService** - Extends ogiri `OgiriTokenService` with custom token factory
 
 ## Development
@@ -214,16 +221,19 @@ public OgiriSubTokenRegistration deviceToken() {
 ## Troubleshooting
 
 ### Database Connection Issues
+
 - Ensure PostgreSQL is running on the configured host/port
 - Verify database credentials in `application.yml`
 - Check that the database exists and schema is initialized
 
 ### Authentication Failures
+
 - Confirm token headers are sent with each request (access-token, client, uid, expiry)
 - Verify token hasn't expired using the expiry header
 - Check that user credentials match values in `SampleOgiriUserDirectory`
 
 ### Token Rotation Issues
+
 - Token rotation only occurs outside the batch grace window
 - By default, 5 second grace period allows requests within that window without rotation
 - Adjust `batch-grace-seconds` to change this behavior

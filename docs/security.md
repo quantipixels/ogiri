@@ -9,10 +9,12 @@ If you discover a security vulnerability in the **ogiri** project, please report
 **Please do NOT open a public GitHub issue for security vulnerabilities.**
 
 Instead, please report security vulnerabilities by emailing:
-- **Primary Contact:** oluwaseyi@quantipixels.com
+
+- **Primary Contact:** Project Maintainers
 - **Subject:** `[SECURITY] Vulnerability Report - ogiri`
 
 Include the following information in your report:
+
 1. **Description** of the vulnerability
 2. **Affected Component** (e.g., OgiriTokenService, OgiriTokenAuthenticationFilter, OgiriTokenRepository)
 3. **Affected Version(s)** (version tag or commit hash)
@@ -23,6 +25,7 @@ Include the following information in your report:
 ### Response Timeline
 
 We follow this responsible disclosure timeline:
+
 - **24 hours:** Acknowledgment of receipt
 - **7 days:** Initial assessment and communication about next steps
 - **30 days:** Target for patch development and testing
@@ -47,6 +50,7 @@ If you don't receive a response within 24 hours, please follow up via GitHub iss
 ### Authentication Header
 
 The `Authorization` header contains token information. Ensure:
+
 - HTTPS is enforced for all requests containing auth headers
 - Proxy servers don't log authorization headers
 - Client-side code doesn't store tokens in localStorage (use httpOnly cookies)
@@ -55,6 +59,7 @@ The `Authorization` header contains token information. Ensure:
 ### Sub-Tokens
 
 If using sub-tokens:
+
 - Implement proper scope validation
 - Use appropriate TTLs for each sub-token type
 - Monitor sub-token usage patterns
@@ -63,6 +68,7 @@ If using sub-tokens:
 ### Database Access
 
 The library itself doesn't enforce database security. Ensure:
+
 - Database credentials are externalized (environment variables, secrets management)
 - Network access to database is restricted
 - Regular database backups are performed
@@ -96,9 +102,9 @@ Enable and configure token rotation based on your security requirements:
 ```yaml
 ogiri:
   auth:
-    rotate-on-write-only: false  # Rotate on every write
-    rotate-stale-seconds: 3600   # Rotate tokens older than 1 hour
-    batch-grace-seconds: 30      # Grace period for old tokens
+    rotate-on-write-only: false # Rotate on every write
+    rotate-stale-seconds: 3600 # Rotate tokens older than 1 hour
+    batch-grace-seconds: 30 # Grace period for old tokens
 ```
 
 ### CORS Configuration
@@ -148,6 +154,7 @@ We actively monitor dependencies for security vulnerabilities:
 - **Regular audits** are performed on the dependency tree
 
 To check for vulnerabilities in your copy:
+
 ```bash
 ./gradlew dependencyCheckAnalyze
 ```
@@ -204,9 +211,9 @@ None reported yet.
 
 ## Contact
 
-For security questions or concerns, contact: oluwaseyi@quantipixels.com
+For security questions or concerns, contact the project maintainers.
 
-For general support: See [contributing.md](./contributing.md) (coming soon)
+For general support: See [contributing.md](./contributing.md)
 
 ---
 

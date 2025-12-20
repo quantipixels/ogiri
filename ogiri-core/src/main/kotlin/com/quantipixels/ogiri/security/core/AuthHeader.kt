@@ -12,9 +12,14 @@
  */
 package com.quantipixels.ogiri.security.core
 
+import com.fasterxml.jackson.core.JsonProcessingException
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
+import java.io.IOException
 import java.util.Base64
+import org.slf4j.LoggerFactory
+
+private val logger = LoggerFactory.getLogger(AuthHeader::class.java)
 
 const val ACCESS_TOKEN = "access-token"
 const val CLIENT = "client"
@@ -141,6 +146,13 @@ fun parseBearerToken(bearer: String): Map<String, String>? =
       val json = String(Base64.getDecoder().decode(token), Charsets.UTF_8)
       @Suppress("UNCHECKED_CAST")
       mapper.readValue(json, Map::class.java) as? Map<String, String>
-    } catch (e: Exception) {
+    } catch (e: IllegalArgumentException) {
+      logger.debug("Failed to decode Base64 bearer token: {}", e.message)
+      null
+    } catch (e: JsonProcessingException) {
+      logger.debug("Failed to parse bearer token JSON: {}", e.message)
+      null
+    } catch (e: IOException) {
+      logger.debug("I/O error parsing bearer token: {}", e.message)
       null
     }

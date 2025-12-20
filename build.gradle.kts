@@ -1,5 +1,5 @@
 import com.diffplug.gradle.spotless.SpotlessExtension
-import org.gradle.kotlin.dsl.version
+import org.jetbrains.kotlin.gradle.internal.builtins.StandardNames.FqNames.target
 
 // Apply centralized version management
 apply(from = "gradle/version.gradle.kts")
@@ -46,9 +46,23 @@ allprojects {
       trimTrailingWhitespace()
       endWithNewline()
     }
-    format("misc") {
-      target("*.md", ".gitignore", ".gitattributes", "**/*.toml", "**/*.yml", "**/*.yaml")
+    yaml {
+      target("**/*.yaml", "**/*.yml")
       targetExclude("**/build/**")
+      prettier()
+      trimTrailingWhitespace()
+      endWithNewline()
+    }
+    format("toml") {
+      target("**/*.toml")
+      targetExclude("**/build/**")
+      trimTrailingWhitespace()
+      endWithNewline()
+    }
+    format("misc") {
+      target(".gitignore", ".gitattributes", "**/*.md")
+      targetExclude("**/build/**")
+      prettier()
       trimTrailingWhitespace()
       endWithNewline()
     }
@@ -67,14 +81,45 @@ tasks.register("installGitHooks") {
     }
 
     val process = ProcessBuilder("bash", installScript.absolutePath).start()
-    val exitCode = process.waitFor()
 
-    if (exitCode != 0) {
-      val errorOutput = process.errorStream.bufferedReader().readText()
-      throw GradleException("Failed to install git hooks:\n$errorOutput")
+    // Read streams concurrently to avoid deadlocks from full buffers
+    val stdout = StringBuilder()
+    val stderr = StringBuilder()
+
+    val stdoutThread = Thread {
+      process.inputStream.bufferedReader().use { reader ->
+        var line: String? = reader.readLine()
+        while (line != null) {
+          stdout.append(line).append("\n")
+          line = reader.readLine()
+        }
+      }
     }
 
-    println(process.inputStream.bufferedReader().readText())
+    val stderrThread = Thread {
+      process.errorStream.bufferedReader().use { reader ->
+        var line: String? = reader.readLine()
+        while (line != null) {
+          stderr.append(line).append("\n")
+          line = reader.readLine()
+        }
+      }
+    }
+
+    stdoutThread.start()
+    stderrThread.start()
+
+    val exitCode = process.waitFor()
+    stdoutThread.join()
+    stderrThread.join()
+
+    if (exitCode != 0) {
+      throw GradleException("Failed to install git hooks (exit $exitCode):\n$stderr")
+    }
+
+    if (stdout.isNotEmpty()) {
+      println(stdout.toString().trim())
+    }
   }
 }
 

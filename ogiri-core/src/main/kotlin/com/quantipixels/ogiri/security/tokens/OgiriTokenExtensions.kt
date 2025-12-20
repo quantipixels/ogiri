@@ -29,7 +29,7 @@ fun <T : OgiriToken> Collection<T>.appTokens(): List<T> = filterByOgiriTokenType
 fun <T : OgiriToken> Collection<T>.subTokens(): List<T> = filterByOgiriTokenType(OgiriTokenType.SUB)
 
 /**
- * Extract client IDs from a collection of APP tokens.
+ * Extract client IDs from a collection of tokens.
  *
  * @return Set of unique client IDs
  */

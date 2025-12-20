@@ -26,6 +26,7 @@ Request → Filter → Bypass Check → Header Extraction → Token Validation �
 `AuthHeader.extractAuthHeader()` parses authentication from:
 
 **Individual headers (preferred):**
+
 ```
 access-token: <token-hash>
 client: web
@@ -34,11 +35,13 @@ expiry: 2025-12-25T00:00:00Z
 ```
 
 **Bearer token (fallback):**
+
 ```
 Authorization: Bearer eyJhY2Nlc3MtdG9rZW4iOiJ4eXoiLCJjbGllbnQiOiJ3ZWIiLCJ1aWQiOiIxMjMiLCJleHBpcnkiOiIyMDI1LTEyLTI1In0=
 ```
 
 The Bearer token decodes to:
+
 ```json
 {
   "access-token": "xyz",
@@ -70,10 +73,12 @@ Based on configuration:
 ### 6. Response
 
 On success:
+
 - `SecurityContext` populated with authenticated user
 - New auth headers appended (if rotated)
 
 On failure:
+
 - `SecurityContext` cleared
 - `AuthenticationEntryPoint` returns error response
 
@@ -86,7 +91,7 @@ Prevents token thrashing from rapid requests:
 ```yaml
 ogiri:
   auth:
-    batch-grace-seconds: 5  # Requests within 5s share same token
+    batch-grace-seconds: 5 # Requests within 5s share same token
 ```
 
 Within the window, only `lastUsedAt` is updated.
@@ -98,7 +103,7 @@ Force rotation after a time period:
 ```yaml
 ogiri:
   auth:
-    rotate-stale-seconds: 3600  # Rotate tokens older than 1 hour
+    rotate-stale-seconds: 3600 # Rotate tokens older than 1 hour
 ```
 
 ### Write-Only Rotation
@@ -108,7 +113,7 @@ Only rotate on mutating requests:
 ```yaml
 ogiri:
   auth:
-    rotate-on-write-only: true  # GET requests don't rotate
+    rotate-on-write-only: true # GET requests don't rotate
 ```
 
 ## Headers
@@ -143,10 +148,11 @@ After login or rotation:
 When sub-tokens are issued:
 
 ```
-sub-tokens: eyJkZXZpY2UiOnsiY2xpZW50IjoiYXBwLmRldmljZSIsInRva2VuIjoiYWJjMTIzIiwiZXhwaXJ5IjoiMjAyNS0xMi0yNVQwMDowMDowMFoifX0=
+sub-tokens: eyJkZXZp******************MFoifX0=
 ```
 
 Decodes to:
+
 ```json
 {
   "device": {
@@ -175,6 +181,7 @@ class MyRouteRegistry : OgiriRouteRegistry {
 ```
 
 Routes support wildcards:
+
 - `*` matches single path segment
 - `**` matches multiple path segments
 
@@ -187,6 +194,7 @@ throw SecurityServiceException("error.auth.invalid_token", "Token is invalid")
 ```
 
 Recommended error codes:
+
 - `error.auth.invalid_token`
 - `error.auth.expired_token`
 - `error.auth.missing_headers`

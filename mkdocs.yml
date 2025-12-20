@@ -29,7 +29,7 @@ markdown_extensions:
       alternate_style: true
 
 extra:
-  ogiri_version: 1.2.1
+  ogiri_version: "{{ env.RELEASE_VERSION }}"
   version:
     provider: mike
     default: latest

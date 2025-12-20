@@ -32,7 +32,7 @@ import java.time.Instant
  *     @Column(name = "user_id") override val userId: Long,
  *     @Column(name = "client_id") override val client: String,
  *     @Column(name = "token_hash") override var token: String,
- *     @Column(name = "token_type") override val tokenType: String = "APP",
+ *     @Column(name = "token_type") override val tokenType: String = "app",
  *     @Column(name = "expiry_at") override var expiryAt: Instant,
  *     @CreationTimestamp override val createdAt: Instant = Instant.now(),
  *     @UpdateTimestamp override val updatedAt: Instant = Instant.now(),
@@ -78,8 +78,8 @@ interface OgiriToken {
   var token: String
 
   /**
-   * Token type classifier. Default: "APP" for primary tokens. Custom: "device", "chat", etc. for
-   * sub-tokens.
+   * Token type classifier. Default: "app" for primary tokens. Use "sub" for specialized tokens
+   * (device, chat, etc.).
    */
   val tokenType: String
 

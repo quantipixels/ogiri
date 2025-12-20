@@ -7,6 +7,7 @@ This guide explains how ogiri uses **mike** to manage versioned documentation on
 **Mike** (Multi-version docs for MkDocs) allows serving multiple documentation versions from the same site with a version selector dropdown.
 
 **Current Configuration:**
+
 - Version source: `.ogiri-version` file (currently: 1.1.0)
 - Provider: `mike`
 - Default version: `latest` (alias to current version)
@@ -16,7 +17,7 @@ This guide explains how ogiri uses **mike** to manage versioned documentation on
 
 ### Version Management Flow
 
-```
+```text
 1. Update .ogiri-version file
          ↓
 2. Commit and push to main
@@ -36,7 +37,7 @@ This guide explains how ogiri uses **mike** to manage versioned documentation on
 
 Mike creates a directory structure like:
 
-```
+```text
 gh-pages (branch)
 ├── index.html              # Latest version (from "latest" alias)
 ├── 1.1.0/                  # Version 1.1.0
@@ -62,6 +63,7 @@ extra:
 ```
 
 **What this does:**
+
 - `provider: mike` - Enable mike version selector
 - `default: latest` - Show "latest" as default option
 
@@ -69,11 +71,12 @@ extra:
 
 Single line file containing the current version:
 
-```
+```text
 1.1.0
 ```
 
 This is read by:
+
 - Build scripts
 - GitHub Actions workflow
 - Version management scripts
@@ -83,15 +86,18 @@ This is read by:
 Three jobs configured:
 
 **Job 1: build**
+
 - Installs mkdocs and mike
 - Reads version from `.ogiri-version`
 - Builds static site with mkdocs
 
 **Job 2: deploy**
+
 - Uploads site to GitHub Pages artifact
 - Only runs on main/ori branch pushes
 
 **Job 3: version** (NEW)
+
 - Runs after build and deploy complete
 - Uses mike to deploy versioned docs
 - Command: `mike deploy --push --update-aliases "$VERSION" latest`
@@ -102,11 +108,13 @@ Three jobs configured:
 ### Release a New Version
 
 1. **Update version file:**
+
    ```bash
    echo "1.2.0" > .ogiri-version
    ```
 
 2. **Commit and push:**
+
    ```bash
    git add .ogiri-version
    git commit -m "chore: bump version to 1.2.0"
@@ -201,12 +209,14 @@ Automatically commits and pushes changes to gh-pages branch.
 The version dropdown appears in the top-right corner of the Material theme.
 
 **Features:**
+
 - Shows all available versions
 - Shows version aliases
 - Clicking a version navigates to that version's docs
 - Built from `versions.json` on gh-pages branch
 
 **Content:**
+
 ```json
 [
   {
@@ -227,11 +237,12 @@ The version dropdown appears in the top-right corner of the Material theme.
 ### Required Permissions
 
 The `version` job requires:
+
 ```yaml
 permissions:
-  contents: write    # Write to gh-pages branch
-  pages: write       # Write to GitHub Pages
-  id-token: write    # For GitHub Pages deployment
+  contents: write # Write to gh-pages branch
+  pages: write # Write to GitHub Pages
+  id-token: write # For GitHub Pages deployment
 ```
 
 ### Branch Configuration
@@ -260,12 +271,14 @@ Pull requests only trigger the build job (validation).
 ### Version doesn't appear in dropdown
 
 1. Check versions.json exists on gh-pages branch:
+
    ```bash
    git checkout gh-pages
    ls versions.json
    ```
 
 2. Verify mike command ran successfully:
+
    - Check Actions workflow logs
    - Look for "Deploy versioned docs" step
 
@@ -297,25 +310,30 @@ Or update in workflow and redeploy.
 ## Best Practices
 
 1. **Keep .ogiri-version in sync with release version**
+
    - Update before releasing
    - One source of truth
 
 2. **Use semantic versioning**
+
    - 1.2.0 format (MAJOR.MINOR.PATCH)
    - Makes version ordering clear
 
 3. **Tag releases**
+
    ```bash
    git tag v1.2.0
    git push origin v1.2.0
    ```
 
 4. **Update docs before release**
+
    - Update CHANGELOG.md
    - Update configuration examples
    - Verify all docs build locally
 
 5. **Keep old versions**
+
    - Users may still run older versions
    - Keep documentation accessible
    - Delete only if necessary
@@ -335,6 +353,7 @@ mike deploy --push 1.2.0 latest stable production
 ```
 
 This creates three ways to access version 1.2.0:
+
 - `/{version}/` - Latest (current release)
 - `/stable/` - Stable version
 - `/production/` - Production docs
@@ -356,7 +375,7 @@ Create separate workflow to update docs on schedule:
 ```yaml
 on:
   schedule:
-    - cron: '0 12 * * 0'  # Weekly
+    - interval-ms: 21600000 # 6 hours
 ```
 
 Useful for updating docs from a separate "docs" branch.
@@ -385,5 +404,5 @@ To rollback to a previous version:
 ## Resources
 
 - [Mike Documentation](https://github.com/jimporter/mike)
-- [Material Theme Versioning](https://squidfunk.github.io/mkdocs-material/setup/changing-the-docs-language/#using-other-languages)
+- [Material Theme Versioning](https://squidfunk.github.io/mkdocs-material/setup/setting-up-versioning/)
 - [GitHub Pages with MkDocs](https://squidfunk.github.io/mkdocs-material/publishing-your-site/#github-pages)

@@ -25,7 +25,7 @@ object TestFixtures {
       username: String = "testuser",
   ): OgiriUser =
       object : OgiriUser {
-        override val userId: Long = userId
+        override fun getOgiriUserId(): Long = userId
 
         override fun getAuthorities(): MutableCollection<out GrantedAuthority> =
             mutableListOf(SimpleGrantedAuthority("ROLE_USER"))

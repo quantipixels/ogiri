@@ -62,11 +62,12 @@ Implement `OgiriSubTokenRegistration`:
 
 Sub-tokens are returned in the `sub-tokens` header as Base64-encoded JSON:
 
-```
-sub-tokens: eyJkZXZpY2UiOnsiY2xpZW50IjoiYXBwLmRldmljZSIsInRva2VuIjoiYWJjMTIzIiwiZXhwaXJ5IjoiMjAyNS0xMi0yNVQwMDowMDowMFoifX0=
+```text
+sub-tokens: eyJkZXZp******************MFoifX0=
 ```
 
 Decoded:
+
 ```json
 {
   "device": {
@@ -104,7 +105,7 @@ Override `validate()` for custom token format validation:
 
 ```kotlin
 @Bean
-fun notificationSubToken(): SubTokenRegistration = object : SubTokenRegistration {
+fun notificationSubToken(): OgiriSubTokenRegistration = object : OgiriSubTokenRegistration {
   override val name = "notification"
   override val includeByDefault = false
 
@@ -134,11 +135,11 @@ const deviceClient = subTokens.device.client;
 ### Sending Sub-Tokens
 
 ```javascript
-fetch('/api/device/action', {
+fetch("/api/device/action", {
   headers: {
-    'Authorization': `Bearer ${deviceToken}`,
-    'client': deviceClient
-  }
+    Authorization: `Bearer ${deviceToken}`,
+    client: deviceClient,
+  },
 });
 ```
 
@@ -156,7 +157,7 @@ Sub-tokens follow the APP token lifecycle:
 
 ```kotlin
 @Bean
-fun apiSubToken(): SubTokenRegistration = object : SubTokenRegistration {
+fun apiSubToken(): OgiriSubTokenRegistration = object : OgiriSubTokenRegistration {
   override val name = "api"
   override val includeByDefault = false  // User must request explicitly
 
@@ -169,7 +170,7 @@ fun apiSubToken(): SubTokenRegistration = object : SubTokenRegistration {
 
 ```kotlin
 @Bean
-fun chatSubToken(): SubTokenRegistration = object : SubTokenRegistration {
+fun chatSubToken(): OgiriSubTokenRegistration = object : OgiriSubTokenRegistration {
   override val name = "chat"
   override val includeByDefault = true
 

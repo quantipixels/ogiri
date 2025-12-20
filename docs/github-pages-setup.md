@@ -46,6 +46,7 @@ pip install mkdocs-material mkdocs-mike
 ```
 
 The `publish-docs.sh` script:
+
 - Reads version from `.ogiri-version` by default
 - Builds documentation with mkdocs
 - Deploys using mike (multi-version support)
@@ -58,23 +59,27 @@ The `publish-docs.sh` script:
 **Version Source:** `.ogiri-version` file
 
 **Deployment with Mike:**
+
 ```bash
 mike deploy 1.1.0 latest
 ```
 
 This creates two deployments:
+
 - `1.1.0/` - Specific version archive
 - `latest/` - Alias pointing to latest version
 
 ### Accessing Versions
 
 **Latest (root):**
-```
+
+```text
 https://mosobande.github.io/ogiri/
 ```
 
 **Specific version:**
-```
+
+```text
 https://mosobande.github.io/ogiri/1.1.0/
 ```
 
@@ -111,9 +116,9 @@ on:
   push:
     branches: [main, ori]
     paths:
-      - 'docs/**'
-      - 'mkdocs.yml'
-      - '.github/workflows/docs.yml'
+      - "docs/**"
+      - "mkdocs.yml"
+      - ".github/workflows/docs.yml"
 ```
 
 ### Key Features
@@ -135,7 +140,7 @@ repo_url: https://github.com/mosobande/ogiri
 
 extra:
   version:
-    provider: mike  # Multi-version support
+    provider: mike # Multi-version support
 ```
 
 ## Troubleshooting
@@ -205,11 +210,13 @@ mkdocs build
 ### When releasing a new version
 
 1. Update `.ogiri-version` file:
+
    ```bash
    echo "1.2.0" > .ogiri-version
    ```
 
 2. Commit and push:
+
    ```bash
    git add .ogiri-version
    git commit -m "chore: bump version to 1.2.0"

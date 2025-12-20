@@ -17,6 +17,7 @@ import com.quantipixels.ogiri.security.spi.OgiriUser
 import com.quantipixels.ogiri.security.spi.OgiriUserDirectory
 import com.quantipixels.ogiri.security.testutil.InMemoryTokenRepository
 import com.quantipixels.ogiri.security.testutil.TestToken
+import com.quantipixels.ogiri.security.tokens.OgiriSubTokenRegistry
 import com.quantipixels.ogiri.security.tokens.OgiriTokenRepository
 import com.quantipixels.ogiri.security.tokens.OgiriTokenService
 import com.quantipixels.ogiri.security.tokens.OgiriTokenType
@@ -26,6 +27,7 @@ import org.springframework.boot.test.context.runner.ApplicationContextRunner
 import org.springframework.context.MessageSource
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
 import org.springframework.context.support.StaticMessageSource
 import org.springframework.security.crypto.password.PasswordEncoder
 
@@ -40,6 +42,45 @@ class OgiriSecurityAutoConfigurationWiringTest {
               "ogiri.security.register-filter=false",
               "ogiri.cleanup.enabled=false",
           )
+
+  companion object {
+    fun createTestTokenService(
+        repository: OgiriTokenRepository<TestToken>,
+        passwordEncoder: PasswordEncoder,
+        userDirectory: OgiriUserDirectory,
+        identifierPolicy: DefaultIdentifierPolicy,
+        subTokenRegistry: OgiriSubTokenRegistry,
+        properties: OgiriConfigurationProperties,
+    ): OgiriTokenService<TestToken> =
+        object :
+            OgiriTokenService<TestToken>(
+                repository,
+                passwordEncoder,
+                userDirectory,
+                identifierPolicy,
+                subTokenRegistry,
+                properties,
+            ) {
+          override fun tokenFactory(
+              userId: Long,
+              client: String,
+              hashedToken: String,
+              tokenType: OgiriTokenType,
+              expiry: Instant,
+              tokenSubtype: String?,
+              plainTokenValue: String,
+          ): TestToken =
+              TestToken(
+                      userId = userId,
+                      client = client,
+                      token = hashedToken,
+                      tokenType = tokenType.label,
+                      expiryAt = expiry,
+                      tokenSubtype = tokenSubtype,
+                  )
+                  .apply { plainToken = plainTokenValue }
+        }
+  }
 
   @Test
   fun `should not create default token service when user provides one`() {
@@ -108,79 +149,37 @@ class OgiriSecurityAutoConfigurationWiringTest {
         passwordEncoder: PasswordEncoder,
         userDirectory: OgiriUserDirectory,
         identifierPolicy: DefaultIdentifierPolicy,
-        subTokenRegistry: com.quantipixels.ogiri.security.tokens.OgiriSubTokenRegistry,
+        subTokenRegistry: OgiriSubTokenRegistry,
         properties: OgiriConfigurationProperties,
     ): OgiriTokenService<TestToken> =
-        object :
-            OgiriTokenService<TestToken>(
-                repository,
-                passwordEncoder,
-                userDirectory,
-                identifierPolicy,
-                subTokenRegistry,
-                properties,
-            ) {
-          override fun tokenFactory(
-              userId: Long,
-              client: String,
-              hashedToken: String,
-              tokenType: OgiriTokenType,
-              expiry: Instant,
-              tokenSubtype: String?,
-              plainTokenValue: String,
-          ): TestToken =
-              TestToken(
-                      userId = userId,
-                      client = client,
-                      token = hashedToken,
-                      tokenType = tokenType.name,
-                      expiryAt = expiry,
-                      tokenSubtype = tokenSubtype,
-                  )
-                  .apply { plainToken = plainTokenValue }
-        }
+        createTestTokenService(
+            repository,
+            passwordEncoder,
+            userDirectory,
+            identifierPolicy,
+            subTokenRegistry,
+            properties)
   }
 
   @Configuration
   class TwoTokenServicesOnePrimary {
     @Bean
-    @org.springframework.context.annotation.Primary
+    @Primary
     fun tokenServiceA(
         repository: OgiriTokenRepository<TestToken>,
         passwordEncoder: PasswordEncoder,
         userDirectory: OgiriUserDirectory,
         identifierPolicy: DefaultIdentifierPolicy,
-        subTokenRegistry: com.quantipixels.ogiri.security.tokens.OgiriSubTokenRegistry,
+        subTokenRegistry: OgiriSubTokenRegistry,
         properties: OgiriConfigurationProperties,
     ): OgiriTokenService<TestToken> =
-        object :
-            OgiriTokenService<TestToken>(
-                repository,
-                passwordEncoder,
-                userDirectory,
-                identifierPolicy,
-                subTokenRegistry,
-                properties,
-            ) {
-          override fun tokenFactory(
-              userId: Long,
-              client: String,
-              hashedToken: String,
-              tokenType: OgiriTokenType,
-              expiry: Instant,
-              tokenSubtype: String?,
-              plainTokenValue: String,
-          ): TestToken =
-              TestToken(
-                      userId = userId,
-                      client = client,
-                      token = hashedToken,
-                      tokenType = tokenType.name,
-                      expiryAt = expiry,
-                      tokenSubtype = tokenSubtype,
-                  )
-                  .apply { plainToken = plainTokenValue }
-        }
+        createTestTokenService(
+            repository,
+            passwordEncoder,
+            userDirectory,
+            identifierPolicy,
+            subTokenRegistry,
+            properties)
 
     @Bean
     fun tokenServiceB(
@@ -188,37 +187,16 @@ class OgiriSecurityAutoConfigurationWiringTest {
         passwordEncoder: PasswordEncoder,
         userDirectory: OgiriUserDirectory,
         identifierPolicy: DefaultIdentifierPolicy,
-        subTokenRegistry: com.quantipixels.ogiri.security.tokens.OgiriSubTokenRegistry,
+        subTokenRegistry: OgiriSubTokenRegistry,
         properties: OgiriConfigurationProperties,
     ): OgiriTokenService<TestToken> =
-        object :
-            OgiriTokenService<TestToken>(
-                repository,
-                passwordEncoder,
-                userDirectory,
-                identifierPolicy,
-                subTokenRegistry,
-                properties,
-            ) {
-          override fun tokenFactory(
-              userId: Long,
-              client: String,
-              hashedToken: String,
-              tokenType: OgiriTokenType,
-              expiry: Instant,
-              tokenSubtype: String?,
-              plainTokenValue: String,
-          ): TestToken =
-              TestToken(
-                      userId = userId,
-                      client = client,
-                      token = hashedToken,
-                      tokenType = tokenType.name,
-                      expiryAt = expiry,
-                      tokenSubtype = tokenSubtype,
-                  )
-                  .apply { plainToken = plainTokenValue }
-        }
+        createTestTokenService(
+            repository,
+            passwordEncoder,
+            userDirectory,
+            identifierPolicy,
+            subTokenRegistry,
+            properties)
   }
 
   @Configuration
@@ -229,37 +207,16 @@ class OgiriSecurityAutoConfigurationWiringTest {
         passwordEncoder: PasswordEncoder,
         userDirectory: OgiriUserDirectory,
         identifierPolicy: DefaultIdentifierPolicy,
-        subTokenRegistry: com.quantipixels.ogiri.security.tokens.OgiriSubTokenRegistry,
+        subTokenRegistry: OgiriSubTokenRegistry,
         properties: OgiriConfigurationProperties,
     ): OgiriTokenService<TestToken> =
-        object :
-            OgiriTokenService<TestToken>(
-                repository,
-                passwordEncoder,
-                userDirectory,
-                identifierPolicy,
-                subTokenRegistry,
-                properties,
-            ) {
-          override fun tokenFactory(
-              userId: Long,
-              client: String,
-              hashedToken: String,
-              tokenType: OgiriTokenType,
-              expiry: Instant,
-              tokenSubtype: String?,
-              plainTokenValue: String,
-          ): TestToken =
-              TestToken(
-                      userId = userId,
-                      client = client,
-                      token = hashedToken,
-                      tokenType = tokenType.name,
-                      expiryAt = expiry,
-                      tokenSubtype = tokenSubtype,
-                  )
-                  .apply { plainToken = plainTokenValue }
-        }
+        createTestTokenService(
+            repository,
+            passwordEncoder,
+            userDirectory,
+            identifierPolicy,
+            subTokenRegistry,
+            properties)
 
     @Bean
     fun tokenServiceB(
@@ -267,36 +224,15 @@ class OgiriSecurityAutoConfigurationWiringTest {
         passwordEncoder: PasswordEncoder,
         userDirectory: OgiriUserDirectory,
         identifierPolicy: DefaultIdentifierPolicy,
-        subTokenRegistry: com.quantipixels.ogiri.security.tokens.OgiriSubTokenRegistry,
+        subTokenRegistry: OgiriSubTokenRegistry,
         properties: OgiriConfigurationProperties,
     ): OgiriTokenService<TestToken> =
-        object :
-            OgiriTokenService<TestToken>(
-                repository,
-                passwordEncoder,
-                userDirectory,
-                identifierPolicy,
-                subTokenRegistry,
-                properties,
-            ) {
-          override fun tokenFactory(
-              userId: Long,
-              client: String,
-              hashedToken: String,
-              tokenType: OgiriTokenType,
-              expiry: Instant,
-              tokenSubtype: String?,
-              plainTokenValue: String,
-          ): TestToken =
-              TestToken(
-                      userId = userId,
-                      client = client,
-                      token = hashedToken,
-                      tokenType = tokenType.name,
-                      expiryAt = expiry,
-                      tokenSubtype = tokenSubtype,
-                  )
-                  .apply { plainToken = plainTokenValue }
-        }
+        createTestTokenService(
+            repository,
+            passwordEncoder,
+            userDirectory,
+            identifierPolicy,
+            subTokenRegistry,
+            properties)
   }
 }

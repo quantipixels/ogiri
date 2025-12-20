@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - "v*.*.*"
 
 jobs:
   release:
@@ -40,7 +40,7 @@ jobs:
         uses: actions/setup-java@v5
         with:
           java-version: 17
-          distribution: 'temurin'
+          distribution: "temurin"
           cache: gradle
 
       - name: Create GitHub Release
@@ -81,7 +81,7 @@ jobs:
         uses: actions/setup-java@v5
         with:
           java-version: 17
-          distribution: 'temurin'
+          distribution: "temurin"
           cache: gradle
 
       - name: Extract version from tag
@@ -100,13 +100,27 @@ jobs:
           RELEASE_VERSION: ${{ steps.version.outputs.VERSION }}
           ORG_GRADLE_PROJECT_ossrhUsername: ${{ secrets.OSSRH_USERNAME }}
           ORG_GRADLE_PROJECT_ossrhPassword: ${{ secrets.OSSRH_PASSWORD }}
-          ORG_GRADLE_PROJECT_signingKeyId: ${{ secrets.GPG_KEY_ID }}
-          ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.GPG_PASSPHRASE }}
-          ORG_GRADLE_PROJECT_signingSecretKeyRingFile: ${{ runner.temp }}/secring.gpg
+          ORG_GRADLE_PROJECT_signing.key: ${{ secrets.GPG_PRIVATE_KEY }}
+          ORG_GRADLE_PROJECT_signing.password: ${{ secrets.GPG_PASSPHRASE }}
 
       - name: Verify published artifact
         run: |
-          sleep 30  # Wait for Maven Central to sync
-          curl -f https://repo1.maven.org/maven2/com/quantipixels/ogiri/ogiri-core/${{ steps.version.outputs.VERSION }}/ogiri-core-${{ steps.version.outputs.VERSION }}.jar \
-            && echo "✓ Artifact verified on Maven Central" \
-            || echo "⚠ Artifact not yet available on Maven Central (may take a few minutes)"
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          URL="https://repo1.maven.org/maven2/com/quantipixels/ogiri/ogiri-core/${VERSION}/ogiri-core-${VERSION}.jar"
+          MAX_RETRIES=10
+          RETRY_INTERVAL=60 # seconds
+
+          echo "🔍 Verifying artifact availability at: $URL"
+
+          for i in $(seq 1 $MAX_RETRIES); do
+            if curl -sfI "$URL" > /dev/null; then
+              echo "✅ Artifact verified on Maven Central!"
+              exit 0
+            fi
+
+            echo "⏳ Attempt $i/$MAX_RETRIES: Artifact not yet available. Retrying in ${RETRY_INTERVAL}s..."
+            sleep $RETRY_INTERVAL
+          done
+
+          echo "::error::Artifact not available on Maven Central after $((MAX_RETRIES * RETRY_INTERVAL / 60)) minutes."
+          exit 1

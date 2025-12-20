@@ -5,16 +5,19 @@ Get ogiri integrated into your Spring Boot application in 5 minutes.
 ## 1. Add Dependency
 
 **Gradle (Kotlin DSL):**
+
 ```kotlin
 implementation("com.quantipixels.ogiri:ogiri-core:{{ config.extra.ogiri_version }}")
 ```
 
 **Gradle (Groovy):**
+
 ```groovy
 implementation 'com.quantipixels.ogiri:ogiri-core:{{ config.extra.ogiri_version }}'
 ```
 
 **Maven:**
+
 ```xml
 <dependency>
   <groupId>com.quantipixels.ogiri</groupId>
@@ -189,7 +192,8 @@ See [Database Integration](database.md) for MongoDB, Redis, and custom implement
 Ògiri auto-configures the security filter chain. Authenticated requests will have their tokens validated and rotated automatically.
 
 **Response headers after login:**
-```
+
+```text
 access-token: <token-hash>
 client: web
 uid: 123
@@ -197,7 +201,8 @@ expiry: 2025-12-25T00:00:00Z
 ```
 
 **Client sends on subsequent requests:**
-```
+
+```text
 access-token: <token-hash>
 client: web
 uid: 123

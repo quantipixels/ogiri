@@ -4,12 +4,13 @@ Minimal Spring Boot applications demonstrating ogiri integration.
 
 ## Available Samples
 
-| Sample | Language | Path |
-|--------|----------|------|
-| Java | Pure Java | `sample-java/` |
-| Kotlin | Kotlin | `sample-kotlin/` |
+| Sample | Language  | Path             |
+| ------ | --------- | ---------------- |
+| Java   | Pure Java | `sample-java/`   |
+| Kotlin | Kotlin    | `sample-kotlin/` |
 
 Both samples implement the same functionality:
+
 - `OgiriUserDirectory` - In-memory user directory
 - `OgiriRouteRegistry` - Public route declarations
 - `OgiriTokenRepository` - JPA token persistence
@@ -61,7 +62,7 @@ curl http://localhost:8080/api/me
 
 ## Project Structure
 
-```
+```text
 sample-kotlin/
 ├── src/main/kotlin/
 │   └── com/quantipixels/ogiri/samples/kotlin/

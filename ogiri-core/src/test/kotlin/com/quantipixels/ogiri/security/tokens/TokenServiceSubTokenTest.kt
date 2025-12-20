@@ -264,24 +264,23 @@ class TokenServiceSubTokenTest {
   @Test
   fun `old tokens are cleaned when max clients exceeded`() {
     val registry = DefaultOgiriSubTokenRegistry(listOf())
+    val properties = defaultAuthProperties().apply { auth.maxClients = 2 }
     tokenService =
         TestTokenService(
-            repository,
-            passwordEncoder,
-            userDirectory,
-            identifierPolicy,
-            registry,
-            defaultAuthProperties())
+            repository, passwordEncoder, userDirectory, identifierPolicy, registry, properties)
 
-    // Create multiple tokens for the same user (simulating max-clients scenario)
-    // First, create a few tokens to reach near the limit
-    for (i in 1..3) {
-      tokenService.createNewAuthToken(user.getOgiriUserId(), "client-$i")
-    }
-
-    // Verify all tokens exist
-    val tokensBefore = repository.findAllByUserId(user.getOgiriUserId())
-    assertEquals(3, tokensBefore.size)
+    // Create 3 tokens for the same user, with small delays to ensure different timestamps
+    tokenService.createNewAuthToken(user.getOgiriUserId(), "client-1")
+    repository.incrementClock() // deterministic clock bump instead of wall-clock sleep
+    tokenService.createNewAuthToken(user.getOgiriUserId(), "client-2")
+    repository.incrementClock()
+    tokenService.createNewAuthToken(user.getOgiriUserId(), "client-3")
+    // Verify only 2 tokens exist (the most recent ones)
+    val tokensAfter = repository.findAllByUserId(user.getOgiriUserId())
+    assertEquals(2, tokensAfter.size)
+    assertNull(repository.findByUserIdAndClient(user.getOgiriUserId(), "client-1"))
+    assertNotNull(repository.findByUserIdAndClient(user.getOgiriUserId(), "client-2"))
+    assertNotNull(repository.findByUserIdAndClient(user.getOgiriUserId(), "client-3"))
   }
 
   @Test

@@ -40,7 +40,7 @@ import org.springframework.validation.annotation.Validated
  *     register-token-service: true
  *   cleanup:
  *     enabled: true
- *     cron: "0 0 * * * *"
+ *     interval-ms: 21600000
  * ```
  */
 @Validated

@@ -59,8 +59,6 @@ class SampleOgiriUserDirectory : OgiriUserDirectory {
       private val password: String,
       val email: String,
   ) : OgiriUser {
-    override val userId: Long = id
-
     override fun getAuthorities(): Collection<GrantedAuthority> =
         listOf(SimpleGrantedAuthority("ROLE_USER"))
 
@@ -75,5 +73,6 @@ class SampleOgiriUserDirectory : OgiriUserDirectory {
     override fun isCredentialsNonExpired(): Boolean = true
 
     override fun isEnabled(): Boolean = true
+    override fun getOgiriUserId(): Long = id
   }
 }

@@ -9,9 +9,9 @@ Your token entity must support these fields:
 | Field            | Type    | Required | Description                     |
 | ---------------- | ------- | -------- | ------------------------------- |
 | `userId`         | Long    | Yes      | User identifier                 |
-| `client`         | String  | Yes      | Client/app identifier           |
-| `token`          | String  | Yes      | BCrypt hash                     |
-| `tokenType`      | String  | Yes      | "APP" or sub-token name         |
+| `clientId`       | String  | Yes      | Client/app identifier           |
+| `tokenHash`      | String  | Yes      | BCrypt hash                     |
+| `tokenType`      | String  | Yes      | "app" or "sub"                  |
 | `expiryAt`       | Instant | Yes      | Expiration timestamp            |
 | `lastToken`      | String  | No       | Previous token (rotation grace) |
 | `previousToken`  | String  | No       | Token before last               |
@@ -22,6 +22,7 @@ Your token entity must support these fields:
 | `lastUsedAt`     | Instant | No       | Last access                     |
 
 **Constraints:**
+
 - Unique constraint on `(userId, client)`
 - Index on `userId` and `expiryAt`
 
@@ -108,6 +109,9 @@ class RedisTokenRepository(private val redisTemplate: RedisTemplate<String, Toke
   override fun save(token: Token): Token {
     val key = "token:${token.userId}:${token.client}"
     val ttl = Duration.between(Instant.now(), token.expiryAt)
+    if (ttl.isNegative || ttl.isZero) {
+      return token // Don't store already-expired tokens
+    }
     redisTemplate.opsForValue().set(key, token, ttl)
     return token
   }
