@@ -31,6 +31,16 @@ object SecurityHelpers {
           "/actuator/info",
       )
 
+  /**
+   * Extracts the client's IP address from the given servlet request.
+   *
+   * Prefers the first value from the `X-Forwarded-For` header when present and not "unknown",
+   * falls back to `X-Real-IP` when present and not "unknown", and otherwise returns
+   * `request.remoteAddr`.
+   *
+   * @param request The incoming HTTP servlet request.
+   * @return The client's IP address, or `null` if no address can be determined.
+   */
   fun getClientIP(request: HttpServletRequest): String? {
     val xForwardedFor = request.getHeader("X-Forwarded-For")
     if (!xForwardedFor.isNullOrBlank() && !xForwardedFor.equals("unknown", ignoreCase = true)) {

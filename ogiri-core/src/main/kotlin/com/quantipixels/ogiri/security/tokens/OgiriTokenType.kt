@@ -49,25 +49,22 @@ enum class OgiriTokenType(val label: String) {
 
   companion object {
     /**
-     * Parse a OgiriTokenType from a string label (case-insensitive).
-     *
-     * @param label The token type label ("app" or "sub")
-     * @return The corresponding OgiriTokenType
-     * @throws IllegalArgumentException if label doesn't match any type
-     */
+             * Parse an OgiriTokenType from the given label using a case-insensitive match.
+             *
+             * @param label The token type label, expected to be "app" or "sub".
+             * @return The `OgiriTokenType` that corresponds to the provided label.
+             * @throws IllegalArgumentException if the label does not match any token type.
+             */
     fun of(label: String): OgiriTokenType =
         entries.firstOrNull { it.label.equals(label, ignoreCase = true) }
             ?: throw IllegalArgumentException("Invalid token type: $label")
 
     /**
-     * Parse a OgiriTokenType from a string, with fallback to APP type if null.
+     * Parse an OgiriTokenType from a label, defaulting to APP when the label is null.
      *
-     * This function is strict: it only allows valid labels ("app", "sub") or null. If a non-null
-     * but invalid label is provided, it throws an exception to prevent silent data corruption.
-     *
-     * @param label The token type label ("app" or "sub"), or null for default APP
-     * @return The corresponding OgiriTokenType, or APP if label is null
-     * @throws IllegalArgumentException if label is non-null and doesn't match any type
+     * @param label The token type label ("app" or "sub"), or null to use the APP default.
+     * @return The matching OgiriTokenType, or APP if label is null.
+     * @throws IllegalArgumentException if label is non-null and does not match any known type.
      */
     fun ofOrDefault(label: String?): OgiriTokenType {
       // Use strict semantics: null defaults to APP, but invalid non-null labels are errors.
@@ -77,11 +74,11 @@ enum class OgiriTokenType(val label: String) {
     }
 
     /**
-     * Parse a OgiriTokenType from a nullable string label.
-     *
-     * @param label The token type label ("app" or "sub"), or null
-     * @return The corresponding OgiriTokenType, or APP if label is null or invalid
-     */
+             * Resolve an OgiriTokenType from an optional label, defaulting to APP when no match is found.
+             *
+             * @param label The token type label (case-insensitive, expected "app" or "sub"), or null.
+             * @return The matching OgiriTokenType, or APP when `label` is null or does not match any known type.
+             */
     private fun ofNullable(label: String?): OgiriTokenType =
         label?.let { value -> entries.firstOrNull { it.label.equals(value, ignoreCase = true) } }
             ?: APP

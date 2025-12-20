@@ -132,10 +132,10 @@ interface OgiriToken {
   var plainToken: String?
 
   /**
-   * Check if token has expired.
-   *
-   * @param now Current instant for comparison (defaults to Instant.now())
-   * @return true if expiryAt is before now, false otherwise
-   */
+ * Determines whether the token is expired relative to the provided instant.
+ *
+ * @param now Instant to compare the token's expiry against; defaults to the current instant.
+ * @return `true` if `expiryAt` is before `now`, `false` otherwise.
+ */
   fun isExpired(now: Instant = Instant.now()): Boolean = expiryAt.isBefore(now)
 }

@@ -15,11 +15,34 @@ package com.quantipixels.ogiri.security.spi
 import org.springframework.security.core.userdetails.UserDetailsService
 
 interface OgiriUserDirectory : UserDetailsService {
-  fun findById(id: Long): OgiriUser?
+  /**
+ * Retrieves an OgiriUser by their numeric identifier.
+ *
+ * @param id The user's numeric ID.
+ * @return The matching `OgiriUser` if found, `null` otherwise.
+ */
+fun findById(id: Long): OgiriUser?
 
-  fun findByEmail(email: String): OgiriUser?
+  /**
+ * Finds an OgiriUser with the given email address.
+ *
+ * @param email The email address of the user to look up.
+ * @return The matching OgiriUser if found, `null` otherwise.
+ */
+fun findByEmail(email: String): OgiriUser?
 
-  fun findByUsername(username: String): OgiriUser?
+  /**
+ * Finds an OgiriUser by their username.
+ *
+ * @param username The username to look up.
+ * @return `OgiriUser` if a user with the given username exists, `null` otherwise.
+ */
+fun findByUsername(username: String): OgiriUser?
 
-  fun recordSuccessfulLogin(userId: Long)
+  /**
+ * Records a successful login for the specified user.
+ *
+ * @param userId The numeric identifier of the user whose successful login should be recorded.
+ */
+fun recordSuccessfulLogin(userId: Long)
 }

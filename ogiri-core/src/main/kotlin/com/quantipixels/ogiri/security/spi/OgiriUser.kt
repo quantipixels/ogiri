@@ -15,6 +15,10 @@ package com.quantipixels.ogiri.security.spi
 import org.springframework.security.core.userdetails.UserDetails
 
 interface OgiriUser : UserDetails {
-  /** Java-friendly getter that delegates to the Kotlin property. */
+  /**
+ * Get the user's Ogiri identifier.
+ *
+ * @return The user's Ogiri identifier as a Long.
+ */
   fun getOgiriUserId(): Long
 }
