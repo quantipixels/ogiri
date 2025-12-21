@@ -69,7 +69,7 @@ class OgiriSecurityAutoConfiguration {
    * @return a new DefaultIdentifierPolicy instance
    */
   @Bean
-  @ConditionalOnMissingBean(DefaultIdentifierPolicy::class)
+  @ConditionalOnMissingBean(IdentifierPolicy::class)
   fun identifierPolicy(): DefaultIdentifierPolicy = DefaultIdentifierPolicy()
 
   /**

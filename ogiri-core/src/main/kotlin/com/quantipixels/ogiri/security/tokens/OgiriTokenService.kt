@@ -185,12 +185,17 @@ open class OgiriTokenService<T : OgiriToken>(
       user: OgiriUser,
       client: String,
       requestStartedAt: Instant,
-  ): Boolean =
-      getByUserIdAndClient(user.getOgiriUserId(), client)
-          ?.takeIf { !it.isExpired() }
-          ?.updatedAt
-          ?.isAfter(requestStartedAt.minusSeconds(batchGraceSeconds))
-          ?: false
+  ): Boolean {
+    val token = getByUserIdAndClient(user.getOgiriUserId(), client)
+    return token
+        ?.takeIf { !it.isExpired() }
+        ?.updatedAt
+        ?.let { updatedAt ->
+          val threshold = requestStartedAt.minusSeconds(batchGraceSeconds)
+          updatedAt.isAfter(threshold) || updatedAt == threshold
+        }
+        ?: false
+  }
 
   @Transactional
   fun extendBatchBuffer(

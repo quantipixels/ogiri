@@ -108,7 +108,9 @@ fun updateVersionInFile(file: File, oldVersion: String, newVersion: String) {
 
   val content = file.readText()
   val versionRegex =
-      Regex("""^(\s*(?:project\.)?version\s*=\s*["'])$oldVersion(["'])""", RegexOption.MULTILINE)
+      Regex(
+          """^(\s*(?:project\.)?version\s*=\s*["'])${Regex.escape(oldVersion)}(["'])""",
+          RegexOption.MULTILINE)
   val updated =
       versionRegex.replace(content) { matchResult ->
         "${matchResult.groupValues[1]}$newVersion${matchResult.groupValues[2]}"

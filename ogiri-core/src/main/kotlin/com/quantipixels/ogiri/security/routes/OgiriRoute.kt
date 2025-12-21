@@ -12,9 +12,9 @@
  */
 package com.quantipixels.ogiri.security.routes
 
-import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import org.springframework.http.HttpMethod
+import org.springframework.web.util.UriUtils
 
 /** Describes an HTTP route for public/auth and rate-limit configuration. */
 class OgiriRoute(
@@ -38,7 +38,7 @@ class OgiriRoute(
    * @return The percent-encoded string representation of the value using UTF-8.
    */
   private fun encode(value: Any): String =
-      URLEncoder.encode(value.toString(), StandardCharsets.UTF_8.toString())
+      UriUtils.encodePathSegment(value.toString(), StandardCharsets.UTF_8.toString())
 
   /**
    * Substitutes path variable placeholders in this route's path with the provided parameter values.

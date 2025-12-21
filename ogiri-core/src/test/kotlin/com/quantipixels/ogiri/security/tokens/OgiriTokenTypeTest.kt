@@ -44,7 +44,7 @@ class OgiriTokenTypeTest {
   }
 
   @Test
-  fun `of should throw for invalid or null labels`() {
+  fun `of should throw for invalid labels`() {
     assertThrows(IllegalArgumentException::class.java) { OgiriTokenType.of("invalid") }
   }
 }

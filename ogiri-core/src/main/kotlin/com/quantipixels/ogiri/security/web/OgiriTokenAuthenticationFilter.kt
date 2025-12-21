@@ -274,8 +274,13 @@ open class OgiriTokenAuthenticationFilter(
    *   kind is not `APP`.
    */
   private fun ensureAppToken(kind: String?) {
-    val tokenKind = OgiriTokenType.ofOrDefault(kind)
-    if (tokenKind != OgiriTokenType.APP) throw BadCredentialsException("error.auth.bad_token_type")
+    try {
+      val tokenKind = OgiriTokenType.ofOrDefault(kind)
+      if (tokenKind != OgiriTokenType.APP)
+          throw BadCredentialsException("error.auth.bad_token_type")
+    } catch (e: IllegalArgumentException) {
+      throw BadCredentialsException("error.auth.bad_token_kind")
+    }
   }
 
   /**

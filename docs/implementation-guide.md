@@ -305,7 +305,7 @@ class TokenService(
     passwordEncoder: PasswordEncoder,
     userDirectory: OgiriUserDirectory,
     identifierPolicy: IdentifierPolicy,
-    subTokenRegistry: SubTokenRegistry,
+    subTokenRegistry: OgiriSubTokenRegistry,
     properties: OgiriConfigurationProperties,
 ) : OgiriTokenService<Token>(
     repository,

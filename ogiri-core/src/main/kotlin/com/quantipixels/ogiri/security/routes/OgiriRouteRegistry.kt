@@ -46,7 +46,7 @@ class OgiriRouteCatalog(
   /**
    * List routes that do not require authentication.
    *
-   * @return A list of public {@link OgiriRoute} instances (routes with authentication disabled).
+   * @return A list of public [OgiriRoute] instances (routes with authentication disabled).
    */
   fun public(): List<OgiriRoute> = publicRoutes
 

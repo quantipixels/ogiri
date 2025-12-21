@@ -27,11 +27,125 @@ The following classes have been renamed. You will need to update your imports an
 
 The following supporting classes were also renamed for consistency:
 
-| Old Name                    | New Name                    |
-| :-------------------------- | :-------------------------- |
-| `RouteRegistry`             | `OgiriRouteRegistry`        |
-| `OgiriSubTokenRegistration` | `OgiriSubTokenRegistration` |
-| `SubTokenRegistry`          | `OgiriSubTokenRegistry`     |
+| Old Name               | New Name                    |
+| :--------------------- | :-------------------------- |
+| `RouteRegistry`        | `OgiriRouteRegistry`        |
+| `SubTokenRegistration` | `OgiriSubTokenRegistration` |
+| `SubTokenRegistry`     | `OgiriSubTokenRegistry`     |
+
+### Method Renames (Breaking Changes)
+
+#### 1. OgiriRouteRegistry: `registrations()` → `routes()`
+
+The `OgiriRouteRegistry` interface (formerly `RouteRegistry`) has renamed its primary method to better reflect its purpose.
+
+**Before:**
+
+=== "Kotlin"
+
+    ```kotlin
+    @Component
+    class MyRouteRegistry : RouteRegistry {
+      override fun registrations() = listOf(
+        OgiriRoute.post("/api/auth/login")
+      )
+    }
+    ```
+
+=== "Java"
+
+    ```java
+    @Component
+    public class MyRouteRegistry implements RouteRegistry {
+      @Override
+      public List<OgiriRoute> registrations() {
+        return List.of(
+          OgiriRoute.post("/api/auth/login")
+        );
+      }
+    }
+    ```
+
+**After:**
+
+=== "Kotlin"
+
+    ```kotlin
+    @Component
+    class MyRouteRegistry : OgiriRouteRegistry {
+      override fun routes() = listOf(
+        OgiriRoute.post("/api/auth/login"),
+        OgiriRoute.post("/api/auth/register"),
+        OgiriRoute.get("/api/health"),
+      )
+    }
+    ```
+
+=== "Java"
+
+    ```java
+    @Component
+    public class MyRouteRegistry implements OgiriRouteRegistry {
+      @Override
+      public List<OgiriRoute> routes() {
+        return List.of(
+          OgiriRoute.post("/api/auth/login"),
+          OgiriRoute.post("/api/auth/register"),
+          OgiriRoute.get("/api/health")
+        );
+      }
+    }
+    ```
+
+#### 2. OgiriUser: `userId` property → `getOgiriUserId()` method
+
+The `OgiriUser` interface has changed from a Kotlin property to an explicit method to improve Java compatibility and align with the interface-first design.
+
+**Before:**
+
+=== "Kotlin"
+
+    ```kotlin
+    class MyUser(override val userId: Long) : OgiriUser {
+        // ...
+    }
+    ```
+
+=== "Java"
+
+    ```java
+    public class MyUser implements OgiriUser {
+        @Override
+        public Long getUserId() {
+            return 1L;
+        }
+    }
+    ```
+
+**After:**
+
+=== "Kotlin"
+
+    ```kotlin
+    class MyUser : OgiriUser {
+        override fun getOgiriUserId(): Long = 1L
+        // ...
+    }
+    ```
+
+=== "Java"
+
+    ```java
+    public class MyUser implements OgiriUser {
+        @Override
+        public Long getOgiriUserId() {
+            return 1L;
+        }
+    }
+    ```
+
+!!! note "Compatibility Note"
+This is a breaking change. All implementations of `OgiriUser` must be updated to implement `getOgiriUserId()`. Usages of the `userId` property in Kotlin or `getUserId()` in Java must be replaced with `getOgiriUserId()`. Ensure tests and any third-party integrations are updated to reflect this signature change.
 
 ### Migration Steps
 

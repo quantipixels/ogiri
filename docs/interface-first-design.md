@@ -75,7 +75,7 @@ open class OgiriTokenService<T : OgiriToken>(
     private val passwordEncoder: PasswordEncoder,
     private val userDirectory: OgiriUserDirectory,
     private val identifierPolicy: IdentifierPolicy,
-    private val subTokenRegistry: SubTokenRegistry,
+    private val subTokenRegistry: OgiriSubTokenRegistry,
     protected val properties: OgiriConfigurationProperties,
 )
 ```
@@ -203,7 +203,7 @@ class MyTokenService(
     passwordEncoder: PasswordEncoder,
     userDirectory: OgiriUserDirectory,
     identifierPolicy: IdentifierPolicy,
-    subTokenRegistry: SubTokenRegistry,
+    subTokenRegistry: OgiriSubTokenRegistry,
     properties: OgiriConfigurationProperties,
 ) : OgiriTokenService<MyToken>(
     repository,
@@ -339,7 +339,7 @@ class UserTokenService(
     passwordEncoder: PasswordEncoder,
     userDirectory: OgiriUserDirectory,
     identifierPolicy: IdentifierPolicy,
-    subTokenRegistry: SubTokenRegistry,
+    subTokenRegistry: OgiriSubTokenRegistry,
     properties: OgiriConfigurationProperties,
 ) : OgiriTokenService<UserToken>(
     repository, passwordEncoder, userDirectory,

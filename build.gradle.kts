@@ -1,5 +1,4 @@
 import com.diffplug.gradle.spotless.SpotlessExtension
-import org.jetbrains.kotlin.gradle.internal.builtins.StandardNames.FqNames.target
 
 // Apply centralized version management
 apply(from = "gradle/version.gradle.kts")
