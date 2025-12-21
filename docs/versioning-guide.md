@@ -375,7 +375,7 @@ Create separate workflow to update docs on schedule:
 ```yaml
 on:
   schedule:
-    - interval-ms: 21600000 # 6 hours
+    - cron: '0 12 * * 0'  # Weekly
 ```
 
 Useful for updating docs from a separate "docs" branch.
