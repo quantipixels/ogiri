@@ -60,28 +60,64 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 @EnableConfigurationProperties(OgiriConfigurationProperties::class)
 class OgiriSecurityAutoConfiguration {
+  /**
+   * Provides a default identifier policy used by the token system.
+   *
+   * This supplies a DefaultIdentifierPolicy instance when no other IdentifierPolicy bean is present.
+   *
+   * @return a new DefaultIdentifierPolicy instance
+   */
   @Bean
   @ConditionalOnMissingBean(DefaultIdentifierPolicy::class)
   fun identifierPolicy(): DefaultIdentifierPolicy = DefaultIdentifierPolicy()
 
-  @Bean
+  /**
+       * Creates an OgiriRouteCatalog by aggregating all available OgiriRouteRegistry beans in order.
+       *
+       * @param registries Provider of OgiriRouteRegistry instances; collected in the provider's declared order.
+       * @return An OgiriRouteCatalog containing the ordered list of route registries.
+       */
+      @Bean
   @ConditionalOnMissingBean(OgiriRouteCatalog::class)
   fun routeCatalog(registries: ObjectProvider<OgiriRouteRegistry>): OgiriRouteCatalog =
       OgiriRouteCatalog(registries.orderedStream().toList())
 
-  @Bean
+  /**
+       * Creates an AuthenticationBypassDecider that determines which routes should bypass authentication using the provided route catalog.
+       *
+       * @param routeCatalog The catalog of registered routes used to evaluate bypass rules.
+       * @return An AuthenticationBypassDecider configured with the given route catalog.
+       */
+      @Bean
   @ConditionalOnMissingBean(AuthenticationBypassDecider::class)
   fun authenticationBypassDecider(routeCatalog: OgiriRouteCatalog): AuthenticationBypassDecider =
       AuthenticationBypassDecider(routeCatalog)
 
-  @Bean
+  /**
+       * Creates a DefaultOgiriSubTokenRegistry initialized with the available sub-token registrations.
+       *
+       * @param registrations provider of OgiriSubTokenRegistration instances; the provider's ordered stream is used to preserve registration order
+       * @return a DefaultOgiriSubTokenRegistry containing the registrations provided by `registrations`
+       */
+      @Bean
   @ConditionalOnMissingBean(DefaultOgiriSubTokenRegistry::class)
   fun subTokenRegistry(
       registrations: ObjectProvider<OgiriSubTokenRegistration>
   ): DefaultOgiriSubTokenRegistry =
       DefaultOgiriSubTokenRegistry(registrations.orderedStream().toList())
 
-  @Bean
+  /**
+       * Creates a default OgiriTokenService configured with the provided collaborators for token management.
+       *
+       * @param repository Repository used to persist and retrieve tokens.
+       * @param passwordEncoder Encoder used to hash or verify token secrets.
+       * @param ogiriUserDirectory Directory used to resolve and validate users associated with tokens.
+       * @param identifierPolicy Policy responsible for generating token identifiers.
+       * @param subTokenRegistry Registry of sub-token registrations used by the service.
+       * @param properties Ogiri configuration properties influencing token behavior.
+       * @return An instance of OgiriTokenService configured with the given repository, encoder, directory, identifier policy, sub-token registry, and properties.
+       */
+      @Bean
   @ConditionalOnMissingBean(OgiriTokenService::class)
   @ConditionalOnProperty(
       prefix = "ogiri.auth",
@@ -106,7 +142,15 @@ class OgiriSecurityAutoConfiguration {
           properties,
       )
 
-  @Bean
+  /**
+       * Creates a resolver that selects and exposes available OgiriTokenService instances.
+       *
+       * @param tokenServices Map of all registered `OgiriTokenService` beans keyed by bean name.
+       * @param properties Ogiri configuration properties used to influence resolver behavior.
+       * @param beanFactory Spring bean factory used for any runtime bean resolution required by the resolver.
+       * @return A `DefaultOgiriTokenServiceResolver` that resolves the appropriate `OgiriTokenService` implementations. 
+       */
+      @Bean
   @ConditionalOnMissingBean(DefaultOgiriTokenServiceResolver::class)
   fun ogiriTokenServiceResolver(
       tokenServices: Map<String, OgiriTokenService<*>>,
@@ -115,12 +159,29 @@ class OgiriSecurityAutoConfiguration {
   ): DefaultOgiriTokenServiceResolver =
       DefaultOgiriTokenServiceResolver(tokenServices, properties, beanFactory)
 
-  @Bean
+  /**
+       * Creates an OgiriAuthenticationEntryPoint that produces localized authentication failure responses.
+       *
+       * @param messageSource source of localized messages used by the entry point
+       * @return an OgiriAuthenticationEntryPoint configured with the given MessageSource
+       */
+      @Bean
   @ConditionalOnMissingBean(OgiriAuthenticationEntryPoint::class)
   fun ogiriAuthenticationEntryPoint(messageSource: MessageSource): OgiriAuthenticationEntryPoint =
       OgiriAuthenticationEntryPoint(messageSource)
 
-  @Bean
+  /**
+       * Creates an OgiriTokenAuthenticationFilter configured with the resolved token service and provided collaborators.
+       *
+       * @param ogiriUserDirectory Directory used to resolve users from tokens.
+       * @param tokenServiceResolver Resolver used to obtain the active OgiriTokenService instance.
+       * @param authenticationEntryPoint Entry point invoked on authentication failures.
+       * @param authenticationBypassDecider Decider that determines whether authentication should be bypassed for a request.
+       * @param identifierPolicy Policy used to extract and validate identifiers from requests/tokens.
+       * @param properties Ogiri configuration properties influencing filter behavior.
+       * @return A configured OgiriTokenAuthenticationFilter instance.
+       */
+      @Bean
   @ConditionalOnMissingBean(OgiriTokenAuthenticationFilter::class)
   fun ogiriTokenAuthenticationFilter(
       ogiriUserDirectory: OgiriUserDirectory,
@@ -139,7 +200,13 @@ class OgiriSecurityAutoConfiguration {
           properties,
       )
 
-  @Bean
+  /**
+       * Creates a periodic job that cleans up expired Ogiri tokens using the provided token service resolver.
+       *
+       * @param tokenServiceResolver Resolver used to locate available token services for cleanup.
+       * @return The configured [OgiriTokenCleanupJob] responsible for expiring and removing tokens.
+       */
+      @Bean
   @ConditionalOnMissingBean(OgiriTokenCleanupJob::class)
   @ConditionalOnProperty(
       prefix = "ogiri.cleanup",
@@ -150,7 +217,19 @@ class OgiriSecurityAutoConfiguration {
   fun ogiriTokenCleanupJob(tokenServiceResolver: OgiriTokenServiceResolver): OgiriTokenCleanupJob =
       OgiriTokenCleanupJob(tokenServiceResolver)
 
-  @Bean(name = ["ogiriSecurityFilterChain"])
+  /**
+           * Configures a stateless SecurityFilterChain that applies Ogiri token authentication.
+           *
+           * This chain disables CSRF, enforces stateless session management, delegates authentication
+           * failures to the provided entry point, and inserts the Ogiri token authentication filter
+           * before the UsernamePasswordAuthenticationFilter. Callers must configure authorization
+           * rules (for example via authorizeHttpRequests) if route access restrictions are required.
+           *
+           * @return A SecurityFilterChain that enforces token-based authentication, disables CSRF,
+           *         uses stateless sessions, and delegates authentication failures to the provided
+           *         AuthenticationEntryPoint.
+           */
+          @Bean(name = ["ogiriSecurityFilterChain"])
   @ConditionalOnMissingBean(name = ["ogiriSecurityFilterChain"])
   @ConditionalOnProperty(
       prefix = "ogiri.security",

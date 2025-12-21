@@ -21,6 +21,11 @@ class OgiriTokenCleanupJob(
 ) {
   private val logger = LoggerFactory.getLogger(OgiriTokenCleanupJob::class.java)
 
+  /**
+   * Removes expired user tokens from the resolved token service.
+   *
+   * If any tokens are removed, logs the count at info level.
+   */
   @Scheduled(fixedDelayString = "\${ogiri.cleanup.interval-ms:21600000}")
   fun cleanupExpiredTokens() {
     val deleted = tokenServiceResolver.resolve().cleanupExpiredTokens(Instant.now())

@@ -17,7 +17,12 @@ import org.springframework.util.AntPathMatcher
 
 /** Contracts for modules/apps to expose their routes to security filters. */
 interface OgiriRouteRegistry {
-  fun routes(): List<OgiriRoute>
+  /**
+ * Exposes the module's HTTP routes for discovery by the application.
+ *
+ * @return A list of OgiriRoute instances representing the routes provided by the implementing module.
+ */
+fun routes(): List<OgiriRoute>
 }
 
 /**
@@ -30,10 +35,27 @@ class OgiriRouteCatalog(
   private val configuredRoutes: List<OgiriRoute> = registries.flatMap { it.routes() }
   private val publicRoutes: List<OgiriRoute> = configuredRoutes.filterNot { it.useAuth }
 
-  fun configured(): List<OgiriRoute> = configuredRoutes
+  /**
+ * Provide the list of routes configured by all registered OgiriRouteRegistry implementations.
+ *
+ * @return The list of configured OgiriRoute objects.
+ */
+fun configured(): List<OgiriRoute> = configuredRoutes
 
-  fun public(): List<OgiriRoute> = publicRoutes
+  /**
+ * List routes that do not require authentication.
+ *
+ * @return A list of public {@link OgiriRoute} instances (routes with authentication disabled).
+ */
+fun public(): List<OgiriRoute> = publicRoutes
 
+  /**
+   * Determines whether the given request URI and HTTP method match any configured public route.
+   *
+   * @param uri The request URI to test against registered routes.
+   * @param method The HTTP method to match; when `null` the function will return `false`.
+   * @return `true` if a configured public route matches the URI and method, `false` otherwise (including when `method` is `null`).
+   */
   fun isPublicRoute(
       uri: String,
       method: HttpMethod?,
