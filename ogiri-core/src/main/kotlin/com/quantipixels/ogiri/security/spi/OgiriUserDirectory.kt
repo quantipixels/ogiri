@@ -24,18 +24,20 @@ interface OgiriUserDirectory : UserDetailsService {
   fun findById(id: Long): OgiriUser?
 
   /**
-   * Finds an OgiriUser by their username.
+   * Finds an OgiriUser by their email address.
    *
-   * Unlike [loadUserByUsername] from [UserDetailsService], this method returns `null` when the user
-   * is not found instead of throwing an exception.
+   * Returns `null` when the user is not found instead of throwing an exception.
    *
-   * @param username The username to look up.
-   * @return `OgiriUser` if a user with the given username exists, `null` otherwise.
+   * @param email The email address to look up.
+   * @return `OgiriUser` if a user with the given email exists, `null` otherwise.
    */
   fun findByEmail(email: String): OgiriUser?
 
   /**
    * Finds an OgiriUser by their username.
+   *
+   * Unlike [loadUserByUsername] from [UserDetailsService], this method returns `null` when the user
+   * is not found instead of throwing an exception.
    *
    * @param username The username to look up.
    * @return `OgiriUser` if a user with the given username exists, `null` otherwise.

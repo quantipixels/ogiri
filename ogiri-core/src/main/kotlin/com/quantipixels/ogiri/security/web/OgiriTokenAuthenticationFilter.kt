@@ -279,7 +279,7 @@ open class OgiriTokenAuthenticationFilter(
       if (tokenKind != OgiriTokenType.APP)
           throw BadCredentialsException("error.auth.bad_token_type")
     } catch (e: IllegalArgumentException) {
-      throw BadCredentialsException("error.auth.bad_token_kind")
+      throw BadCredentialsException("error.auth.bad_token_kind", e)
     }
   }
 
