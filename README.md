@@ -1,155 +1,112 @@
-# ogiri
+# Ògiri
 
-Reusable Spring Boot security components for token-based auth with pluggable sub-tokens.
+[![Test](https://github.com/mosobande/ogiri/actions/workflows/test.yml/badge.svg)](https://github.com/mosobande/ogiri/actions/workflows/test.yml)
+[![Build](https://github.com/mosobande/ogiri/actions/workflows/build.yml/badge.svg)](https://github.com/mosobande/ogiri/actions/workflows/build.yml)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.quantipixels.ogiri/ogiri-core/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.quantipixels.ogiri/ogiri-core)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Java](https://img.shields.io/badge/java-17+-blue.svg)](https://www.oracle.com/java/technologies/javase/jdk17-archive.html)
+[![Spring Boot](https://img.shields.io/badge/spring%20boot-3.5+-green.svg)](https://spring.io/projects/spring-boot)
 
-- Provides Token entity/repository/service, auth header helpers, route catalog, and a
-  OncePerRequestFilter (`OgiriTokenAuthenticationFilter`) wired via auto-configuration.
-- Supports generic sub-tokens (e.g., chat/device) registered by the hosting app through `SubTokenRegistration`.
+Reusable Spring Boot security components for token-based authentication with pluggable sub-tokens.
 
-## Database schema / migrations
+**[📖 Full Documentation](https://mosobande.github.io/ogiri/)** | [Quickstart](https://mosobande.github.io/ogiri/quickstart/) | [Migration Guide](https://mosobande.github.io/ogiri/migration-guide/)
 
-The library does not run DDL automatically. Use the bundled default schema to seed your migration
-tool:
+## Features
 
-- Default Postgres schema: `classpath:/ogiri/db/ogiri-user-tokens.sql`
-- Flyway example:
-  ```yaml
-  spring:
-    flyway:
-      locations: classpath:db/migration,classpath:/ogiri/db
-  ```
-- Liquibase example (`db.changelog-master.yaml`):
-  ```yaml
-  databaseChangeLog:
-    - sqlFile:
-        path: classpath:/ogiri/db/ogiri-user-tokens.sql
-        relativeToChangelogFile: false
-  ```
-- The SQL includes indexes and a unique `(user_id, client_id)` constraint; uncomment and adjust the
-  foreign key in the file if you want to enforce a reference to your users table.
+- **Database-agnostic** - Works with JPA, MongoDB, Redis, or any custom persistence
+- **Auto-configured** - Spring Boot auto-configuration with customization options
+- **Token rotation** - Configurable rotation with batch request detection
+- **Sub-tokens** - Pluggable sub-tokens for chat, device, API, etc.
+- **Secure by default** - BCrypt hashing, timestamp validation, grant-based authorization
 
-## Adding to a project
+## Installation
 
-1. Include the module as a project dependency (already wired in this repo):
-   ```kotlin
-   implementation(project(":ogiri"))
-   ```
-2. Ensure component scanning picks up `com.quantipixels.ogiri.*` (the app’s `@SpringBootApplication`
-   can include that package).
+**Gradle:**
 
-## Required adapters in the host app
+```kotlin
+implementation("com.quantipixels.ogiri:ogiri-core:LATEST")
+```
 
-- `TokenUserDirectory`: load users by id/email/username and record successful logins.
-- `RouteRegistry`: expose public/auth routes so the filter can allow unauthenticated paths.
-- (Optional) `SubTokenRegistration` beans to define extra sub-tokens.
+**Maven:**
 
-Example TokenUserDirectory:
+```xml
+<dependency>
+  <groupId>com.quantipixels.ogiri</groupId>
+  <artifactId>ogiri-core</artifactId>
+  <version>LATEST</version>
+</dependency>
+```
+
+> **Note:** Replace `LATEST` with the version found in [.ogiri-version](./.ogiri-version) or on [Maven Central](https://maven-badges.herokuapp.com/maven-central/com.quantipixels.ogiri/ogiri-core).
+
+**Requirements:** Java 17+, Spring Boot 3.5+
+
+## Quick Start
+
+**1. Implement user directory:**
+
+Connect your user database by implementing `OgiriUserDirectory`. Note that `loadUserByUsername` is inherited from Spring Security's `UserDetailsService` and must throw `UsernameNotFoundException` if the user does not exist.
+
 ```kotlin
 @Component
-class TokenUserDirectoryAdapter(private val userService: UserService) : TokenUserDirectory {
-  override fun loadUserByUsername(username: String) = userService.loadUserByUsername(username)
-  override fun findById(id: Long) = userService.getById(id)
-  override fun findByEmail(email: String) = userService.getByEmail(email)
-  override fun findByPublicId(publicId: String) = userService.getByCircleId(publicId)
-  override fun recordSuccessfulLogin(userId: Long) { userService.getById(userId)?.let { userService.save(it.apply { updateLastLoginAt() }) } }
+class MyUserDirectory(private val userService: UserService) : OgiriUserDirectory {
+  override fun findById(id: Long): OgiriUser? = userService.getById(id)
+  override fun findByUsername(username: String): OgiriUser? = userService.getByUsername(username)
+  override fun findByEmail(email: String): OgiriUser? = userService.getByEmail(email)
+
+  override fun loadUserByUsername(username: String): OgiriUser =
+      userService.getByUsername(username) ?: throw UsernameNotFoundException("User not found: $username")
+
+  override fun recordSuccessfulLogin(userId: Long) { userService.recordLogin(userId) }
 }
 ```
 
-## Defining sub-tokens
+**2. Declare public routes:**
 
-Implement `SubTokenRegistration` to mint additional tokens alongside APP tokens.
-Example: sub-token mirrored from this app:
 ```kotlin
-@Configuration
-class DeviceSubTokenConfig {
-  @Bean
-  fun deviceSubTokenRegistration(): SubTokenRegistration =
-      object : SubTokenRegistration {
-        override val name = "device"
-        override fun clientIdFor(parentClientId: String) = "$parentClientId.device"
-        override fun expiry(parentExpiry: Instant) = minOf(parentExpiry, Instant.now().plus(12, ChronoUnit.HOURS))
-      }
+@Component
+class MyRouteRegistry : OgiriRouteRegistry {
+  override fun routes() = listOf(OgiriRoute.post("/api/auth/**"), OgiriRoute.get("/api/health"))
 }
 ```
 
-During `TokenService.createNewAuthToken`, all registrations with `includeByDefault=true` are issued.
-Sub-token renewals can be forced via `TokenService.renewSubToken(userId, request, response, name)`.
+**3. Issue tokens on login:**
 
-Renew a sub-token from a controller:
 ```kotlin
-@PostMapping("/api/auth/sub/{name}/renew")
-fun renew(
-    @PathVariable name: String,
-    request: HttpServletRequest,
-    response: HttpServletResponse,
-    currentUser: CurrentUser,
-) {
-  tokenService.renewSubToken(currentUser.id, request, response, name)
+@PostMapping("/api/auth/login")
+fun login(@RequestBody request: LoginRequest, response: HttpServletResponse) {
+  val user = authenticate(request.username, request.password)
+  response.appendAuthHeaders(tokenService.createNewAuthToken(user.id, "web"))
 }
 ```
 
-Register multiple sub-tokens:
-```kotlin
-@Configuration
-class SubTokenConfigs {
-  @Bean
-  fun chat(): SubTokenRegistration = object : SubTokenRegistration {
-    override val name = "chat"
-    override fun clientIdFor(parentClientId: String) = "$parentClientId.chat"
-    override fun expiry(parentExpiry: Instant) = minOf(parentExpiry, Instant.now().plus(12, ChronoUnit.HOURS))
-  }
+Done! Ògiri auto-configures the security filter chain.
 
-  @Bean
-  fun device(): SubTokenRegistration = object : SubTokenRegistration {
-    override val name = "device"
-    override val includeByDefault = false // only issued when explicitly requested
-    override fun clientIdFor(parentClientId: String) = "$parentClientId.device"
-    override fun expiry(parentExpiry: Instant) = parentExpiry // tie to APP expiry
-  }
-}
-```
-In this example, `chat` issues automatically with every APP token; `device` is only issued when callers request it via `TokenService.renewSubToken(..., name = "device")`.
-
-## Headers
-
-`AuthHeader` emits:
-- Core: `access-token`, `client`, `uid`, `expiry`, `access-token-kind`, and Authorization bearer (Base64 JSON).
-- Sub-tokens only: `sub-tokens` header with Base64-encoded JSON map `{name: {client, token, expiry}}`.
-
-## Requirements
-
-- Java 17+ (the build toolchain and compiled targets are pinned to 17).
-- Kotlin compiler 2.0.x (see `settings.gradle.kts`), compatible with Spring Boot 3.5.x.
-
-## Spring Boot integration
-
-- Auto-configuration: `OgiriSecurityAutoConfiguration` is registered as a Boot auto-config. By default it wires `TokenService<Token>`, `OgiriTokenAuthenticationFilter`, and a `SecurityFilterChain` that registers the filter before `UsernamePasswordAuthenticationFilter`.
-- Disabling the default chain: set `ogiri.security.register-filter=false` and register your own `SecurityFilterChain`, injecting `OgiriTokenAuthenticationFilter` and the provided `AuthenticationEntryPoint`.
-- Custom token entity: extend `BaseToken` with your own `@Entity`, implement `TokenRepository<MyToken>`, and provide a `TokenService<MyToken>` bean (you can subclass `TokenService` and override `createTokenEntity` for construction).
-- Java example:
-  ```java
-  @Configuration
-  public class SecurityConfig {
-    @Bean
-    public SecurityFilterChain appSecurity(
-        HttpSecurity http,
-        OgiriTokenAuthenticationFilter filter,
-        AuthenticationEntryPoint entryPoint) throws Exception {
-      return http
-          .csrf(AbstractHttpConfigurer::disable)
-          .exceptionHandling(e -> e.authenticationEntryPoint(entryPoint))
-          .addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class)
-          .authorizeHttpRequests(reg -> reg.anyRequest().authenticated())
-          .build();
-    }
-  }
-  ```
-
-## Testing notes
-
-- WebMvc slices should exclude the auto-configured filter/auto-config and mock EntityManagerFactory or disable JPA if not needed.
-- Full suite: `./gradlew test`.
+See the [full Quickstart Guide](https://mosobande.github.io/ogiri/quickstart/) for complete examples in both Kotlin and Java.
 
 ## Documentation
 
-- Authentication and rotation overview: `docs/authentication.md`
+| Topic                                                                                  | Description                                |
+| -------------------------------------------------------------------------------------- | ------------------------------------------ |
+| [Quickstart](https://mosobande.github.io/ogiri/quickstart/)                            | 5-minute integration guide                 |
+| [Interface Design](https://mosobande.github.io/ogiri/core-concepts/interface-design/)  | Architecture and design philosophy         |
+| [Configuration](https://mosobande.github.io/ogiri/guides/configuration/)               | Token rotation, cleanup, batch windows     |
+| [Database Integration](https://mosobande.github.io/ogiri/guides/database-integration/) | JPA, MongoDB, Redis examples               |
+| [Sub-tokens](https://mosobande.github.io/ogiri/guides/sub-tokens/)                     | Device, chat, API tokens                   |
+| [Authentication Flow](https://mosobande.github.io/ogiri/guides/authentication-flow/)   | Request lifecycle, headers                 |
+| [Migration Guide](https://mosobande.github.io/ogiri/guides/migration-guide/)           | Upgrade guide (see docs for version notes) |
+| [Sample Applications](https://github.com/mosobande/ogiri/tree/main/sample)             | Java and Kotlin examples                   |
+
+## Development
+
+```bash
+./gradlew build          # Build and test
+./gradlew test           # Run tests only
+./gradlew spotlessApply  # Format code
+```
+
+See [development guide](https://mosobande.github.io/ogiri/contributing/development-guide/) for contributor guidelines.
+
+## License
+
+Apache License 2.0 - See [LICENSE](LICENSE) for details.

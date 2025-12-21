@@ -1,25 +1,39 @@
-/*
- * Copyright (c) 2025 Quanti Pixels
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- */
 rootProject.name = "ogiri"
+
+/*
+ * Centralized version management.
+ *
+ * Version is read from .ogiri-version file (primary source of truth).
+ * Version determination order (highest to lowest precedence):
+ *   1. Environment variable RELEASE_VERSION (CI/CD overrides)
+ *   2. Gradle property -PRELEASE_VERSION (local overrides)
+ *   3. .ogiri-version file (main version)
+ *   4. Default fallback: 1.0.2
+ *
+ * To update version:
+ *   - Edit .ogiri-version file
+ *   - Or override: RELEASE_VERSION=1.0.X gradle build
+ *   - Or use: scripts/release.sh (creates tag and pushes to GitHub)
+ */
+val versionFile = File(settingsDir, ".ogiri-version")
+val projectVersion =
+    System.getenv("RELEASE_VERSION")?.takeIf { it.isNotBlank() }
+        ?: (System.getProperty("RELEASE_VERSION")?.takeIf { it.isNotBlank() })
+            ?: (if (versionFile.exists()) versionFile.readText().trim() else null)
+            ?: "0.0.0-SNAPSHOT"
+
+include(":ogiri-core")
+
+include(":sample:sample-java")
+
+include(":sample:sample-kotlin")
 
 /*
  * Plugin repositories:
  * Where Gradle downloads plugins declared in plugins {} blocks of build scripts.
  * These repos apply only to plugin lookup, NOT library dependencies.
  */
-plugins {
-  id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
-}
+plugins { id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0" }
 
 /*
  * Dependency resolution configuration for ALL modules.
@@ -41,9 +55,7 @@ dependencyResolutionManagement {
    *
    * Best practice: keep ALL repository declarations here.
    */
-  repositories {
-    mavenCentral()
-  }
+  repositories { mavenCentral() }
 
   /*
    * Version catalog:
@@ -56,7 +68,7 @@ dependencyResolutionManagement {
   versionCatalogs {
     create("libs") {
       // Plugin versions
-      version("kotlin", "2.0.21")
+      version("kotlin", "2.1.0")
       version("spotless", "8.0.0")
       version("springBoot", "3.5.7")
       version("dependencyManagement", "1.1.7")

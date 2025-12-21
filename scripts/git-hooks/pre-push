@@ -1,0 +1,23 @@
+#!/bin/bash
+# Pre-push hook to run tests and verify the build is healthy before pushing
+# Prevents pushing code that breaks the build or fails tests
+
+HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$HOOK_DIR/../../" && pwd)"
+
+echo "Running tests and checking build health before push..."
+cd "$PROJECT_ROOT" || exit 1
+
+# Run the full test suite to ensure nothing is broken
+if ! "$PROJECT_ROOT/gradlew" build --no-daemon -q; then
+  echo ""
+  echo "❌ Build failed or tests did not pass!"
+  echo ""
+  echo "Fix the issues and try pushing again:"
+  echo "  ./gradlew build"
+  echo ""
+  exit 1
+fi
+
+echo "✅ All tests passed and build is healthy"
+exit 0

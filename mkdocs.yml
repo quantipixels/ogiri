@@ -1,0 +1,69 @@
+site_name: Ògiri Security
+site_description: Token-based authentication for Spring Boot with pluggable sub-tokens.
+site_url: https://mosobande.github.io/ogiri
+repo_url: https://github.com/mosobande/ogiri
+repo_name: mosobande/ogiri
+docs_dir: docs
+
+theme:
+  name: material
+  features:
+    - navigation.instant
+    - navigation.top
+    - navigation.sections
+    - navigation.tabs
+    - navigation.indexes
+    - navigation.footer
+    - toc.integrate
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+
+extra:
+  ogiri_version: "{{ env.RELEASE_VERSION }}"
+  version:
+    provider: mike
+    default: latest
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/mosobande/ogiri
+
+plugins:
+  - search:
+      lang: en
+      separator: '[\s\-_]+'
+  - macros
+  - minify:
+      minify_html: true
+  - git-revision-date-localized:
+      enable_creation_date: true
+  - redirects:
+      redirect_maps: {}
+
+nav:
+  - Home: index.md
+  - Quickstart: quickstart.md
+  - Core Concepts:
+      - Interface Design: interface-first-design.md
+      - Implementation: implementation-guide.md
+  - Guides:
+      - Configuration: configuration.md
+      - Database Integration: database.md
+      - Sub-tokens: sub-tokens.md
+      - Authentication Flow: authentication.md
+      - Migration Guide: migration-guide.md
+  - Contributing:
+      - Development Guide: development.md
+      - Contributing Guidelines: contributing.md
+      - Security Policy: security.md
+      - Code of Conduct: code-of-conduct.md
+  - Changelog: changelog.md

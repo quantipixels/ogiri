@@ -1,0 +1,24 @@
+#!/bin/bash
+# Pre-commit hook to check code formatting and prevent commits with style violations
+# This runs spotlessCheck to ensure code meets formatting standards
+
+HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$HOOK_DIR/../../" && pwd)"
+
+echo "Running spotlessCheck before commit..."
+cd "$PROJECT_ROOT" || exit 1
+
+# Run spotless check to ensure all code is properly formatted
+if ! "$PROJECT_ROOT/gradlew" spotlessCheck --no-daemon -q; then
+  echo ""
+  echo "❌ Code formatting issues detected!"
+  echo ""
+  echo "To fix formatting violations, run:"
+  echo "  ./gradlew spotlessApply"
+  echo ""
+  echo "Then stage the changes and commit again."
+  exit 1
+fi
+
+echo "✅ Code formatting check passed"
+exit 0
