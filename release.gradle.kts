@@ -59,15 +59,17 @@ tasks.register("bumpVersion") {
 }
 
 /**
- * Bumps the patch component of a semantic version string and returns the resulting snapshot version.
+ * Bumps the patch component of a semantic version string and returns the resulting snapshot
+ * version.
  *
- * If the input ends with "-SNAPSHOT" that suffix is ignored for parsing. For versions with at least three
- * dot-separated segments the patch segment is incremented and "-SNAPSHOT" is appended. For shorter versions
- * ".1-SNAPSHOT" is appended to the sanitized input.
+ * If the input ends with "-SNAPSHOT" that suffix is ignored for parsing. For versions with at least
+ * three dot-separated segments the patch segment is incremented and "-SNAPSHOT" is appended. For
+ * shorter versions ".1-SNAPSHOT" is appended to the sanitized input.
  *
  * @param version The version string to bump (may include a trailing "-SNAPSHOT").
  * @return The new version string with a trailing "-SNAPSHOT".
- * @throws IllegalArgumentException if the version has a third segment that cannot be parsed as an integer.
+ * @throws IllegalArgumentException if the version has a third segment that cannot be parsed as an
+ *   integer.
  */
 fun bumpPatchVersion(version: String): String {
   val sanitized = version.replace("-SNAPSHOT", "")
@@ -87,12 +89,15 @@ fun bumpPatchVersion(version: String): String {
 /**
  * Updates occurrences of a specific version assignment in the given file to a new version.
  *
- * Matches lines of the form `version = "x.y.z"` or `project.version = 'x.y.z'` (allowing surrounding whitespace),
- * replaces only when the assigned value exactly equals `oldVersion`, and preserves the surrounding quotes and any `project.` prefix.
- * If the file does not exist the function logs a warning and returns without error. If a change is made the file is overwritten and a confirmation is logged.
+ * Matches lines of the form `version = "x.y.z"` or `project.version = 'x.y.z'` (allowing
+ * surrounding whitespace), replaces only when the assigned value exactly equals `oldVersion`, and
+ * preserves the surrounding quotes and any `project.` prefix. If the file does not exist the
+ * function logs a warning and returns without error. If a change is made the file is overwritten
+ * and a confirmation is logged.
  *
  * @param file The file to scan and potentially update.
- * @param oldVersion The exact version string to replace (must match the assigned value in the file).
+ * @param oldVersion The exact version string to replace (must match the assigned value in the
+ *   file).
  * @param newVersion The version string to write in place of `oldVersion`.
  */
 fun updateVersionInFile(file: File, oldVersion: String, newVersion: String) {

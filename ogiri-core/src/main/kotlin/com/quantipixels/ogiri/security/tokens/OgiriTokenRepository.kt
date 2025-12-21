@@ -55,14 +55,14 @@ import java.time.Instant
  */
 interface OgiriTokenRepository<T : OgiriToken> {
   /**
- * Persist a token entity, inserting or updating as appropriate.
- *
- * If the token's `id` is 0, insert a new record and return the token with the generated ID.
- * If the token's `id` is greater than 0, update the existing record and return the updated token.
- *
- * @param token The token to persist.
- * @return The saved token; for newly inserted tokens this includes the generated ID.
- */
+   * Persist a token entity, inserting or updating as appropriate.
+   *
+   * If the token's `id` is 0, insert a new record and return the token with the generated ID. If
+   * the token's `id` is greater than 0, update the existing record and return the updated token.
+   *
+   * @param token The token to persist.
+   * @return The saved token; for newly inserted tokens this includes the generated ID.
+   */
   fun save(token: T): T
 
   /**
@@ -81,16 +81,17 @@ interface OgiriTokenRepository<T : OgiriToken> {
   fun deleteById(id: Long)
 
   /**
- * Retrieve all tokens belonging to the given user.
- *
- * Implementations typically return results ordered by `updated_at` descending.
- *
- * @return List of tokens for the user; empty list if none are found.
- */
+   * Retrieve all tokens belonging to the given user.
+   *
+   * Implementations typically return results ordered by `updated_at` descending.
+   *
+   * @return List of tokens for the user; empty list if none are found.
+   */
   fun findAllByUserId(userId: Long): List<T>
 
   /**
-   * Retrieve all tokens for a user filtered by the given token subtype, ordered by most recently updated first.
+   * Retrieve all tokens for a user filtered by the given token subtype, ordered by most recently
+   * updated first.
    *
    * @param userId The ID of the user whose tokens to retrieve.
    * @param tokenSubtype Sub-token type identifier (for example `"device"` or `"chat"`).
@@ -114,11 +115,12 @@ interface OgiriTokenRepository<T : OgiriToken> {
   ): T?
 
   /**
- * Retrieve tokens whose expiry timestamp is strictly before the given cutoff.
- *
- * @param cutoff Instant used as the expiry threshold; tokens with an expiry time before this Instant are returned.
- * @return List of tokens that expired before the cutoff, or an empty list if none are found.
- */
+   * Retrieve tokens whose expiry timestamp is strictly before the given cutoff.
+   *
+   * @param cutoff Instant used as the expiry threshold; tokens with an expiry time before this
+   *   Instant are returned.
+   * @return List of tokens that expired before the cutoff, or an empty list if none are found.
+   */
   fun findByExpiryAtBefore(cutoff: Instant): List<T>
 
   /**
@@ -137,7 +139,8 @@ interface OgiriTokenRepository<T : OgiriToken> {
   /**
    * Deletes tokens for a specific user that belong to any of the given clients.
    *
-   * Typical use: revoke multiple client sessions for a user (for example, revoke all devices except the current one).
+   * Typical use: revoke multiple client sessions for a user (for example, revoke all devices except
+   * the current one).
    *
    * @param userId The user's primary key identifier.
    * @param clientIds Collection of client identifiers whose tokens should be removed for the user.
@@ -148,10 +151,10 @@ interface OgiriTokenRepository<T : OgiriToken> {
   )
 
   /**
- * Delete all tokens associated with the given user.
- *
- * Called during account deletion or global logout.
- */
+   * Delete all tokens associated with the given user.
+   *
+   * Called during account deletion or global logout.
+   */
   fun deleteByUserId(userId: Long)
 
   /**

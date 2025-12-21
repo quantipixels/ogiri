@@ -66,7 +66,7 @@ class MyUserDirectory(private val userService: UserService) : OgiriUserDirectory
 ```kotlin
 @Component
 class MyRouteRegistry : OgiriRouteRegistry {
-  override fun registrations() = listOf(OgiriRoute.post("/api/auth/**"), OgiriRoute.get("/api/health"))
+  override fun routes() = listOf(OgiriRoute.post("/api/auth/**"), OgiriRoute.get("/api/health"))
 }
 ```
 

@@ -57,14 +57,14 @@ data class TestToken(
    */
   companion object {
     /**
-         * Create a TestToken populated with the minimal fields commonly needed in tests.
-         *
-         * @param userId The ID of the token owner.
-         * @param client The client identifier associated with the token.
-         * @param token The stored token value (e.g., a hashed token).
-         * @param expiryAt The instant when the token expires.
-         * @return A TestToken instance with the provided values and defaults for remaining fields.
-         */
+     * Create a TestToken populated with the minimal fields commonly needed in tests.
+     *
+     * @param userId The ID of the token owner.
+     * @param client The client identifier associated with the token.
+     * @param token The stored token value (e.g., a hashed token).
+     * @param expiryAt The instant when the token expires.
+     * @return A TestToken instance with the provided values and defaults for remaining fields.
+     */
     fun create(
         userId: Long = 1L,
         client: String = "test-client",
@@ -79,12 +79,12 @@ data class TestToken(
         )
 
     /**
-         * Constructs a TestToken with an expiry time already in the past.
-         *
-         * @param userId The user ID to assign to the token.
-         * @param client The client identifier to assign to the token.
-         * @return A TestToken whose `expiryAt` is set to one second before the current instant.
-         */
+     * Constructs a TestToken with an expiry time already in the past.
+     *
+     * @param userId The user ID to assign to the token.
+     * @param client The client identifier to assign to the token.
+     * @return A TestToken whose `expiryAt` is set to one second before the current instant.
+     */
     fun expired(
         userId: Long = 1L,
         client: String = "test-client",

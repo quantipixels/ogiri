@@ -39,10 +39,11 @@ data class AuthHeader(
     var subTokens: Map<String, SubTokenHeader>? = null,
 ) {
   /**
-           * Indicates whether the auth header contains non-blank accessToken, client, uid, and expiry.
-           *
-           * @return `true` if accessToken, client, uid, and expiry are all present and not blank, `false` otherwise.
-           */
+   * Indicates whether the auth header contains non-blank accessToken, client, uid, and expiry.
+   *
+   * @return `true` if accessToken, client, uid, and expiry are all present and not blank, `false`
+   *   otherwise.
+   */
   fun isValid(): Boolean =
       !accessToken.isNullOrBlank() &&
           !client.isNullOrBlank() &&
@@ -58,22 +59,25 @@ data class SubTokenHeader(
 )
 
 /**
-     * Get the value of the cookie with the given name.
-     *
-     * @param name The cookie name to look up.
-     * @return The cookie value, or `null` if no cookie with that name exists.
-     */
-    private fun HttpServletRequest.cookieValue(name: String): String? =
+ * Get the value of the cookie with the given name.
+ *
+ * @param name The cookie name to look up.
+ * @return The cookie value, or `null` if no cookie with that name exists.
+ */
+private fun HttpServletRequest.cookieValue(name: String): String? =
     cookies?.firstOrNull { it.name == name }?.value
 
 /**
- * Extracts authentication values from the HTTP request, preferring explicit headers and falling back to cookies.
+ * Extracts authentication values from the HTTP request, preferring explicit headers and falling
+ * back to cookies.
  *
- * Reads the ACCESS_TOKEN header first; if present, returns an AuthHeader populated from the ACCESS_TOKEN, CLIENT, UID,
- * EXPIRY and ACCESS_TOKEN_KIND request headers. If the ACCESS_TOKEN header is missing or blank, returns an AuthHeader
- * populated from the ACCESS_TOKEN, CLIENT, UID and EXPIRY cookies and the ACCESS_TOKEN_KIND header.
+ * Reads the ACCESS_TOKEN header first; if present, returns an AuthHeader populated from the
+ * ACCESS_TOKEN, CLIENT, UID, EXPIRY and ACCESS_TOKEN_KIND request headers. If the ACCESS_TOKEN
+ * header is missing or blank, returns an AuthHeader populated from the ACCESS_TOKEN, CLIENT, UID
+ * and EXPIRY cookies and the ACCESS_TOKEN_KIND header.
  *
- * @return An AuthHeader containing the extracted access token, client, uid, expiry, kind, and any defaulted subTokens.
+ * @return An AuthHeader containing the extracted access token, client, uid, expiry, kind, and any
+ *   defaulted subTokens.
  */
 fun HttpServletRequest.extractAuthHeader(): AuthHeader {
   var accessToken = getHeader(ACCESS_TOKEN)
@@ -95,12 +99,13 @@ fun HttpServletRequest.extractAuthHeader(): AuthHeader {
 /**
  * Adds authentication headers to this response based on the provided AuthHeader.
  *
- * If `authHeaders` is null the response is left unchanged. For non-null input this sets standard headers
- * (access token, client, uid, token type "Bearer", token kind, expiry) when their values are present.
- * For each sub-token entry it emits two headers: the sub-token key with the sub-token value, and
- * `<sub-key>-authorization` containing a Base64-encoded JSON payload with `client`, `token`, and `expiry`.
- * If the main access token is present it also sets the `Authorization` header to `Bearer ` followed by
- * a Base64-encoded JSON payload containing `access_token`, `client`, `uid`, `token_type`, and `expiry`.
+ * If `authHeaders` is null the response is left unchanged. For non-null input this sets standard
+ * headers (access token, client, uid, token type "Bearer", token kind, expiry) when their values
+ * are present. For each sub-token entry it emits two headers: the sub-token key with the sub-token
+ * value, and `<sub-key>-authorization` containing a Base64-encoded JSON payload with `client`,
+ * `token`, and `expiry`. If the main access token is present it also sets the `Authorization`
+ * header to `Bearer ` followed by a Base64-encoded JSON payload containing `access_token`,
+ * `client`, `uid`, `token_type`, and `expiry`.
  *
  * @param authHeaders Authentication header data; when null no headers are added.
  */
@@ -156,14 +161,14 @@ fun HttpServletResponse.appendAuthHeaders(authHeaders: AuthHeader?) {
 }
 
 /**
-     * Parses an Authorization Bearer token string into a map of fields.
-     *
-     * Expects format `Bearer <base64-encoded-json>` where the decoded JSON contains string key/value pairs
-     * such as `{"access-token":"...","client":"...","uid":"...","expiry":"..."}`.
-     *
-     * @param bearer The bearer token string, with or without the `Bearer ` prefix.
-     * @return A map of parsed string fields, or `null` if base64 decoding or JSON parsing fails.
-     */
+ * Parses an Authorization Bearer token string into a map of fields.
+ *
+ * Expects format `Bearer <base64-encoded-json>` where the decoded JSON contains string key/value
+ * pairs such as `{"access-token":"...","client":"...","uid":"...","expiry":"..."}`.
+ *
+ * @param bearer The bearer token string, with or without the `Bearer ` prefix.
+ * @return A map of parsed string fields, or `null` if base64 decoding or JSON parsing fails.
+ */
 fun parseBearerToken(bearer: String): Map<String, String>? =
     try {
       val token = bearer.trim().removePrefix("Bearer ").trim()

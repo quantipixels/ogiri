@@ -30,9 +30,7 @@ class InMemoryTokenRepository : OgiriTokenRepository<TestToken> {
   private val idSequence = AtomicLong(1L)
   private var clock: Instant = Instant.now()
 
-  /**
-   * Removes all tokens from the repository in a thread-safe manner.
-   */
+  /** Removes all tokens from the repository in a thread-safe manner. */
   fun clear() {
     synchronized(tokens) { tokens.clear() }
   }
@@ -160,7 +158,8 @@ class InMemoryTokenRepository : OgiriTokenRepository<TestToken> {
   /**
    * Returns all tokens whose `expiryAt` timestamp is before the given cutoff `Instant`.
    *
-   * @param cutoff The cutoff instant; tokens with `expiryAt` strictly before this value are returned.
+   * @param cutoff The cutoff instant; tokens with `expiryAt` strictly before this value are
+   *   returned.
    * @return A list of tokens that expired before `cutoff`.
    */
   override fun findByExpiryAtBefore(cutoff: Instant): List<TestToken> {
@@ -186,7 +185,8 @@ class InMemoryTokenRepository : OgiriTokenRepository<TestToken> {
    * Remove all tokens that belong to the given user and whose client is in the provided collection.
    *
    * @param userId The user's ID whose tokens should be removed.
-   * @param clientIds The collection of client identifiers; any token whose client is contained in this collection will be deleted.
+   * @param clientIds The collection of client identifiers; any token whose client is contained in
+   *   this collection will be deleted.
    */
   override fun deleteByUserIdAndClientIn(
       userId: Long,

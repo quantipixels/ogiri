@@ -34,9 +34,8 @@ object SecurityHelpers {
   /**
    * Extracts the client's IP address from the given servlet request.
    *
-   * Prefers the first value from the `X-Forwarded-For` header when present and not "unknown",
-   * falls back to `X-Real-IP` when present and not "unknown", and otherwise returns
-   * `request.remoteAddr`.
+   * Prefers the first value from the `X-Forwarded-For` header when present and not "unknown", falls
+   * back to `X-Real-IP` when present and not "unknown", and otherwise returns `request.remoteAddr`.
    *
    * @param request The incoming HTTP servlet request.
    * @return The client's IP address, or `null` if no address can be determined.

@@ -33,21 +33,21 @@ interface OgiriSubTokenRegistration {
     get() = true
 
   /**
- * Compute the client id for this sub-token based on the parent APP client id.
- *
- * @param parentClientId The parent APP client id used to derive the sub-token's client id.
- * @return The computed client id for the sub-token.
- */
+   * Compute the client id for this sub-token based on the parent APP client id.
+   *
+   * @param parentClientId The parent APP client id used to derive the sub-token's client id.
+   * @return The computed client id for the sub-token.
+   */
   fun clientIdFor(parentClientId: String): String
 
   /**
- * Determine the expiry Instant for this sub-token based on the parent APP expiry.
- *
- * The returned expiry will not be later than [parentExpiry].
- *
- * @param parentExpiry The expiry Instant of the parent APP token.
- * @return The expiry Instant for the sub-token (no later than [parentExpiry]).
- */
+   * Determine the expiry Instant for this sub-token based on the parent APP expiry.
+   *
+   * The returned expiry will not be later than [parentExpiry].
+   *
+   * @param parentExpiry The expiry Instant of the parent APP token.
+   * @return The expiry Instant for the sub-token (no later than [parentExpiry]).
+   */
   fun expiry(parentExpiry: Instant): Instant
 
   /** Whether issuing this sub-token should always rotate (overwrite). */
@@ -55,22 +55,22 @@ interface OgiriSubTokenRegistration {
     get() = false
 
   /**
- * Performs additional validation of a sub-token after its hash has been verified.
- *
- * @param plainToken The raw (unhashed) token value to validate.
- * @return `true` if the token passes custom validation, `false` otherwise.
- * Default implementation returns `true`.
- */
+   * Performs additional validation of a sub-token after its hash has been verified.
+   *
+   * @param plainToken The raw (unhashed) token value to validate.
+   * @return `true` if the token passes custom validation, `false` otherwise. Default implementation
+   *   returns `true`.
+   */
   fun validate(plainToken: String): Boolean = true
 }
 
 interface OgiriSubTokenRegistry {
   /**
- * Retrieve the registered sub-token registrations.
- *
- * @return A `List<OgiriSubTokenRegistration>` containing all registrations in registration order.
- */
-fun registrations(): List<OgiriSubTokenRegistration>
+   * Retrieve the registered sub-token registrations.
+   *
+   * @return A `List<OgiriSubTokenRegistration>` containing all registrations in registration order.
+   */
+  fun registrations(): List<OgiriSubTokenRegistration>
 }
 
 /**
@@ -80,9 +80,9 @@ class DefaultOgiriSubTokenRegistry(
     private val registrations: List<OgiriSubTokenRegistration> = emptyList(),
 ) : OgiriSubTokenRegistry {
   /**
- * Provides the list of registered Ogiri sub-token registrations.
- *
- * @return The list of `OgiriSubTokenRegistration` instances held by this registry.
- */
-override fun registrations(): List<OgiriSubTokenRegistration> = registrations
+   * Provides the list of registered Ogiri sub-token registrations.
+   *
+   * @return The list of `OgiriSubTokenRegistration` instances held by this registry.
+   */
+  override fun registrations(): List<OgiriSubTokenRegistration> = registrations
 }

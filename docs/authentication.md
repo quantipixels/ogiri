@@ -170,7 +170,7 @@ Declare unauthenticated routes:
 ```kotlin
 @Component
 class MyRouteRegistry : OgiriRouteRegistry {
-  override fun registrations() = listOf(
+  override fun routes() = listOf(
     OgiriRoute.get("/public/**"),
     OgiriRoute.post("/api/auth/login"),
     OgiriRoute.post("/api/auth/register"),

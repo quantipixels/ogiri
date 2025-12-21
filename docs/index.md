@@ -32,7 +32,7 @@ Add the dependency and implement two interfaces:
     // 3. Declare public routes
     @Component
     class MyRouteRegistry : OgiriRouteRegistry {
-      override fun registrations() = listOf(OgiriRoute.post("/api/auth/**"))
+      override fun routes() = listOf(OgiriRoute.post("/api/auth/**"))
     }
     ```
 
@@ -66,7 +66,7 @@ Add the dependency and implement two interfaces:
     @Component
     public class MyRouteRegistry implements OgiriRouteRegistry {
       @Override
-      public List<OgiriRoute> registrations() {
+      public List<OgiriRoute> routes() {
         return List.of(OgiriRoute.post("/api/auth/**"));
       }
     }

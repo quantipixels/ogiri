@@ -16,9 +16,9 @@ import org.springframework.security.core.userdetails.UserDetails
 
 interface OgiriUser : UserDetails {
   /**
- * Get the user's Ogiri identifier.
- *
- * @return The user's Ogiri identifier as a Long.
- */
+   * Get the user's Ogiri identifier.
+   *
+   * @return The user's Ogiri identifier as a Long.
+   */
   fun getOgiriUserId(): Long
 }

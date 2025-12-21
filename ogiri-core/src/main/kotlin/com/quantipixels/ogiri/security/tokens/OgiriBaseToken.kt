@@ -116,10 +116,12 @@ abstract class OgiriBaseToken : OgiriToken {
   override var plainToken: String? = null
 
   /**
-       * Produce a compact single-line representation of the token including id, userId, client, tokenType, and expiryAt.
-       *
-       * @return A string containing a concise summary of the token's id, userId, client, tokenType, and expiryAt.
-       */
-      override fun toString(): String =
+   * Produce a compact single-line representation of the token including id, userId, client,
+   * tokenType, and expiryAt.
+   *
+   * @return A string containing a concise summary of the token's id, userId, client, tokenType, and
+   *   expiryAt.
+   */
+  override fun toString(): String =
       "Token(id=$id, userId=$userId, client=$client, tokenType=$tokenType, expiryAt=$expiryAt)"
 }

@@ -38,7 +38,8 @@ class OgiriAuthenticationEntryPoint(
    *
    * @param request The incoming HTTP request that triggered authentication.
    * @param response The HTTP response that will be populated with status 401 and a JSON payload.
-   * @param authException The authentication exception used to determine the localized error message.
+   * @param authException The authentication exception used to determine the localized error
+   *   message.
    */
   override fun commence(
       request: HttpServletRequest,

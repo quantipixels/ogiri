@@ -104,7 +104,7 @@ Declares which routes bypass authentication:
     ```kotlin
     @Component
     class MyRouteRegistry : OgiriRouteRegistry {
-      override fun registrations() = listOf(
+      override fun routes() = listOf(
         OgiriRoute.post("/api/auth/login"),
         OgiriRoute.post("/api/auth/register"),
         OgiriRoute.get("/api/health"),
@@ -118,7 +118,7 @@ Declares which routes bypass authentication:
     @Component
     public class MyRouteRegistry implements OgiriRouteRegistry {
       @Override
-      public List<OgiriRoute> registrations() {
+      public List<OgiriRoute> routes() {
         return List.of(
           OgiriRoute.post("/api/auth/login"),
           OgiriRoute.post("/api/auth/register"),

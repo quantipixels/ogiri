@@ -20,9 +20,9 @@ import org.springframework.security.crypto.password.PasswordEncoder
 @Configuration
 class SecurityConfig {
   /**
- * Provides a BCrypt-based password encoder for the application.
- *
- * @return A `PasswordEncoder` implementation that hashes passwords using the BCrypt algorithm.
- */
-@Bean fun passwordEncoder(): PasswordEncoder = BCryptPasswordEncoder()
+   * Provides a BCrypt-based password encoder for the application.
+   *
+   * @return A `PasswordEncoder` implementation that hashes passwords using the BCrypt algorithm.
+   */
+  @Bean fun passwordEncoder(): PasswordEncoder = BCryptPasswordEncoder()
 }
