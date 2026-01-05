@@ -78,8 +78,9 @@ public class SampleTokenService extends OgiriTokenService<SampleToken> {
    * @param plainTokenValue The plain (unhashed) token - only in-memory, never persisted
    * @return A new SampleToken configured with all parameters
    */
+  @Override
   protected SampleToken tokenFactory(
-      Long userId,
+      long userId,
       String client,
       String hashedToken,
       OgiriTokenType tokenType,

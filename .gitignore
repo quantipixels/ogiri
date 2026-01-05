@@ -47,3 +47,4 @@ out/
 logs/
 .DS_Store
 site/
+.claude/settings.local.json
