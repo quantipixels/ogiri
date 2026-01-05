@@ -87,4 +87,9 @@ public class SampleTokenRepositoryAdapter implements OgiriTokenRepository<Sample
   public void delete(SampleToken token) {
     jpaRepository.delete(token);
   }
+
+  @Override
+  public int deleteByExpiryAtBefore(Instant cutoff) {
+    return jpaRepository.deleteByExpiryAtBeforeCutoff(cutoff);
+  }
 }

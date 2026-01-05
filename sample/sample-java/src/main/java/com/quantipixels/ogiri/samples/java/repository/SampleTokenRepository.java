@@ -127,4 +127,15 @@ public interface SampleTokenRepository extends JpaRepository<SampleToken, Long> 
   default List<SampleToken> findByExpiryAtBefore(Instant cutoff) {
     return findByExpiryAtBeforeCutoff(cutoff);
   }
+
+  /**
+   * Delete all tokens that expired before a specific cutoff time.
+   *
+   * @param expiryAt The expiry time threshold
+   * @return Number of tokens deleted
+   */
+  @Transactional
+  @Modifying
+  @Query("DELETE FROM SampleToken t WHERE t.expiryAt < ?1")
+  int deleteByExpiryAtBeforeCutoff(Instant expiryAt);
 }

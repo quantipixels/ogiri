@@ -94,7 +94,7 @@ open class OgiriTokenAuthenticationFilter(
       val authResult = authenticateRequest(request)
       afterAuth(request, response, authResult)
       if (authResult != null) {
-        authResult.authHeader?.let { response.appendAuthHeaders(it) }
+        authResult.authHeader?.let { response.appendAuthHeaders(it, properties.cookies) }
         SecurityContextHolder.getContext().authentication =
             buildAuthentication(authResult.user, request)
       }

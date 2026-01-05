@@ -47,7 +47,8 @@ private fun tokensMatch(
     token: String,
     passwordEncoder: PasswordEncoder,
 ): Boolean {
-  val key = "$tokenHash/$token"
+  // Use NULL char as delimiter to prevent collision (tokens can't contain NULL)
+  val key = "$tokenHash\u0000$token"
   val cached = tokenEqualityCache.getIfPresent(key)
   if (cached != null) {
     return cached
@@ -174,11 +175,8 @@ open class OgiriTokenService<T : OgiriToken>(
   }
 
   @Transactional
-  fun cleanupExpiredTokens(now: Instant = Instant.now()): Int {
-    val expired = repository.findByExpiryAtBefore(now)
-    expired.forEach { repository.delete(it) }
-    return expired.size
-  }
+  fun cleanupExpiredTokens(now: Instant = Instant.now()): Int =
+      repository.deleteByExpiryAtBefore(now)
 
   @Transactional(readOnly = true)
   fun isBatchRequest(
@@ -399,7 +397,7 @@ open class OgiriTokenService<T : OgiriToken>(
           )
       val remove = sorted.take(toRemoveCount)
       remove.forEach { repository.delete(it) }
-      val removeSubClients = generateSubClientIds(remove.clientIds(), registrations)
+      val removeSubClients = expectedSubClientsFor(remove.clientIds(), registrations)
       deleteToken(user.getOgiriUserId(), removeSubClients)
     }
   }
@@ -540,7 +538,7 @@ open class OgiriTokenService<T : OgiriToken>(
     SecurityContextHolder.getContext().authentication = authentication
 
     val authHeaders = createNewAuthToken(user.getOgiriUserId(), null)
-    response.appendAuthHeaders(authHeaders)
+    response.appendAuthHeaders(authHeaders, properties.cookies)
     userDirectory.recordSuccessfulLogin(user.getOgiriUserId())
   }
 
@@ -564,7 +562,7 @@ open class OgiriTokenService<T : OgiriToken>(
           }
       deleteToken(user.getOgiriUserId(), subClients)
       val authHeaders = buildAuthHeader(user, authHeader.accessToken!!, clientId, null)
-      response.appendAuthHeaders(authHeaders)
+      response.appendAuthHeaders(authHeaders, properties.cookies)
     }
   }
 
@@ -600,7 +598,7 @@ open class OgiriTokenService<T : OgiriToken>(
             clientId,
             issuedSubTokens = issued,
         )
-    response.appendAuthHeaders(authHeaders)
+    response.appendAuthHeaders(authHeaders, properties.cookies)
   }
 
   fun tryDecodeSubBearer(encodedPart: String): SubTokenHeader? {
@@ -760,16 +758,4 @@ open class OgiriTokenService<T : OgiriToken>(
       registrations: List<OgiriSubTokenRegistration>,
   ): Set<String> =
       appClients.flatMap { parent -> registrations.map { it.clientIdFor(parent) } }.toSet()
-
-  /**
-   * Generate sub-client IDs from app client IDs and registrations.
-   *
-   * @param appClients Set of app client IDs
-   * @param registrations Sub-token registrations
-   * @return List of sub-client IDs
-   */
-  private fun generateSubClientIds(
-      appClients: Set<String>,
-      registrations: List<OgiriSubTokenRegistration>,
-  ): List<String> = appClients.flatMap { parent -> registrations.map { it.clientIdFor(parent) } }
 }

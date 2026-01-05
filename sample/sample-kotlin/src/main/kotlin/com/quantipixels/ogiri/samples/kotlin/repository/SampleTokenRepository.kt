@@ -65,6 +65,8 @@ interface SampleTokenRepository :
 
   override fun deleteByUserId(userId: Long) = deleteByUserIdJpa(userId)
 
+  override fun deleteByExpiryAtBefore(cutoff: Instant): Int = deleteByExpiryAtBeforeCutoff(cutoff)
+
   @Query("SELECT t FROM SampleToken t WHERE t.userId = ?1 ORDER BY t.updatedAt DESC, t.id DESC")
   fun findByUserIdOrderByUpdatedAtDesc(userId: Long): List<SampleToken>
 
@@ -110,4 +112,10 @@ interface SampleTokenRepository :
   @Modifying
   @Query("DELETE FROM SampleToken t WHERE t = ?1")
   override fun delete(token: SampleToken)
+
+  /** Delete all tokens that expired before a specific cutoff time. */
+  @Transactional
+  @Modifying
+  @Query("DELETE FROM SampleToken t WHERE t.expiryAt < ?1")
+  fun deleteByExpiryAtBeforeCutoff(expiryAt: Instant): Int
 }

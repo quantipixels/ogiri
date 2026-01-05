@@ -64,6 +64,12 @@ open class OgiriConfigurationProperties {
    */
   val cleanup: CleanupProperties = CleanupProperties()
 
+  /** Cookie configuration for authentication responses. */
+  val cookies: CookieProperties = CookieProperties()
+
+  /** Token comparison cache configuration. */
+  val cache: CacheProperties = CacheProperties()
+
   /** Security filter configuration properties. */
   open class SecurityProperties {
     /**
@@ -232,5 +238,87 @@ open class OgiriConfigurationProperties {
      * Only used if [enabled] is true.
      */
     var intervalMs: Long = 21600000
+  }
+
+  /**
+   * Cookie configuration properties for authentication responses.
+   *
+   * Controls how authentication cookies are set in HTTP responses. By default, cookies are enabled
+   * with secure settings (HttpOnly, Secure, SameSite=Strict) to prevent XSS and CSRF attacks.
+   */
+  open class CookieProperties {
+    /**
+     * Enable setting authentication cookies in responses.
+     *
+     * When true, authentication headers will also be set as secure cookies. When false, only HTTP
+     * headers are set.
+     *
+     * Default: true
+     */
+    var enabled: Boolean = true
+
+    /**
+     * Set the Secure flag on cookies.
+     *
+     * When true, cookies are only sent over HTTPS connections. Should always be true in production.
+     *
+     * Default: true
+     */
+    var secure: Boolean = true
+
+    /**
+     * Set the HttpOnly flag on cookies.
+     *
+     * When true, cookies are not accessible via JavaScript, preventing XSS cookie theft.
+     *
+     * Default: true
+     */
+    var httpOnly: Boolean = true
+
+    /**
+     * SameSite attribute for cookies.
+     *
+     * Controls when cookies are sent with cross-site requests:
+     * - "Strict": Only sent with same-site requests (most secure)
+     * - "Lax": Sent with same-site and top-level navigation (reasonable default)
+     * - "None": Sent with all requests (requires Secure=true)
+     *
+     * Default: "Strict"
+     */
+    var sameSite: String = "Strict"
+
+    /**
+     * Cookie path attribute.
+     *
+     * Default: "/" (entire site)
+     */
+    var path: String = "/"
+  }
+
+  /**
+   * Token comparison cache configuration properties.
+   *
+   * The token service uses a Caffeine cache to avoid repeated BCrypt comparisons for the same
+   * token. This cache stores the result of token hash comparisons for a configurable duration.
+   */
+  open class CacheProperties {
+    /**
+     * Maximum number of token comparison results to cache.
+     *
+     * Higher values use more memory but reduce BCrypt computation for high-traffic applications.
+     *
+     * Default: 10000
+     */
+    @field:Min(100) var maxSize: Long = 10000
+
+    /**
+     * Time in minutes before cached token comparison results expire.
+     *
+     * Lower values improve security (invalidate cached results sooner) but increase BCrypt load.
+     * Higher values reduce CPU usage but may allow stale cache entries.
+     *
+     * Default: 60 (1 hour)
+     */
+    @field:Min(1) var expiryMinutes: Long = 60
   }
 }

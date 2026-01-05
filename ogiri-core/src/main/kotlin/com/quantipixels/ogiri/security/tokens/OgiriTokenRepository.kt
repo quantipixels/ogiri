@@ -124,6 +124,23 @@ interface OgiriTokenRepository<T : OgiriToken> {
   fun findByExpiryAtBefore(cutoff: Instant): List<T>
 
   /**
+   * Delete all tokens whose expiry timestamp is strictly before the given cutoff.
+   *
+   * This is more efficient than findByExpiryAtBefore + delete for each. Implementations should use
+   * batch delete operations when available (e.g., DELETE WHERE expiry_at < ?).
+   *
+   * Default implementation falls back to find + delete for backwards compatibility.
+   *
+   * @param cutoff Instant used as the expiry threshold; tokens expiring before this are deleted.
+   * @return Number of tokens deleted.
+   */
+  fun deleteByExpiryAtBefore(cutoff: Instant): Int {
+    val expired = findByExpiryAtBefore(cutoff)
+    expired.forEach { delete(it) }
+    return expired.size
+  }
+
+  /**
    * Delete the token for a specific user and client.
    *
    * This is typically called during logout or client revocation.

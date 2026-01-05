@@ -13,6 +13,8 @@
 package com.quantipixels.ogiri.security.core
 
 import com.fasterxml.jackson.core.JsonProcessingException
+import com.quantipixels.ogiri.security.config.OgiriConfigurationProperties
+import jakarta.servlet.http.Cookie
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import java.io.IOException
@@ -108,8 +110,12 @@ fun HttpServletRequest.extractAuthHeader(): AuthHeader {
  * `client`, `uid`, `token_type`, and `expiry`.
  *
  * @param authHeaders Authentication header data; when null no headers are added.
+ * @param cookieConfig Optional cookie configuration; when provided, secure cookies are also set.
  */
-fun HttpServletResponse.appendAuthHeaders(authHeaders: AuthHeader?) {
+fun HttpServletResponse.appendAuthHeaders(
+    authHeaders: AuthHeader?,
+    cookieConfig: OgiriConfigurationProperties.CookieProperties? = null,
+) {
   if (authHeaders == null) return
 
   fun setIfNotBlank(
@@ -158,6 +164,46 @@ fun HttpServletResponse.appendAuthHeaders(authHeaders: AuthHeader?) {
     val encoded = Base64.getEncoder().encodeToString(json.toByteArray(Charsets.UTF_8))
     setHeader("Authorization", "Bearer $encoded")
   }
+
+  // Set secure cookies if enabled
+  if (cookieConfig != null && cookieConfig.enabled) {
+    appendAuthCookies(authHeaders, cookieConfig)
+  }
+}
+
+/**
+ * Sets secure authentication cookies based on the provided AuthHeader and cookie configuration.
+ *
+ * Creates cookies with security attributes (HttpOnly, Secure, SameSite) to prevent XSS and CSRF
+ * attacks. Each cookie is configured according to the provided [cookieConfig].
+ *
+ * @param authHeaders Authentication header data containing token values.
+ * @param cookieConfig Cookie configuration specifying security attributes.
+ */
+fun HttpServletResponse.appendAuthCookies(
+    authHeaders: AuthHeader,
+    cookieConfig: OgiriConfigurationProperties.CookieProperties,
+) {
+  fun addSecureCookie(
+      name: String,
+      value: String?,
+  ) {
+    if (value.isNullOrBlank()) return
+    val cookie =
+        Cookie(name, value).apply {
+          isHttpOnly = cookieConfig.httpOnly
+          secure = cookieConfig.secure
+          path = cookieConfig.path
+          // SameSite is set via setAttribute (Servlet 6.0+)
+          setAttribute("SameSite", cookieConfig.sameSite)
+        }
+    addCookie(cookie)
+  }
+
+  addSecureCookie(ACCESS_TOKEN, authHeaders.accessToken)
+  addSecureCookie(CLIENT, authHeaders.client)
+  addSecureCookie(UID, authHeaders.uid)
+  addSecureCookie(EXPIRY, authHeaders.expiry)
 }
 
 /**

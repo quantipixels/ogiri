@@ -45,13 +45,6 @@ allprojects {
       trimTrailingWhitespace()
       endWithNewline()
     }
-    yaml {
-      target("**/*.yaml", "**/*.yml")
-      targetExclude("**/build/**")
-      prettier()
-      trimTrailingWhitespace()
-      endWithNewline()
-    }
     format("toml") {
       target("**/*.toml")
       targetExclude("**/build/**")
@@ -59,7 +52,7 @@ allprojects {
       endWithNewline()
     }
     format("misc") {
-      target(".gitignore", ".gitattributes", "**/*.md")
+      target(".gitignore", ".gitattributes", "**/*.md", "**/*.yaml", "**/*.yml")
       targetExclude("**/build/**")
       prettier()
       trimTrailingWhitespace()
