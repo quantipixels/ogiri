@@ -85,20 +85,29 @@ ogiri:
     batch-grace-seconds: 5 # Batch request window
     token-lifespan-days: 14 # Token TTL
     rotate-on-write-only: false # Only rotate on POST/PUT/DELETE
-    rotate-stale-seconds: 0 # Force rotation threshold (0=disabled)
+    rotate-stale-seconds: 0 # Force rotation threshold (0=disabled, recommend 3600 for prod)
     register-token-service: true # Auto-register TokenService
+    max-bearer-token-size: 8192 # Max bearer token size in bytes (DoS protection)
   cleanup:
     enabled: true # Auto-cleanup job
     interval-ms: 21600000 # 6 hours
+    batch-size: 1000 # Tokens deleted per batch (large dataset optimization)
   cookies:
     enabled: true # Set auth cookies
-    secure: true # Secure flag
-    http-only: true # HttpOnly flag
+    secure: true # Secure flag (WARN if false)
+    http-only: true # HttpOnly flag (WARN if false)
     same-site: Strict # SameSite attribute
+    path: "/" # Cookie path
   cache:
     max-size: 10000 # Max cached token comparisons
     expiry-minutes: 60 # Cache entry TTL
 ```
+
+**Startup Warnings:** The library logs warnings for insecure configurations:
+
+- `rotate-stale-seconds: 0` - Disables time-based rotation
+- `secure: false` - Allows cookies over HTTP
+- `http-only: false` - Exposes cookies to JavaScript
 
 ## Authentication Flow
 
@@ -115,7 +124,16 @@ ogiri:
 - Token comparison results cached for 1 hour (Caffeine cache)
 - Grace period allows batch requests without token thrashing
 - Sub-tokens scoped to parent APP token
+- Bearer token size validation (8KB default) prevents memory exhaustion
 - See `SECURITY.md` for full security policy
+
+## Performance Optimizations
+
+- **Token Prefix Indexing**: 8-char prefix enables O(1) database lookups instead of O(n) BCrypt comparisons
+- **Batch Request Caching**: Recent timestamps cached to avoid DB queries for batch detection
+- **Conditional Cleanup**: Token cleanup only runs when count exceeds 80% of `max-clients`
+- **Batched Deletion**: Cleanup job deletes tokens in configurable batches to avoid DB overload
+- **Sub-token Registry Caching**: Registry lookups cached at service initialization
 
 ## Sample Applications
 

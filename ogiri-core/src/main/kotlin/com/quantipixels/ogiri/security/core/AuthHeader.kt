@@ -30,6 +30,22 @@ const val TOKEN_TYPE = "token-type"
 const val EXPIRY = "expiry"
 const val ACCESS_TOKEN_KIND = "access-token-kind"
 
+/**
+ * Default maximum allowed size for bearer tokens in bytes.
+ *
+ * This limit prevents memory exhaustion attacks where an attacker sends extremely large bearer
+ * tokens that would be base64 decoded and parsed. 8KB is sufficient for normal JWT tokens while
+ * blocking potential DoS attempts.
+ *
+ * This constant is used as a fallback default. Applications should configure the limit via:
+ * ```yaml
+ * ogiri:
+ *   auth:
+ *     max-bearer-token-size: 8192
+ * ```
+ */
+const val DEFAULT_MAX_BEARER_TOKEN_SIZE = 8192
+
 private val mapper = JsonCodec.mapper
 
 data class AuthHeader(
@@ -212,22 +228,49 @@ fun HttpServletResponse.appendAuthCookies(
  * Expects format `Bearer <base64-encoded-json>` where the decoded JSON contains string key/value
  * pairs such as `{"access-token":"...","client":"...","uid":"...","expiry":"..."}`.
  *
+ * This function includes size validation to prevent memory exhaustion attacks. Tokens exceeding the
+ * specified maximum size are rejected before decoding.
+ *
  * @param bearer The bearer token string, with or without the `Bearer ` prefix.
- * @return A map of parsed string fields, or `null` if base64 decoding or JSON parsing fails.
+ * @param maxSize Maximum allowed token size in bytes (default: [DEFAULT_MAX_BEARER_TOKEN_SIZE]).
+ * @return A map of parsed string fields, or `null` if the token is too large, base64 decoding
+ *   fails, or JSON parsing fails.
  */
-fun parseBearerToken(bearer: String): Map<String, String>? =
-    try {
-      val token = bearer.trim().removePrefix("Bearer ").trim()
-      val json = String(Base64.getDecoder().decode(token), Charsets.UTF_8)
-      @Suppress("UNCHECKED_CAST")
-      mapper.readValue(json, Map::class.java) as? Map<String, String>
-    } catch (e: IllegalArgumentException) {
-      logger.debug("Failed to decode Base64 bearer token: {}", e.message)
-      null
-    } catch (e: JsonProcessingException) {
-      logger.debug("Failed to parse bearer token JSON: {}", e.message)
-      null
-    } catch (e: IOException) {
-      logger.debug("I/O error parsing bearer token: {}", e.message)
-      null
+fun parseBearerToken(
+    bearer: String,
+    maxSize: Int = DEFAULT_MAX_BEARER_TOKEN_SIZE
+): Map<String, String>? {
+  val token = bearer.trim().removePrefix("Bearer ").trim()
+
+  // Validate size before Base64 decoding to prevent memory exhaustion attacks
+  if (token.length > maxSize) {
+    logger.warn(
+        "Bearer token exceeds maximum size: {} bytes (max: {})",
+        token.length,
+        maxSize,
+    )
+    return null
+  }
+
+  return try {
+    val json = String(Base64.getDecoder().decode(token), Charsets.UTF_8)
+
+    // Also validate decoded JSON size as a secondary check
+    if (json.length > maxSize) {
+      logger.warn("Decoded bearer token exceeds maximum size: {} bytes", json.length)
+      return null
     }
+
+    @Suppress("UNCHECKED_CAST")
+    mapper.readValue(json, Map::class.java) as? Map<String, String>
+  } catch (e: IllegalArgumentException) {
+    logger.debug("Failed to decode Base64 bearer token: {}", e.message)
+    null
+  } catch (e: JsonProcessingException) {
+    logger.debug("Failed to parse bearer token JSON: {}", e.message)
+    null
+  } catch (e: IOException) {
+    logger.debug("I/O error parsing bearer token: {}", e.message)
+    null
+  }
+}

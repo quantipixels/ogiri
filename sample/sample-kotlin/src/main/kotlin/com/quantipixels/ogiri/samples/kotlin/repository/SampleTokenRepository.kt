@@ -13,7 +13,6 @@
 package com.quantipixels.ogiri.samples.kotlin.repository
 
 import com.quantipixels.ogiri.samples.kotlin.entity.SampleToken
-import com.quantipixels.ogiri.security.tokens.OgiriTokenRepository
 import java.time.Instant
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
@@ -22,63 +21,30 @@ import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 
 /**
- * Sample JPA implementation of TokenRepository.
+ * Sample JPA repository for SampleToken persistence.
  *
- * This demonstrates how to implement TokenRepository using Spring Data JPA. It extends both
- * JpaRepository (for JPA persistence) and TokenRepository (for the ogiri abstraction), providing
- * implementations for all required methods.
+ * This interface extends Spring Data JPA's JpaRepository to provide standard CRUD operations and
+ * custom query methods for token management. Uses explicit @Query annotations to avoid Spring
+ * Data's method name parsing.
  *
- * The default JPA query methods derive queries from method names:
- * - findByUserIdAndClientEquals -> SELECT where user_id = ? AND client_id = ?
- * - findByExpiryAtBefore -> SELECT where expiry_at < ?
- * - deleteByUserIdAndClientEquals -> DELETE where user_id = ? AND client_id = ?
- * - deleteByExpiryAtBefore -> DELETE where expiry_at < ?
+ * Note: Does NOT extend OgiriTokenRepository directly to avoid method signature conflicts. Use
+ * SampleTokenRepositoryAdapter for OgiriTokenRepository implementation.
  */
 @Repository
-interface SampleTokenRepository :
-    JpaRepository<SampleToken, Long>, OgiriTokenRepository<SampleToken> {
-  override fun findAllByUserId(userId: Long): List<SampleToken> =
-      findByUserIdOrderByUpdatedAtDesc(userId)
+interface SampleTokenRepository : JpaRepository<SampleToken, Long> {
 
-  override fun findByUserIdAndClient(
-      userId: Long,
-      clientId: String,
-  ): SampleToken? = findByUserIdAndClientJpa(userId, clientId).orElse(null)
-
-  override fun findByExpiryAtBefore(cutoff: Instant): List<SampleToken> =
-      findByExpiryAtBeforeCutoff(cutoff)
-
-  override fun findAllByUserIdAndTokenSubtype(
-      userId: Long,
-      tokenSubtype: String,
-  ): List<SampleToken> = findByUserIdAndTokenSubtypeOrderByUpdatedAtDesc(userId, tokenSubtype)
-
-  override fun deleteByUserIdAndClient(
-      userId: Long,
-      clientId: String,
-  ) = deleteByUserIdAndClientJpa(userId, clientId)
-
-  override fun deleteByUserIdAndClientIn(
-      userId: Long,
-      clientIds: Collection<String>,
-  ) = deleteByUserIdAndClientJpaIn(userId, clientIds)
-
-  override fun deleteByUserId(userId: Long) = deleteByUserIdJpa(userId)
-
-  override fun deleteByExpiryAtBefore(cutoff: Instant): Int = deleteByExpiryAtBeforeCutoff(cutoff)
-
+  /** Find all tokens for a user, ordered by most recent first. */
   @Query("SELECT t FROM SampleToken t WHERE t.userId = ?1 ORDER BY t.updatedAt DESC, t.id DESC")
   fun findByUserIdOrderByUpdatedAtDesc(userId: Long): List<SampleToken>
 
+  /** Find a specific token by user ID and client identifier. */
   @Query("SELECT t FROM SampleToken t WHERE t.userId = ?1 AND t.client = ?2")
-  fun findByUserIdAndClientJpa(
+  fun findByUserIdAndClientEquals(
       userId: Long,
       client: String,
   ): java.util.Optional<SampleToken>
 
-  @Query("SELECT t FROM SampleToken t WHERE t.expiryAt < ?1")
-  fun findByExpiryAtBeforeCutoff(expiryAt: Instant): List<SampleToken>
-
+  /** Find all tokens for a user with a specific subtype. */
   @Query(
       "SELECT t FROM SampleToken t WHERE t.userId = ?1 AND t.tokenSubtype = ?2 ORDER BY t.updatedAt DESC, t.id DESC")
   fun findByUserIdAndTokenSubtypeOrderByUpdatedAtDesc(
@@ -86,36 +52,53 @@ interface SampleTokenRepository :
       tokenSubtype: String,
   ): List<SampleToken>
 
+  /** Find all tokens that expired before a specific cutoff time. */
+  @Query("SELECT t FROM SampleToken t WHERE t.expiryAt < ?1")
+  fun findByExpiryAtBeforeCutoff(expiryAt: Instant): List<SampleToken>
+
+  /** Delete a token by user ID and client identifier. */
   @Transactional
   @Modifying
   @Query("DELETE FROM SampleToken t WHERE t.userId = ?1 AND t.client = ?2")
-  fun deleteByUserIdAndClientJpa(
+  fun deleteByUserIdAndClientEquals(
       userId: Long,
       client: String,
   )
 
+  /** Delete tokens by user ID and multiple client identifiers. */
   @Transactional
   @Modifying
   @Query("DELETE FROM SampleToken t WHERE t.userId = ?1 AND t.client IN ?2")
-  fun deleteByUserIdAndClientJpaIn(
+  fun deleteByUserIdAndClientIdIn(
       userId: Long,
       clients: Collection<String>,
   )
 
+  /** Delete all tokens for a specific user. */
   @Transactional
   @Modifying
   @Query("DELETE FROM SampleToken t WHERE t.userId = ?1")
   fun deleteByUserIdJpa(userId: Long)
-
-  /** Delete token. */
-  @Transactional
-  @Modifying
-  @Query("DELETE FROM SampleToken t WHERE t = ?1")
-  override fun delete(token: SampleToken)
 
   /** Delete all tokens that expired before a specific cutoff time. */
   @Transactional
   @Modifying
   @Query("DELETE FROM SampleToken t WHERE t.expiryAt < ?1")
   fun deleteByExpiryAtBeforeCutoff(expiryAt: Instant): Int
+
+  /** Count the number of tokens for a specific user. */
+  @Query("SELECT COUNT(t) FROM SampleToken t WHERE t.userId = ?1")
+  fun countByUserId(userId: Long): Long
+
+  /** Find valid tokens by prefix (for optimization). */
+  @Query(
+      "SELECT t FROM SampleToken t WHERE t.tokenPrefix = ?1 AND t.tokenType = 'app' AND t.expiryAt > ?2")
+  fun findValidTokensByPrefix(
+      prefix: String,
+      now: Instant,
+  ): List<SampleToken>
+
+  /** Find all tokens of a specific type. */
+  @Query("SELECT t FROM SampleToken t WHERE t.tokenType = ?1")
+  fun findAllByTokenType(tokenType: String): List<SampleToken>
 }

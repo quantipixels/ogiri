@@ -16,6 +16,7 @@ import com.quantipixels.ogiri.security.spi.OgiriUser
 import com.quantipixels.ogiri.security.spi.OgiriUserDirectory
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Component
 
 /**
@@ -25,13 +26,15 @@ import org.springframework.stereotype.Component
  * for demonstration.
  */
 @Component
-class SampleOgiriUserDirectory : OgiriUserDirectory {
+class SampleOgiriUserDirectory(private val passwordEncoder: PasswordEncoder) : OgiriUserDirectory {
   private val usersByUsername = mutableMapOf<String, SampleUser>()
   private val usersById = mutableMapOf<Long, SampleUser>()
 
   init {
-    val user1 = SampleUser(1L, "user1", "password", "user1@example.com")
-    val user2 = SampleUser(2L, "user2", "password", "user2@example.com")
+    // Passwords are BCrypt encoded for secure storage
+    val encodedPassword = passwordEncoder.encode("password")
+    val user1 = SampleUser(1L, "user1", encodedPassword, "user1@example.com")
+    val user2 = SampleUser(2L, "user2", encodedPassword, "user2@example.com")
     usersByUsername["user1"] = user1
     usersByUsername["user2"] = user2
     usersById[1L] = user1

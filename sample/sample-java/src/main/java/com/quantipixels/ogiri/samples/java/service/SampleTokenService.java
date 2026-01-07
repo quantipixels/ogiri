@@ -90,7 +90,7 @@ public class SampleTokenService extends OgiriTokenService<SampleToken> {
     // Create new token with all required fields
     SampleToken token = new SampleToken(userId, client, hashedToken, expiry);
 
-    // Set token type (convert enum to string: "APP" or "SUB")
+    // Set token type (convert enum to string: "app" or "sub")
     token.setTokenType(tokenType.name());
 
     // Set optional sub-token type

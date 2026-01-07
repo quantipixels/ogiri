@@ -4,6 +4,47 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-01-07
+
+### Added
+
+- Token prefix indexing for O(1) database lookups (performance optimization)
+- Configurable `max-bearer-token-size` property (default 8192, DoS protection)
+- Configurable `cleanup.batch-size` property for batched token deletion
+- Cookie configuration properties (`enabled`, `secure`, `http-only`, `same-site`, `path`)
+- Startup warnings for insecure configurations
+- New repository methods: `findValidTokensByPrefix`, `countByUserId`, `deleteExpiredBatch`
+
+### Changed
+
+- Token cleanup now uses batched deletion for large datasets
+- Bearer token size validation is now configurable
+
+### Database Migration Required
+
+- Add `token_prefix VARCHAR(8)` column to tokens table
+- Add index on `token_prefix` (partial index for PostgreSQL recommended)
+
+See [Migration Guide](migration-guide.md#migrating-to-130-performance-optimizations) for detailed upgrade instructions.
+
+## [1.2.1] - 2026-01-07
+
+### Added
+
+- Comprehensive test suite for token and security services
+- Secure cookie support with configurable attributes
+- Token cleanup optimization with batched deletion
+- Fallback error messages in OgiriAuthenticationEntryPoint to prevent 500 errors when messages.properties is missing
+
+### Changed
+
+- Renamed SubTokenRegistry to OgiriSubTokenRegistry for consistency
+- OgiriRouteRegistry method renamed from `registrations()` to `routes()`
+
+### Fixed
+
+- Bearer token authentication now returns 401 with proper error message instead of 500
+
 ## [1.2.0] - 2025-12-12
 
 ### Added

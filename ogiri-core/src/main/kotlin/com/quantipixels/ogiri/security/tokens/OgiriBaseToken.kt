@@ -64,7 +64,7 @@ abstract class OgiriBaseToken : OgiriToken {
   abstract override var token: String
 
   /**
-   * Token type classifier. Default: "APP" for primary tokens. Custom: "device", "chat", etc. for
+   * Token type classifier. Default: "app" for primary tokens. Custom: "device", "chat", etc. for
    * sub-tokens.
    */
   abstract override val tokenType: String
@@ -114,6 +114,18 @@ abstract class OgiriBaseToken : OgiriToken {
    * during token creation. Sent to client for authentication headers.
    */
   override var plainToken: String? = null
+
+  /**
+   * Token prefix for efficient lookup (first 8 characters of plaintext token).
+   *
+   * This field enables O(1) database lookups by indexing on a non-hashed prefix. Since the full
+   * token is hashed with BCrypt, direct lookups are impossible. Storing a short prefix allows
+   * efficient filtering before expensive BCrypt comparisons.
+   *
+   * Default implementation returns null for backwards compatibility with existing tokens. New
+   * tokens will have prefix populated automatically by the token service.
+   */
+  override var tokenPrefix: String? = null
 
   /**
    * Produce a compact single-line representation of the token including id, userId, client,

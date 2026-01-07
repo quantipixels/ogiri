@@ -24,11 +24,14 @@ class OgiriTokenCleanupJob(
   /**
    * Removes expired user tokens from the resolved token service.
    *
+   * Uses batched deletion to avoid overwhelming the database with large DELETE operations. Tokens
+   * are deleted in configurable batches (see ogiri.cleanup.batch-size).
+   *
    * If any tokens are removed, logs the count at info level.
    */
   @Scheduled(fixedDelayString = "\${ogiri.cleanup.interval-ms:21600000}")
   fun cleanupExpiredTokens() {
-    val deleted = tokenServiceResolver.resolve().cleanupExpiredTokens(Instant.now())
+    val deleted = tokenServiceResolver.resolve().cleanupExpiredTokensBatched(Instant.now())
     if (deleted > 0) {
       logger.info("Expired user tokens removed count={}", deleted)
     }

@@ -138,4 +138,13 @@ public interface SampleTokenRepository extends JpaRepository<SampleToken, Long> 
   @Modifying
   @Query("DELETE FROM SampleToken t WHERE t.expiryAt < ?1")
   int deleteByExpiryAtBeforeCutoff(Instant expiryAt);
+
+  /**
+   * Count the number of tokens for a specific user.
+   *
+   * @param userId The user ID
+   * @return Number of tokens for the user
+   */
+  @Query("SELECT COUNT(t) FROM SampleToken t WHERE t.userId = ?1")
+  long countByUserId(Long userId);
 }

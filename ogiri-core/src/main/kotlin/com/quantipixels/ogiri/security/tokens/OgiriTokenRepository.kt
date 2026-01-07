@@ -141,6 +141,33 @@ interface OgiriTokenRepository<T : OgiriToken> {
   }
 
   /**
+   * Delete a batch of expired tokens.
+   *
+   * This method deletes up to [batchSize] expired tokens in a single operation, which is more
+   * efficient for large-scale cleanup than deleting all at once. Continue calling this method until
+   * it returns less than [batchSize] to ensure all expired tokens are removed.
+   *
+   * Implementations should use batch delete operations with LIMIT when available:
+   * ```sql
+   * DELETE FROM tokens WHERE expiry_at < :cutoff LIMIT :batchSize
+   * ```
+   *
+   * Default implementation falls back to find (limited) + delete for backwards compatibility.
+   *
+   * @param cutoff Instant used as the expiry threshold; tokens expiring before this are deleted.
+   * @param batchSize Maximum number of tokens to delete in this batch.
+   * @return Number of tokens deleted (may be less than batchSize if fewer expired tokens exist).
+   */
+  fun deleteExpiredBatch(
+      cutoff: Instant,
+      batchSize: Int,
+  ): Int {
+    val expired = findByExpiryAtBefore(cutoff).take(batchSize)
+    expired.forEach { delete(it) }
+    return expired.size
+  }
+
+  /**
    * Delete the token for a specific user and client.
    *
    * This is typically called during logout or client revocation.
@@ -182,4 +209,64 @@ interface OgiriTokenRepository<T : OgiriToken> {
   fun delete(token: T) {
     token.id.takeIf { it > 0 }?.let { deleteById(it) }
   }
+
+  /**
+   * Find all valid (non-expired) APP tokens matching the given prefix.
+   *
+   * This method enables O(1) token lookup by filtering on the indexed token prefix before
+   * performing expensive BCrypt comparisons. The prefix is the first 8 characters of the plaintext
+   * token value.
+   *
+   * Default implementation returns all valid APP tokens for backwards compatibility.
+   * Implementations should override this method with an optimized query:
+   * ```kotlin
+   * @Query("SELECT t FROM Token t WHERE t.tokenPrefix = :prefix AND t.tokenType = 'app' AND t.expiryAt > :now")
+   * override fun findValidTokensByPrefix(prefix: String, now: Instant): List<MyToken>
+   * ```
+   *
+   * @param prefix The 8-character token prefix to search for
+   * @param now Current instant for expiry comparison (defaults to Instant.now())
+   * @return List of matching non-expired APP tokens; empty list if none found
+   */
+  fun findValidTokensByPrefix(
+      prefix: String,
+      now: Instant = Instant.now(),
+  ): List<T> {
+    // Default: return all tokens and filter - implementations should override for efficiency
+    return findAllByTokenType(OgiriTokenType.APP.label).filter {
+      it.tokenPrefix == prefix && !it.isExpired(now)
+    }
+  }
+
+  /**
+   * Find all tokens of a specific type.
+   *
+   * Default implementation filters findAll results. Implementations should override with optimized
+   * query.
+   *
+   * @param tokenType The token type to filter by (e.g., "app", "sub")
+   * @return List of tokens matching the type
+   */
+  fun findAllByTokenType(tokenType: String): List<T> {
+    // Default implementation - subclasses should override
+    return emptyList()
+  }
+
+  /**
+   * Count the number of tokens for a user.
+   *
+   * This method supports optimization of cleanup frequency by allowing threshold checks before
+   * performing expensive cleanup operations.
+   *
+   * Default implementation counts results from findAllByUserId. Implementations should override
+   * with an optimized COUNT query:
+   * ```kotlin
+   * @Query("SELECT COUNT(t) FROM Token t WHERE t.userId = :userId")
+   * override fun countByUserId(userId: Long): Long
+   * ```
+   *
+   * @param userId The user ID to count tokens for
+   * @return Number of tokens belonging to the user
+   */
+  fun countByUserId(userId: Long): Long = findAllByUserId(userId).size.toLong()
 }

@@ -58,7 +58,7 @@ data class DirectToken(
     @Column(name = "user_id", nullable = false) override val userId: Long = 0,
     @Column(name = "client_id", nullable = false) override val client: String = "",
     @Column(name = "token_hash", nullable = false) override var token: String = "",
-    @Column(name = "token_type", nullable = false) override val tokenType: String = "APP",
+    @Column(name = "token_type", nullable = false) override val tokenType: String = "app",
     @Column(name = "expiry_at", nullable = false) override var expiryAt: Instant = Instant.now(),
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -72,6 +72,7 @@ data class DirectToken(
     @Column(name = "last_token_hash") override var lastToken: String? = null,
     @Column(name = "previous_token_hash") override var previousToken: String? = null,
     @Column(name = "last_used_at") override var lastUsedAt: Instant? = null,
+    @Column(name = "token_prefix", length = 8) override var tokenPrefix: String? = null,
 ) : OgiriToken {
   @Transient override var plainToken: String? = null
 }

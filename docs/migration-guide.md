@@ -240,3 +240,88 @@ After making these changes:
 
 1. Run your build to ensure all references are updated.
 2. Run your test suite. The logic remains backward compatible, so tests should pass without functional changes.
+
+---
+
+## Migrating to 1.3.0 (Performance Optimizations)
+
+Version 1.3.0 introduces significant performance optimizations, including token prefix indexing for O(1) lookups. This requires a database schema change.
+
+### Database Schema Migration
+
+Add the `token_prefix` column to your tokens table:
+
+```sql
+-- PostgreSQL
+ALTER TABLE user_tokens ADD COLUMN token_prefix VARCHAR(8);
+CREATE INDEX idx_user_tokens_prefix ON user_tokens (token_prefix)
+  WHERE token_type = 'app' AND expiry_at > NOW();
+
+-- MySQL
+ALTER TABLE user_tokens ADD COLUMN token_prefix VARCHAR(8);
+CREATE INDEX idx_user_tokens_prefix ON user_tokens (token_prefix);
+
+-- H2 (for testing)
+ALTER TABLE user_tokens ADD COLUMN token_prefix VARCHAR(8);
+CREATE INDEX idx_user_tokens_prefix ON user_tokens (token_prefix);
+```
+
+### Backwards Compatibility
+
+The migration is **non-breaking**:
+
+1. **Existing tokens**: Will have `NULL` for `token_prefix`. The token service falls back to scanning all tokens when prefix is `NULL`, maintaining full backwards compatibility.
+
+2. **New tokens**: Will automatically have `token_prefix` populated with the first 8 characters of the plaintext token.
+
+3. **Gradual migration**: As users authenticate and tokens rotate, new tokens will have the prefix populated. Over time (typically within your `token-lifespan-days` period), all active tokens will have prefixes.
+
+### New Configuration Options
+
+```yaml
+ogiri:
+  auth:
+    max-bearer-token-size: 8192 # New: Max bearer token size (DoS protection)
+  cleanup:
+    batch-size: 1000 # New: Tokens deleted per batch
+```
+
+### Startup Warnings
+
+The library now logs warnings for insecure configurations at startup:
+
+- `ogiri.auth.rotate-stale-seconds=0` - Consider setting to 3600+ for production
+- `ogiri.cookies.secure=false` - Enable for HTTPS deployments
+- `ogiri.cookies.http-only=false` - Enable to prevent XSS cookie theft
+
+### OgiriToken Interface Changes
+
+If you implement `OgiriToken` directly (not extending `OgiriBaseToken`), add the new property:
+
+```kotlin
+interface OgiriToken {
+    // ... existing properties ...
+    var tokenPrefix: String?  // New: First 8 chars for O(1) lookup
+}
+```
+
+`OgiriBaseToken` already includes this property with a default value of `null`, so implementations extending the base class require no changes.
+
+### Repository Interface Changes
+
+`OgiriTokenRepository` has new methods with default implementations:
+
+| Method                                  | Purpose                                        |
+| --------------------------------------- | ---------------------------------------------- |
+| `findValidTokensByPrefix(prefix, now)`  | O(1) token lookup by prefix                    |
+| `countByUserId(userId)`                 | Efficient token count for cleanup optimization |
+| `deleteExpiredBatch(cutoff, batchSize)` | Batched cleanup for large datasets             |
+
+These have default implementations using existing methods, so no changes are required unless you want to override them with optimized database queries.
+
+### Verification
+
+1. Run the database migration
+2. Rebuild and restart your application
+3. Verify tokens work as expected (existing tokens continue working)
+4. Monitor logs for startup warnings and address any insecure configurations

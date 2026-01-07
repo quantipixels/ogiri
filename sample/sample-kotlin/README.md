@@ -27,7 +27,7 @@ This sample application showcases:
 
 The application runs with H2 in-memory database by default. This requires zero setup and is ideal for development and testing.
 
-The H2 console is available at `http://localhost:8080/h2-console` (leave username as `sa`, password blank).
+The H2 console is available at `http://localhost:48081/h2-console` (leave username as `sa`, password blank).
 
 ### PostgreSQL Setup (Optional)
 
@@ -72,7 +72,7 @@ The library is auto-configured in `com.quantipixels.ogiri.samples.kotlin.config.
 ogiri:
   auth:
     max-clients: 24 # Max concurrent clients per user
-    batch-grace-seconds: 5 # Grace period for token batch requests
+    batch-grace-seconds: 30 # Grace period for token batch requests
     token-lifespan-days: 14 # Token expiration in days
   security:
     register-filter: true # Auto-register authentication filter
@@ -88,7 +88,7 @@ From the repository root:
 ./gradlew :sample:sample-kotlin:bootRun
 ```
 
-The application starts on `http://localhost:8080` with an in-memory H2 database. No database setup required.
+The application starts on `http://localhost:48081` with an in-memory H2 database. No database setup required.
 
 ### With PostgreSQL
 
@@ -105,29 +105,111 @@ First, follow the PostgreSQL setup steps above, then:
 - **POST /api/auth/login** - Authenticate and obtain tokens
 
   ```bash
-  curl -X POST http://localhost:8080/api/auth/login \
+  curl -X POST http://localhost:48081/api/auth/login \
     -H "Content-Type: application/json" \
-    -d '{"username":"user1","password":"password"}'
+    -d '{"username":"user1","password":"password"}' \
+    -v
   ```
+
+  Response includes tokens in headers, cookies (if enabled), and body.
 
 - **GET /api/health** - Application health check
   ```bash
-  curl http://localhost:8080/api/health
+  curl http://localhost:48081/api/health
   ```
 
 ### Secured Endpoints (Authentication Required)
 
-- **GET /api/secure** - Protected route
-  ```bash
-  curl -H "Authorization: Bearer <token>" http://localhost:8080/api/secure
-  ```
+The sample demonstrates **three authentication methods**. All methods are functionally equivalent:
 
-Include these headers with authenticated requests:
+#### Method 1: HTTP Headers
 
-- `access-token`: The access token
-- `client`: The client identifier
-- `uid`: The user ID
-- `expiry`: Token expiration time
+```bash
+curl http://localhost:48081/api/demo/headers \
+  -H "access-token: <token>" \
+  -H "client: <client>" \
+  -H "uid: <uid>" \
+  -H "expiry: <expiry>"
+```
+
+#### Method 2: Secure Cookies
+
+```bash
+# Login with cookie storage
+curl -X POST http://localhost:8080/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"user1","password":"password"}' \
+  -c cookies.txt
+
+# Use stored cookies
+curl http://localhost:48081/api/demo/cookies -b cookies.txt
+```
+
+#### Method 3: Bearer Token
+
+```bash
+# Extract Authorization header from login response
+curl http://localhost:48081/api/demo/bearer \
+  -H "Authorization: Bearer <base64-encoded-json>"
+```
+
+### Available Endpoints
+
+| Endpoint            | Method | Auth | Description              |
+| ------------------- | ------ | ---- | ------------------------ |
+| `/api/health`       | GET    | No   | Health check             |
+| `/api/me`           | GET    | Yes  | Current user info        |
+| `/api/auth/login`   | POST   | No   | Login and get tokens     |
+| `/api/auth/logout`  | POST   | Yes  | Logout and revoke tokens |
+| `/api/demo/headers` | GET    | Yes  | Test header-based auth   |
+| `/api/demo/cookies` | GET    | Yes  | Test cookie-based auth   |
+| `/api/demo/bearer`  | GET    | Yes  | Test Bearer token auth   |
+| `/api/demo/info`    | GET    | Yes  | General auth info        |
+
+### Test Users
+
+The sample includes two pre-configured users:
+
+| Username | Password | Email             |
+| -------- | -------- | ----------------- |
+| user1    | password | user1@example.com |
+| user2    | password | user2@example.com |
+
+### Complete Testing Flow
+
+```bash
+# 1. Login and save response headers
+curl -X POST http://localhost:8080/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"user1","password":"password"}' \
+  -v 2>&1 | grep -E "< (access-token|client|uid|expiry|Authorization):"
+
+# 2. Extract tokens and test header auth
+TOKEN="<access-token>"
+CLIENT="<client>"
+UID="<uid>"
+EXPIRY="<expiry>"
+
+curl http://localhost:48081/api/demo/headers \
+  -H "access-token: $TOKEN" \
+  -H "client: $CLIENT" \
+  -H "uid: $UID" \
+  -H "expiry: $EXPIRY"
+
+# 3. Test general info endpoint
+curl http://localhost:48081/api/demo/info \
+  -H "access-token: $TOKEN" \
+  -H "client: $CLIENT" \
+  -H "uid: $UID" \
+  -H "expiry: $EXPIRY"
+
+# 4. Logout
+curl -X POST http://localhost:48081/api/auth/logout \
+  -H "access-token: $TOKEN" \
+  -H "client: $CLIENT" \
+  -H "uid: $UID" \
+  -H "expiry: $EXPIRY"
+```
 
 ## Key Components
 
@@ -289,7 +371,7 @@ fun deviceToken(): OgiriSubTokenRegistration = object : OgiriSubTokenRegistratio
 ## References
 
 - [ogiri Documentation](../../docs/)
-- [Token Authentication Flow](../../docs/AUTHENTICATION.md)
+- [Token Authentication Flow](../../docs/authentication.md)
 - [Spring Boot with Kotlin](https://spring.io/guides/tutorials/spring-boot-kotlin/)
 - [Kotlin Language Documentation](https://kotlinlang.org/docs/home.html)
 - [Spring Security](https://spring.io/projects/spring-security)

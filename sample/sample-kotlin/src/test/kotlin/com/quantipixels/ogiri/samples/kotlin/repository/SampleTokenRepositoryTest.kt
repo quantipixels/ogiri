@@ -53,7 +53,7 @@ class SampleTokenRepositoryTest {
         )
     tokenRepository.save(token)
 
-    val retrieved = tokenRepository.findByUserIdAndClient(testUserId, testClient)
+    val retrieved = tokenRepository.findByUserIdAndClientEquals(testUserId, testClient).orElse(null)
 
     assertNotNull(retrieved)
     assertEquals(testUserId, retrieved!!.userId)
@@ -63,7 +63,7 @@ class SampleTokenRepositoryTest {
 
   @Test
   fun `should return null for non-existent token`() {
-    val retrieved = tokenRepository.findByUserIdAndClient(999L, "non-existent")
+    val retrieved = tokenRepository.findByUserIdAndClientEquals(999L, "non-existent").orElse(null)
     assertNull(retrieved)
   }
 
@@ -91,7 +91,7 @@ class SampleTokenRepositoryTest {
     tokenRepository.save(token2)
 
     // Retrieve all tokens
-    val tokens = tokenRepository.findAllByUserId(testUserId)
+    val tokens = tokenRepository.findByUserIdOrderByUpdatedAtDesc(testUserId)
 
     assertEquals(2, tokens.size)
     // Verify both tokens are present (order may vary)
@@ -125,7 +125,7 @@ class SampleTokenRepositoryTest {
     tokenRepository.save(validToken)
 
     // Find expired tokens
-    val expired = tokenRepository.findByExpiryAtBefore(now)
+    val expired = tokenRepository.findByExpiryAtBeforeCutoff(now)
 
     assertEquals(1, expired.size)
     assertEquals("expired-client", expired[0].client)
@@ -143,9 +143,9 @@ class SampleTokenRepositoryTest {
     tokenRepository.save(token)
 
     // Delete token
-    tokenRepository.deleteByUserIdAndClient(testUserId, testClient)
+    tokenRepository.deleteByUserIdAndClientEquals(testUserId, testClient)
 
-    val retrieved = tokenRepository.findByUserIdAndClient(testUserId, testClient)
+    val retrieved = tokenRepository.findByUserIdAndClientEquals(testUserId, testClient).orElse(null)
     assertNull(retrieved)
   }
 
@@ -178,9 +178,9 @@ class SampleTokenRepositoryTest {
     tokenRepository.save(token3)
 
     // Delete two tokens
-    tokenRepository.deleteByUserIdAndClientIn(testUserId, listOf("client-1", "client-2"))
+    tokenRepository.deleteByUserIdAndClientIdIn(testUserId, listOf("client-1", "client-2"))
 
-    val remaining = tokenRepository.findAllByUserId(testUserId)
+    val remaining = tokenRepository.findByUserIdOrderByUpdatedAtDesc(testUserId)
     assertEquals(1, remaining.size)
     assertEquals("client-3", remaining[0].client)
   }
@@ -206,9 +206,9 @@ class SampleTokenRepositoryTest {
     tokenRepository.save(token2)
 
     // Delete all tokens for user
-    tokenRepository.deleteByUserId(testUserId)
+    tokenRepository.deleteByUserIdJpa(testUserId)
 
-    val remaining = tokenRepository.findAllByUserId(testUserId)
+    val remaining = tokenRepository.findByUserIdOrderByUpdatedAtDesc(testUserId)
     assertTrue(remaining.isEmpty())
   }
 
@@ -235,7 +235,7 @@ class SampleTokenRepositoryTest {
     // Delete from collection
     tokenRepository.deleteAll(listOf(saved1))
 
-    val remaining = tokenRepository.findAllByUserId(testUserId)
+    val remaining = tokenRepository.findByUserIdOrderByUpdatedAtDesc(testUserId)
     assertEquals(1, remaining.size)
     assertEquals("client-2", remaining[0].client)
   }
@@ -256,7 +256,7 @@ class SampleTokenRepositoryTest {
     token.lastUsedAt = Instant.now()
     tokenRepository.save(token)
 
-    val updated = tokenRepository.findByUserIdAndClient(testUserId, testClient)
+    val updated = tokenRepository.findByUserIdAndClientEquals(testUserId, testClient).orElse(null)
     assertNotNull(updated)
     assertEquals("new-hashed-token", updated!!.token)
     assertNotNull(updated.lastUsedAt)

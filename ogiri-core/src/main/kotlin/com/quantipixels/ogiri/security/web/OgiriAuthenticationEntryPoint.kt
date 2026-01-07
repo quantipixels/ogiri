@@ -29,12 +29,22 @@ class OgiriAuthenticationEntryPoint(
   private val logger = LoggerFactory.getLogger(OgiriAuthenticationEntryPoint::class.java)
   private val mapper = jacksonObjectMapper()
 
+  companion object {
+    private val DEFAULT_MESSAGES =
+        mapOf(
+            "error.auth.bad_credentials" to "Invalid credentials",
+            "error.auth.required" to "Authentication required",
+        )
+  }
+
   /**
    * Sends a 401 JSON response containing a localized authentication error message.
    *
    * The response uses a message key chosen based on the exception type:
    * - "error.auth.bad_credentials" when the exception is BadCredentialsException
    * - "error.auth.required" for other authentication failures
+   *
+   * If no message is found in the MessageSource, a default message is used.
    *
    * @param request The incoming HTTP request that triggered authentication.
    * @param response The HTTP response that will be populated with status 401 and a JSON payload.
@@ -56,7 +66,9 @@ class OgiriAuthenticationEntryPoint(
           is BadCredentialsException -> "error.auth.bad_credentials"
           else -> "error.auth.required"
         }
-    val message = messageSource.getMessage(code, null, locale)
+    val message =
+        messageSource.getMessage(
+            code, null, DEFAULT_MESSAGES[code] ?: "Authentication error", locale)
     val payload = mapOf("status" to HttpServletResponse.SC_UNAUTHORIZED, "message" to message)
     mapper.writeValue(response.outputStream, payload)
   }

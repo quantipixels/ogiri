@@ -22,14 +22,17 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.security.core.authority.SimpleGrantedAuthority
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import org.springframework.security.crypto.password.PasswordEncoder
 
 class UserDirectoryTest {
 
   private lateinit var userDirectory: SampleOgiriUserDirectory
+  private val passwordEncoder: PasswordEncoder = BCryptPasswordEncoder()
 
   @BeforeEach
   fun setUp() {
-    userDirectory = SampleOgiriUserDirectory()
+    userDirectory = SampleOgiriUserDirectory(passwordEncoder)
   }
 
   @Test

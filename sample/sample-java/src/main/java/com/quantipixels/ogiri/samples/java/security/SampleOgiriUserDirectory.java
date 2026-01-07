@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 /**
@@ -30,21 +31,23 @@ import org.springframework.stereotype.Component;
 @Component
 public class SampleOgiriUserDirectory implements OgiriUserDirectory {
 
-  private static final Map<Long, SampleUser> USERS_BY_ID = new HashMap<>();
-  private static final Map<String, SampleUser> USERS_BY_USERNAME = new HashMap<>();
+  private final Map<Long, SampleUser> usersById = new HashMap<>();
+  private final Map<String, SampleUser> usersByUsername = new HashMap<>();
 
-  static {
-    SampleUser user1 = new SampleUser(1L, "user1", "password", "user1@example.com");
-    SampleUser user2 = new SampleUser(2L, "user2", "password", "user2@example.com");
-    USERS_BY_ID.put(1L, user1);
-    USERS_BY_ID.put(2L, user2);
-    USERS_BY_USERNAME.put("user1", user1);
-    USERS_BY_USERNAME.put("user2", user2);
+  public SampleOgiriUserDirectory(PasswordEncoder passwordEncoder) {
+    // Passwords are BCrypt encoded for secure storage
+    String encodedPassword = passwordEncoder.encode("password");
+    SampleUser user1 = new SampleUser(1L, "user1", encodedPassword, "user1@example.com");
+    SampleUser user2 = new SampleUser(2L, "user2", encodedPassword, "user2@example.com");
+    usersById.put(1L, user1);
+    usersById.put(2L, user2);
+    usersByUsername.put("user1", user1);
+    usersByUsername.put("user2", user2);
   }
 
   @Override
   public OgiriUser loadUserByUsername(String username) {
-    OgiriUser user = USERS_BY_USERNAME.get(username);
+    OgiriUser user = usersByUsername.get(username);
     if (user == null) {
       throw new IllegalArgumentException("User not found: " + username);
     }
@@ -52,18 +55,18 @@ public class SampleOgiriUserDirectory implements OgiriUserDirectory {
   }
 
   public OgiriUser findById(long id) {
-    return USERS_BY_ID.get(id);
+    return usersById.get(id);
   }
 
   public OgiriUser findByEmail(String email) {
-    return USERS_BY_ID.values().stream()
+    return usersById.values().stream()
         .filter(u -> u.getEmail().equals(email))
         .findFirst()
         .orElse(null);
   }
 
   public OgiriUser findByUsername(String username) {
-    return USERS_BY_USERNAME.get(username);
+    return usersByUsername.get(username);
   }
 
   public void recordSuccessfulLogin(long userId) {

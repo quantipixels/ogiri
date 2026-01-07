@@ -60,8 +60,10 @@ data class SampleToken(
     @Column(name = "client_id", nullable = false) override val client: String = "",
     /** Hashed token value (never plaintext). */
     @Column(name = "token_hash", nullable = false) override var token: String = "",
-    /** Token type classifier ("APP" or "SUB"). */
-    @Column(name = "token_type", nullable = false) override val tokenType: String = "APP",
+    /** First 8 characters of plaintext token - indexed for O(1) lookups. */
+    @Column(name = "token_prefix", length = 8) override var tokenPrefix: String? = null,
+    /** Token type classifier ("app" or "sub"). */
+    @Column(name = "token_type", nullable = false) override val tokenType: String = "app",
     /** Token expiration time (UTC) - indexed for cleanup queries. */
     @Column(name = "expiry_at", nullable = false) override var expiryAt: Instant = Instant.now(),
     /** Timestamp when token was created. Auto-populated by Hibernate on insert. */

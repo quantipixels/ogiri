@@ -52,12 +52,13 @@ class TokenServiceIntegrationTest {
     token.plainToken = "plain-token-value"
     tokenRepository.save(token)
 
-    val savedToken = tokenRepository.findByUserIdAndClient(testUserId, testClient)
+    val savedToken =
+        tokenRepository.findByUserIdAndClientEquals(testUserId, testClient).orElse(null)
     assertNotNull(savedToken)
     assertEquals(testUserId, savedToken!!.userId)
     assertEquals(testClient, savedToken.client)
     assertEquals("hashed-token-value", savedToken.token)
-    assertEquals("APP", savedToken.tokenType)
+    assertEquals("app", savedToken.tokenType)
   }
 
   @Test
@@ -73,7 +74,7 @@ class TokenServiceIntegrationTest {
     tokenRepository.save(token1)
 
     // Rotate token by deleting old and saving new
-    tokenRepository.deleteByUserIdAndClient(testUserId, testClient)
+    tokenRepository.deleteByUserIdAndClientEquals(testUserId, testClient)
     tokenRepository.flush() // Ensure delete is flushed before saving new token
 
     val token2 =
@@ -85,7 +86,8 @@ class TokenServiceIntegrationTest {
         )
     tokenRepository.save(token2)
 
-    val rotatedToken = tokenRepository.findByUserIdAndClient(testUserId, testClient)
+    val rotatedToken =
+        tokenRepository.findByUserIdAndClientEquals(testUserId, testClient).orElse(null)
     assertNotNull(rotatedToken)
     assertEquals("token-hash-2", rotatedToken!!.token)
   }
@@ -105,7 +107,7 @@ class TokenServiceIntegrationTest {
       tokenRepository.save(token)
     }
 
-    val userTokens = tokenRepository.findAllByUserId(testUserId)
+    val userTokens = tokenRepository.findByUserIdOrderByUpdatedAtDesc(testUserId)
     assertEquals(3, userTokens.size)
     assertTrue(userTokens.map { it.client }.containsAll(clients))
   }
@@ -131,13 +133,14 @@ class TokenServiceIntegrationTest {
         )
     tokenRepository.save(subToken)
 
-    val mainSaved = tokenRepository.findByUserIdAndClient(testUserId, testClient)
-    val subSaved = tokenRepository.findByUserIdAndClient(testUserId, "$testClient.device")
+    val mainSaved = tokenRepository.findByUserIdAndClientEquals(testUserId, testClient).orElse(null)
+    val subSaved =
+        tokenRepository.findByUserIdAndClientEquals(testUserId, "$testClient.device").orElse(null)
 
     assertNotNull(mainSaved)
     assertNotNull(subSaved)
-    assertEquals("APP", mainSaved!!.tokenType)
-    assertEquals("APP", subSaved!!.tokenType)
+    assertEquals("app", mainSaved!!.tokenType)
+    assertEquals("app", subSaved!!.tokenType)
     assertEquals("device", subSaved.tokenSubtype)
   }
 
@@ -163,12 +166,12 @@ class TokenServiceIntegrationTest {
         )
     tokenRepository.save(validToken)
 
-    val expiredTokens = tokenRepository.findByExpiryAtBefore(now)
+    val expiredTokens = tokenRepository.findByExpiryAtBeforeCutoff(now)
     assertEquals(1, expiredTokens.size)
 
     tokenRepository.deleteAll(expiredTokens)
 
-    val remaining = tokenRepository.findAllByUserId(testUserId)
+    val remaining = tokenRepository.findByUserIdOrderByUpdatedAtDesc(testUserId)
     assertEquals(1, remaining.size)
     assertEquals("valid-client", remaining[0].client)
   }

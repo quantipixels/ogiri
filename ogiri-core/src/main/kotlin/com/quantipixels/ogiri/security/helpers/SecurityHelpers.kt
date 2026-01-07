@@ -13,6 +13,9 @@
 package com.quantipixels.ogiri.security.helpers
 
 import jakarta.servlet.http.HttpServletRequest
+import java.net.Inet4Address
+import java.net.Inet6Address
+import java.net.InetAddress
 import java.net.URI
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.util.AntPathMatcher
@@ -20,10 +23,6 @@ import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
 
 val pathMatcher = AntPathMatcher()
-
-// IP validation patterns
-private val IPV4_PATTERN = Regex("^(\\d{1,3}\\.){3}\\d{1,3}$")
-private val IPV6_PATTERN = Regex("^([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}$")
 
 object SecurityHelpers {
   val WHITE_LIST_PREFIXES: List<String> =
@@ -39,11 +38,50 @@ object SecurityHelpers {
   /**
    * Validates whether the given string is a valid IP address (IPv4 or IPv6).
    *
+   * Uses [InetAddress] for robust validation instead of regex patterns, which correctly handles:
+   * - Standard IPv4 addresses (e.g., "192.168.1.1")
+   * - Full IPv6 addresses (e.g., "2001:db8::1")
+   * - Compressed IPv6 (e.g., "::", "::1")
+   * - IPv4-mapped IPv6 (e.g., "::ffff:192.168.1.1")
+   *
+   * Note: IPv6 zone IDs (e.g., "fe80::1%eth0") are stripped before validation as they are
+   * interface-specific suffixes that don't affect the validity of the IP address itself.
+   *
    * @param ip The string to validate.
-   * @return `true` if the string matches IPv4 or IPv6 format, `false` otherwise.
+   * @return `true` if the string is a valid IPv4 or IPv6 address, `false` otherwise.
    */
-  fun isValidIp(ip: String): Boolean =
-      IPV4_PATTERN.matches(ip) || IPV6_PATTERN.matches(ip) || ip == "::1" || ip == "localhost"
+  fun isValidIp(ip: String): Boolean {
+    if (ip == "localhost") return true
+    if (ip.isBlank()) return false
+
+    // Strip IPv6 zone ID (e.g., "fe80::1%eth0" -> "fe80::1")
+    val ipWithoutZone = ip.substringBefore('%')
+
+    return try {
+      // InetAddress.getByName validates and parses the IP address
+      val addr = InetAddress.getByName(ipWithoutZone)
+      when (addr) {
+        is Inet4Address -> {
+          // InetAddress.getByName parses various formats as IPv4:
+          // - Standard: "192.168.1.1" (valid)
+          // - IPv4-mapped IPv6: "::ffff:192.168.1.1" (valid - special case)
+          // - Single number: "12345" (invalid for our purposes)
+          // - Partial: "192.168.1" (invalid for our purposes)
+          //
+          // Accept if it's either a proper 4-octet IPv4 or an IPv4-mapped IPv6 format
+          val isStandardIpv4 =
+              ipWithoutZone.count { it == '.' } == 3 &&
+                  ipWithoutZone.matches(Regex("^\\d{1,3}(\\.\\d{1,3}){3}$"))
+          val isIpv4MappedIpv6 = ipWithoutZone.startsWith("::ffff:", ignoreCase = true)
+          isStandardIpv4 || isIpv4MappedIpv6
+        }
+        is Inet6Address -> true
+        else -> false
+      }
+    } catch (_: Exception) {
+      false
+    }
+  }
 
   /**
    * Extracts the client's IP address from the given servlet request.

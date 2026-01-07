@@ -179,7 +179,8 @@ open class OgiriTokenAuthenticationFilter(
 
     // Try Bearer token as fallback
     val authHeader = request.getHeader("Authorization") ?: return headerToken
-    val fields = parseBearerToken(authHeader) ?: return headerToken
+    val fields =
+        parseBearerToken(authHeader, properties.auth.maxBearerTokenSize) ?: return headerToken
 
     return AuthHeader(
         accessToken = fields["access-token"],

@@ -22,12 +22,12 @@ dependencies {
   implementation(project(":ogiri-core"))
   implementation("org.springframework.boot:spring-boot-starter-web")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-  implementation("org.postgresql:postgresql:42.7.8")
+  runtimeOnly("com.h2database:h2:2.4.240")
+  runtimeOnly("org.postgresql:postgresql:42.7.8")
 
   testImplementation("org.springframework.boot:spring-boot-starter-test") {
     exclude(module = "mockito-core")
   }
-  testImplementation("com.h2database:h2:2.4.240")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

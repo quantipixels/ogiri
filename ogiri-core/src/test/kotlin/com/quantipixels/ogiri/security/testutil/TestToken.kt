@@ -32,8 +32,8 @@ data class TestToken(
     override val client: String,
     /** Token hash. */
     override var token: String,
-    /** Token type ("APP" or "SUB"). */
-    override val tokenType: String = "APP",
+    /** Token type ("app" or "sub"). */
+    override val tokenType: String = "app",
     /** Expiration time. */
     override var expiryAt: Instant,
     /** Creation time. */
@@ -102,7 +102,7 @@ data class TestToken(
         userId: Long = 1L,
         client: String = "test-client",
         token: String = "hashed-token",
-        tokenType: String = "APP",
+        tokenType: String = "app",
         expiryAt: Instant = Instant.now().plusSeconds(3600),
         createdAt: Instant = Instant.now(),
         updatedAt: Instant = Instant.now(),

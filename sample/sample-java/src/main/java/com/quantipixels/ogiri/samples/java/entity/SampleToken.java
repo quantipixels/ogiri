@@ -66,9 +66,13 @@ public class SampleToken extends OgiriBaseToken {
   @Column(name = "token_hash", nullable = false)
   private String token;
 
-  /** Token type classifier ("APP" or "SUB"). */
+  /** First 8 characters of plaintext token - indexed for O(1) lookups. */
+  @Column(name = "token_prefix", length = 8)
+  private String tokenPrefix;
+
+  /** Token type classifier ("app" or "sub"). */
   @Column(name = "token_type", nullable = false)
-  private String tokenType = "APP";
+  private String tokenType = "app";
 
   /** Token expiration time (UTC) - indexed for cleanup queries. */
   @Column(name = "expiry_at", nullable = false)
@@ -148,6 +152,14 @@ public class SampleToken extends OgiriBaseToken {
 
   public String getTokenType() {
     return tokenType;
+  }
+
+  public String getTokenPrefix() {
+    return tokenPrefix;
+  }
+
+  public void setTokenPrefix(String tokenPrefix) {
+    this.tokenPrefix = tokenPrefix;
   }
 
   public Instant getExpiryAt() {

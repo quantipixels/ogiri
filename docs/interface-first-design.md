@@ -290,7 +290,7 @@ data class UserToken(
     override var token: String,
 
     @Column(name = "token_type", nullable = false)
-    override val tokenType: String = "APP",
+    override val tokenType: String = "app",
 
     @Column(name = "expiry_at", nullable = false)
     override var expiryAt: Instant,

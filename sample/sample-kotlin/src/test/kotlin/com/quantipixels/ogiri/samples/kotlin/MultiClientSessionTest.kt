@@ -48,7 +48,7 @@ class MultiClientSessionTest {
     tokenService.createNewAuthToken(testUserId, "web")
     tokenService.createNewAuthToken(testUserId, "desktop")
 
-    val tokens = tokenRepository.findAllByUserId(testUserId)
+    val tokens = tokenRepository.findByUserIdOrderByUpdatedAtDesc(testUserId)
 
     assertEquals(3, tokens.size)
 
@@ -68,7 +68,7 @@ class MultiClientSessionTest {
     // Logout from mobile only
     tokenService.deleteToken(testUserId, "mobile")
 
-    val remaining = tokenRepository.findAllByUserId(testUserId)
+    val remaining = tokenRepository.findByUserIdOrderByUpdatedAtDesc(testUserId)
     assertEquals(2, remaining.size)
 
     val clients = remaining.map { it.client }.toSet()
@@ -84,12 +84,12 @@ class MultiClientSessionTest {
     tokenService.createNewAuthToken(testUserId, "web")
     tokenService.createNewAuthToken(testUserId, "desktop")
 
-    assertEquals(3, tokenRepository.findAllByUserId(testUserId).size)
+    assertEquals(3, tokenRepository.findByUserIdOrderByUpdatedAtDesc(testUserId).size)
 
     // Logout from all clients
     tokenService.deleteAllForUser(testUserId)
 
-    assertEquals(0, tokenRepository.findAllByUserId(testUserId).size)
+    assertEquals(0, tokenRepository.findByUserIdOrderByUpdatedAtDesc(testUserId).size)
   }
 
   @Test
@@ -103,7 +103,7 @@ class MultiClientSessionTest {
     // Bulk logout from mobile and web
     tokenService.deleteToken(testUserId, listOf("mobile", "web"))
 
-    val remaining = tokenRepository.findAllByUserId(testUserId)
+    val remaining = tokenRepository.findByUserIdOrderByUpdatedAtDesc(testUserId)
     assertEquals(2, remaining.size)
 
     val clients = remaining.map { it.client }.toSet()
@@ -120,14 +120,14 @@ class MultiClientSessionTest {
     tokenService.createNewAuthToken(user1, "web")
     tokenService.createNewAuthToken(user2, "mobile")
 
-    assertEquals(2, tokenRepository.findAllByUserId(user1).size)
-    assertEquals(1, tokenRepository.findAllByUserId(user2).size)
+    assertEquals(2, tokenRepository.findByUserIdOrderByUpdatedAtDesc(user1).size)
+    assertEquals(1, tokenRepository.findByUserIdOrderByUpdatedAtDesc(user2).size)
 
     // Deleting user1's tokens doesn't affect user2
     tokenService.deleteAllForUser(user1)
 
-    assertEquals(0, tokenRepository.findAllByUserId(user1).size)
-    assertEquals(1, tokenRepository.findAllByUserId(user2).size)
+    assertEquals(0, tokenRepository.findByUserIdOrderByUpdatedAtDesc(user1).size)
+    assertEquals(1, tokenRepository.findByUserIdOrderByUpdatedAtDesc(user2).size)
   }
 
   @Test
@@ -135,14 +135,17 @@ class MultiClientSessionTest {
     // Create initial token
     tokenService.createNewAuthToken(testUserId, "mobile")
 
-    val firstToken = tokenRepository.findByUserIdAndClient(testUserId, "mobile")
+    val firstToken = tokenRepository.findByUserIdAndClientEquals(testUserId, "mobile").orElse(null)
     val firstId = firstToken!!.id
 
     // Create token for same client again (should update)
     tokenService.createNewAuthToken(testUserId, "mobile")
 
     // Should still have only one token for this client
-    val tokens = tokenRepository.findAllByUserId(testUserId).filter { it.client == "mobile" }
+    val tokens =
+        tokenRepository.findByUserIdOrderByUpdatedAtDesc(testUserId).filter {
+          it.client == "mobile"
+        }
 
     assertEquals(1, tokens.size)
   }

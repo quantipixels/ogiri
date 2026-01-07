@@ -48,19 +48,53 @@ class SecurityHelpersTest {
 
     @Test
     fun `valid IPv6 addresses return true`() {
-      // ::1 is explicitly handled as a special case
+      // Loopback
       assertTrue(SecurityHelpers.isValidIp("::1"))
+      // Unspecified address
+      assertTrue(SecurityHelpers.isValidIp("::"))
       // Standard IPv6 format with multiple segments
       assertTrue(SecurityHelpers.isValidIp("2001:0db8:0000:0000:0000:0000:0000:0001"))
       assertTrue(SecurityHelpers.isValidIp("fe80:0000:0000:0000:0000:0000:0000:0001"))
+      // Compressed IPv6 (various positions)
+      assertTrue(SecurityHelpers.isValidIp("2001:db8::1"))
+      assertTrue(SecurityHelpers.isValidIp("2001:db8:85a3::8a2e:370:7334"))
+    }
+
+    @Test
+    fun `IPv4-mapped IPv6 addresses are valid`() {
+      // IPv4-mapped IPv6 is valid (Java parses it as Inet4Address internally but it's still valid)
+      // Note: InetAddress.getByName("::ffff:192.168.1.1") returns Inet4Address
+      assertTrue(SecurityHelpers.isValidIp("::ffff:192.168.1.1"))
+    }
+
+    @Test
+    fun `IPv6 with zone IDs are valid`() {
+      // Link-local with zone ID (commonly used in network interfaces)
+      assertTrue(SecurityHelpers.isValidIp("fe80::1%eth0"))
+      assertTrue(SecurityHelpers.isValidIp("fe80::1%en0"))
+      assertTrue(SecurityHelpers.isValidIp("fe80::1%1"))
     }
 
     @Test
     fun `invalid IPv6 addresses return false`() {
       // Contains invalid hex character 'g'
       assertFalse(SecurityHelpers.isValidIp("gggg:0000:0000:0000:0000:0000:0000:0001"))
-      // Invalid format
+      // Invalid format - too few colons
       assertFalse(SecurityHelpers.isValidIp("not:an:ipv6"))
+      // Invalid - too many segments
+      assertFalse(SecurityHelpers.isValidIp("1:2:3:4:5:6:7:8:9"))
+      // Invalid - empty segments without proper compression
+      assertFalse(SecurityHelpers.isValidIp("1::2::3"))
+      // Invalid - just colons (was previously accepted by regex)
+      assertFalse(SecurityHelpers.isValidIp("::::::::"))
+    }
+
+    @Test
+    fun `IPv4 addresses with out-of-range octets are invalid`() {
+      // InetAddress correctly rejects these
+      assertFalse(SecurityHelpers.isValidIp("256.1.1.1"))
+      assertFalse(SecurityHelpers.isValidIp("192.168.1.256"))
+      assertFalse(SecurityHelpers.isValidIp("999.999.999.999"))
     }
 
     @Test

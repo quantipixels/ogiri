@@ -77,9 +77,10 @@ class InMemoryTokenRepository : OgiriTokenRepository<TestToken> {
   override fun save(token: TestToken): TestToken {
     synchronized(tokens) {
       return if (token.id == 0L) {
-        // Insert: generate new ID and preserve transient plainToken
+        // Insert: generate new ID and preserve transient properties
         val newToken = token.copy(id = idSequence.getAndIncrement())
         newToken.plainToken = token.plainToken // Preserve transient property
+        newToken.tokenPrefix = token.tokenPrefix // Preserve inherited mutable property
         newToken.updatedAt = clock // Use repository's clock for deterministic testing
         tokens.add(newToken)
         newToken
@@ -198,5 +199,49 @@ class InMemoryTokenRepository : OgiriTokenRepository<TestToken> {
   /** Delete all tokens for a user. */
   override fun deleteByUserId(userId: Long) {
     synchronized(tokens) { tokens.removeIf { it.userId == userId } }
+  }
+
+  /**
+   * Find all valid (non-expired) APP tokens matching the given prefix.
+   *
+   * @param prefix The 8-character token prefix to search for
+   * @param now Current instant for expiry comparison
+   * @return List of matching non-expired APP tokens
+   */
+  override fun findValidTokensByPrefix(
+      prefix: String,
+      now: Instant,
+  ): List<TestToken> {
+    synchronized(tokens) {
+      return tokens.filter {
+        it.tokenPrefix == prefix &&
+            it.tokenType.equals("app", ignoreCase = true) &&
+            !it.expiryAt.isBefore(now)
+      }
+    }
+  }
+
+  /**
+   * Find all tokens of a specific type.
+   *
+   * @param tokenType The token type to filter by
+   * @return List of tokens matching the type
+   */
+  override fun findAllByTokenType(tokenType: String): List<TestToken> {
+    synchronized(tokens) {
+      return tokens.filter { it.tokenType.equals(tokenType, ignoreCase = true) }
+    }
+  }
+
+  /**
+   * Count the number of tokens for a user.
+   *
+   * @param userId The user ID to count tokens for
+   * @return Number of tokens belonging to the user
+   */
+  override fun countByUserId(userId: Long): Long {
+    synchronized(tokens) {
+      return tokens.count { it.userId == userId }.toLong()
+    }
   }
 }

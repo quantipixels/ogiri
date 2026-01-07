@@ -12,6 +12,7 @@
  */
 package com.quantipixels.ogiri.security.tokens
 
+import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.quantipixels.ogiri.security.config.OgiriConfigurationProperties
 import com.quantipixels.ogiri.security.core.AuthHeader
@@ -36,27 +37,21 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
-private val tokenEqualityCache =
-    Caffeine.newBuilder().maximumSize(10000).expireAfterWrite(1, TimeUnit.HOURS).build<
-        String, Boolean> { _ ->
-      false
-    }
+/**
+ * Length of token prefix stored for efficient database lookups.
+ *
+ * With 8 characters from a base62 alphabet, there are 62^8 (~218 trillion) possible prefixes,
+ * providing excellent collision resistance while minimizing information leakage.
+ */
+const val TOKEN_PREFIX_LENGTH = 8
 
-private fun tokensMatch(
-    tokenHash: String,
-    token: String,
-    passwordEncoder: PasswordEncoder,
-): Boolean {
-  // Use NULL char as delimiter to prevent collision (tokens can't contain NULL)
-  val key = "$tokenHash\u0000$token"
-  val cached = tokenEqualityCache.getIfPresent(key)
-  if (cached != null) {
-    return cached
-  }
-  val result = passwordEncoder.matches(token, tokenHash)
-  tokenEqualityCache.put(key, result)
-  return result
-}
+/**
+ * Threshold ratio for triggering token cleanup.
+ *
+ * Token cleanup is only performed when the number of tokens reaches this percentage of maxClients.
+ * This prevents unnecessary database operations when users have few active tokens.
+ */
+const val CLEANUP_THRESHOLD_RATIO = 0.8
 
 data class OgiriGeneratedTokens<T : OgiriToken>(
     val appToken: T,
@@ -83,6 +78,70 @@ open class OgiriTokenService<T : OgiriToken>(
   private val maxClients: Long = properties.auth.maxClients
   private val batchGraceSeconds: Long = properties.auth.batchGraceSeconds
   private val tokenLifespanDays: Long = properties.auth.tokenLifespanDays
+
+  /**
+   * Cache for token comparison results to avoid repeated BCrypt operations.
+   *
+   * Uses configuration from [OgiriConfigurationProperties.CacheProperties] for size and expiry.
+   */
+  private val tokenEqualityCache: Cache<String, Boolean> by lazy {
+    Caffeine.newBuilder()
+        .maximumSize(properties.cache.maxSize)
+        .expireAfterWrite(properties.cache.expiryMinutes, TimeUnit.MINUTES)
+        .build()
+  }
+
+  /**
+   * Cache for batch request detection timestamps to avoid database queries.
+   *
+   * Stores the last update timestamp for each user:client combination. Entries expire slightly
+   * after the batch grace period to ensure stale entries don't interfere with detection.
+   */
+  private val batchTimestampCache: Cache<String, Instant> by lazy {
+    Caffeine.newBuilder()
+        .maximumSize(properties.cache.maxSize)
+        .expireAfterWrite(batchGraceSeconds + 1, TimeUnit.SECONDS)
+        .build()
+  }
+
+  /** Generate cache key for batch timestamp lookup. */
+  private fun batchCacheKey(
+      userId: Long,
+      client: String,
+  ): String = "$userId:$client"
+
+  /**
+   * Cached sub-token registrations.
+   *
+   * Registrations are retrieved once at first access and cached for the service's lifetime,
+   * avoiding repeated calls to [OgiriSubTokenRegistry.registrations].
+   */
+  private val cachedRegistrations: List<OgiriSubTokenRegistration> by lazy {
+    subTokenRegistry.registrations()
+  }
+
+  /**
+   * Check if a plain token matches a hashed token, using cache to avoid repeated BCrypt operations.
+   *
+   * @param tokenHash The BCrypt-hashed token from the database
+   * @param token The plaintext token to validate
+   * @return true if tokens match, false otherwise
+   */
+  private fun tokensMatch(
+      tokenHash: String,
+      token: String,
+  ): Boolean {
+    // Use length-prefixed format to prevent collision (more robust than NULL delimiter)
+    val key = "${tokenHash.length}:$tokenHash:${token.length}:$token"
+    val cached = tokenEqualityCache.getIfPresent(key)
+    if (cached != null) {
+      return cached
+    }
+    val result = passwordEncoder.matches(token, tokenHash)
+    tokenEqualityCache.put(key, result)
+    return result
+  }
+
   /**
    * Factory function for creating new token instances.
    *
@@ -178,21 +237,51 @@ open class OgiriTokenService<T : OgiriToken>(
   fun cleanupExpiredTokens(now: Instant = Instant.now()): Int =
       repository.deleteByExpiryAtBefore(now)
 
+  /**
+   * Clean up expired tokens in batches.
+   *
+   * This method repeatedly deletes batches of expired tokens until none remain, using the batch
+   * size from configuration. This is more efficient for large-scale cleanup as it avoids
+   * overwhelming the database with a single large DELETE operation.
+   *
+   * @param now The cutoff time for expiry comparison. Tokens with expiryAt before this are deleted.
+   * @return Total number of tokens deleted across all batches.
+   */
+  @Transactional
+  fun cleanupExpiredTokensBatched(now: Instant = Instant.now()): Int {
+    val batchSize = properties.cleanup.batchSize
+    var totalDeleted = 0
+    var deleted: Int
+    do {
+      deleted = repository.deleteExpiredBatch(now, batchSize)
+      totalDeleted += deleted
+    } while (deleted == batchSize)
+    return totalDeleted
+  }
+
   @Transactional(readOnly = true)
   fun isBatchRequest(
       user: OgiriUser,
       client: String,
       requestStartedAt: Instant,
   ): Boolean {
-    val token = getByUserIdAndClient(user.getOgiriUserId(), client)
-    return token
-        ?.takeIf { !it.isExpired() }
-        ?.updatedAt
-        ?.let { updatedAt ->
-          val threshold = requestStartedAt.minusSeconds(batchGraceSeconds)
-          updatedAt.isAfter(threshold) || updatedAt == threshold
-        }
-        ?: false
+    val userId = user.getOgiriUserId()
+    val cacheKey = batchCacheKey(userId, client)
+
+    // Check cache first to avoid database query
+    val cachedTimestamp = batchTimestampCache.getIfPresent(cacheKey)
+    if (cachedTimestamp != null) {
+      val threshold = requestStartedAt.minusSeconds(batchGraceSeconds)
+      return cachedTimestamp.isAfter(threshold) || cachedTimestamp == threshold
+    }
+
+    // Cache miss - query database and cache the result
+    val token = getByUserIdAndClient(userId, client)
+    val updatedAt = token?.takeIf { !it.isExpired() }?.updatedAt ?: return false
+
+    batchTimestampCache.put(cacheKey, updatedAt)
+    val threshold = requestStartedAt.minusSeconds(batchGraceSeconds)
+    return updatedAt.isAfter(threshold) || updatedAt == threshold
   }
 
   @Transactional
@@ -201,9 +290,22 @@ open class OgiriTokenService<T : OgiriToken>(
       token: String,
       client: String,
   ): AuthHeader? {
-    val clientToken = getByUserIdAndClient(user.getOgiriUserId(), client) ?: return null
-    clientToken.lastUsedAt = Instant.now()
-    repository.save(clientToken)
+    val userId = user.getOgiriUserId()
+    val clientToken = getByUserIdAndClient(userId, client) ?: return null
+    val now = Instant.now()
+
+    // Only update database if timestamp is stale (older than half batch window)
+    // This reduces write load while keeping the timestamp reasonably fresh
+    val lastUsed = clientToken.lastUsedAt
+    val updateThreshold = batchGraceSeconds / 2
+    val shouldUpdate = lastUsed == null || lastUsed.plusSeconds(updateThreshold).isBefore(now)
+
+    if (shouldUpdate) {
+      clientToken.lastUsedAt = now
+      repository.save(clientToken)
+      // Update batch timestamp cache to reflect the new timestamp
+      batchTimestampCache.put(batchCacheKey(userId, client), now)
+    }
     return updateAuthHeader(user, token, client)
   }
 
@@ -224,6 +326,7 @@ open class OgiriTokenService<T : OgiriToken>(
     val tokenClient = client ?: identifierPolicy.generate()
     val generatedToken = identifierPolicy.generate()
     val hashedToken = passwordEncoder.encode(generatedToken)
+    val tokenPrefixValue = extractTokenPrefix(generatedToken)
     var token = client?.let { getByUserIdAndClient(user.getOgiriUserId(), it) }
     if (token == null) {
       token =
@@ -238,6 +341,7 @@ open class OgiriTokenService<T : OgiriToken>(
           )
       token.tokenUpdatedAt = Instant.now()
       token.plainToken = generatedToken
+      token.tokenPrefix = tokenPrefixValue
     }
     token.apply {
       expiryAt = expiry
@@ -249,13 +353,52 @@ open class OgiriTokenService<T : OgiriToken>(
         this.token = hashedToken
         tokenUpdatedAt = Instant.now()
         plainToken = generatedToken
+        tokenPrefix = tokenPrefixValue
       } else {
         this.token = hashedToken
         tokenUpdatedAt = Instant.now()
         plainToken = generatedToken
+        tokenPrefix = tokenPrefixValue
       }
     }
-    return repository.save(token)
+    val savedToken = repository.save(token)
+    // Invalidate batch timestamp cache since token was updated
+    batchTimestampCache.invalidate(batchCacheKey(user.getOgiriUserId(), savedToken.client))
+    return savedToken
+  }
+
+  /**
+   * Extract the prefix from a plaintext token for efficient database lookups.
+   *
+   * The prefix is the first 8 characters of the token. This is stored in plaintext to enable
+   * indexed lookups, avoiding O(n) BCrypt comparisons.
+   *
+   * @param tokenValue The plaintext token value
+   * @return The 8-character prefix, or the full token if shorter than 8 characters
+   */
+  protected open fun extractTokenPrefix(tokenValue: String): String =
+      tokenValue.take(TOKEN_PREFIX_LENGTH)
+
+  /**
+   * Find token candidates for validation.
+   *
+   * This hook method allows subclasses to customize token lookup strategy. The default
+   * implementation uses prefix-based lookup when available, falling back to loading all tokens.
+   *
+   * Subclasses can override this method to implement:
+   * - Redis-cached lookups
+   * - Custom sharding strategies
+   * - Alternative indexing schemes
+   *
+   * @param tokenValue The plaintext token to find candidates for
+   * @return List of tokens that might match the given token value
+   */
+  protected open fun findTokenCandidates(tokenValue: String): List<T> {
+    val prefix = extractTokenPrefix(tokenValue)
+    val candidates = repository.findValidTokensByPrefix(prefix)
+    // Fall back to all tokens if no candidates found (backwards compatibility for tokens without
+    // prefix)
+    return candidates.ifEmpty { repository.findAllByTokenType(OgiriTokenType.APP.label) }
   }
 
   @Transactional
@@ -266,7 +409,7 @@ open class OgiriTokenService<T : OgiriToken>(
     val expiry = Instant.now().plus(tokenLifespanDays, ChronoUnit.DAYS)
     val appToken = createOrUpdateToken(user, client, expiry)
     val subTokens = issueSubTokens(user, appToken.client, null, forceNew = false)
-    cleanOldTokens(user)
+    maybeCleanOldTokens(user)
     return OgiriGeneratedTokens(appToken, subTokens)
   }
 
@@ -285,7 +428,7 @@ open class OgiriTokenService<T : OgiriToken>(
       forceNew: Boolean,
   ): Map<String, T> {
     val registrations =
-        subTokenRegistry.registrations().filter {
+        cachedRegistrations.filter {
           requestedNames?.let { names -> it.name in names } ?: it.includeByDefault
         }
     val results = mutableMapOf<String, T>()
@@ -379,7 +522,7 @@ open class OgiriTokenService<T : OgiriToken>(
     val tokens = repository.findAllByUserId(user.getOgiriUserId())
     if (tokens.isEmpty()) return
 
-    val registrations = subTokenRegistry.registrations()
+    val registrations = cachedRegistrations
     val (appTokens, subTokens) =
         tokens.partition { OgiriTokenType.of(it.tokenType) == OgiriTokenType.APP }
 
@@ -399,6 +542,24 @@ open class OgiriTokenService<T : OgiriToken>(
       remove.forEach { repository.delete(it) }
       val removeSubClients = expectedSubClientsFor(remove.clientIds(), registrations)
       deleteToken(user.getOgiriUserId(), removeSubClients)
+    }
+  }
+
+  /**
+   * Conditionally clean old tokens only when approaching the max clients limit.
+   *
+   * This optimization reduces database operations by skipping cleanup when the user has
+   * significantly fewer tokens than the maximum allowed. Cleanup is only triggered when the token
+   * count reaches 80% of [maxClients].
+   *
+   * @param user User whose tokens should potentially be cleaned
+   */
+  @Transactional
+  fun maybeCleanOldTokens(user: OgiriUser) {
+    val tokenCount = repository.countByUserId(user.getOgiriUserId())
+    val threshold = (maxClients * CLEANUP_THRESHOLD_RATIO).toLong()
+    if (tokenCount >= threshold) {
+      cleanOldTokens(user)
     }
   }
 
@@ -447,7 +608,7 @@ open class OgiriTokenService<T : OgiriToken>(
       plainToken: String?,
   ): Boolean {
     if (hashedToken.isNullOrBlank() || plainToken.isNullOrBlank()) return false
-    return tokensMatch(hashedToken, plainToken, passwordEncoder)
+    return tokensMatch(hashedToken, plainToken)
   }
 
   private fun tokenCanBeReused(
@@ -469,7 +630,7 @@ open class OgiriTokenService<T : OgiriToken>(
   ): AuthHeader {
     val appToken = getByUserIdAndClient(user.getOgiriUserId(), client)
     val subHeaders = mutableMapOf<String, SubTokenHeader>()
-    subTokenRegistry.registrations().forEach { reg ->
+    cachedRegistrations.forEach { reg ->
       val subClient = reg.clientIdFor(client)
       val provided = issuedSubTokens?.get(reg.name)
       val stored = getByUserIdAndClient(user.getOgiriUserId(), subClient)
@@ -503,7 +664,7 @@ open class OgiriTokenService<T : OgiriToken>(
       issuedSubTokens: Map<String, T>? = null,
   ): AuthHeader {
     val authHeaders = buildAuthHeader(user, token, client, issuedSubTokens)
-    cleanOldTokens(user)
+    maybeCleanOldTokens(user)
     return authHeaders
   }
 
@@ -557,9 +718,7 @@ open class OgiriTokenService<T : OgiriToken>(
     if (isTokenValid) {
       deleteToken(user.getOgiriUserId(), clientId)
       val subClients =
-          subTokenRegistry.registrations().map { registration ->
-            registration.clientIdFor(clientId)
-          }
+          cachedRegistrations.map { registration -> registration.clientIdFor(clientId) }
       deleteToken(user.getOgiriUserId(), subClients)
       val authHeaders = buildAuthHeader(user, authHeader.accessToken!!, clientId, null)
       response.appendAuthHeaders(authHeaders, properties.cookies)
@@ -635,8 +794,7 @@ open class OgiriTokenService<T : OgiriToken>(
       rawOrBearer: String,
   ): Boolean {
     val user = userDirectory.findByUsername(username) ?: return false
-    val registration =
-        subTokenRegistry.registrations().find { it.name == subTokenName } ?: return false
+    val registration = cachedRegistrations.find { it.name == subTokenName } ?: return false
     val tokenField = rawOrBearer.trim()
     val authHeader = tryDecodeSubBearer(tokenField.removePrefix("Bearer ").trim())
 
@@ -673,7 +831,7 @@ open class OgiriTokenService<T : OgiriToken>(
       userId: Long,
       subtype: String,
   ): OgiriToken? {
-    val registration = subTokenRegistry.registrations().find { it.name == subtype } ?: return null
+    val registration = cachedRegistrations.find { it.name == subtype } ?: return null
 
     return repository.findAllByUserIdAndTokenSubtype(userId, subtype).firstOrNull { token ->
       OgiriTokenType.of(token.tokenType) == OgiriTokenType.SUB
@@ -723,8 +881,7 @@ open class OgiriTokenService<T : OgiriToken>(
     val parentToken = getByUserIdAndClient(userId, parentClient) ?: return null
     if (parentToken.isExpired()) return null
 
-    val registration =
-        subTokenRegistry.registrations().find { it.name == subtypeName } ?: return null
+    val registration = cachedRegistrations.find { it.name == subtypeName } ?: return null
     val subClient = registration.clientIdFor(parentClient)
 
     val newSubToken =

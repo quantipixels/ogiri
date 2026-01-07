@@ -12,8 +12,10 @@
  */
 package com.quantipixels.ogiri.security.config
 
+import jakarta.annotation.PostConstruct
 import jakarta.validation.Valid
 import jakarta.validation.constraints.Min
+import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.validation.annotation.Validated
 
@@ -69,6 +71,34 @@ open class OgiriConfigurationProperties {
 
   /** Token comparison cache configuration. */
   val cache: CacheProperties = CacheProperties()
+
+  companion object {
+    private val logger = LoggerFactory.getLogger(OgiriConfigurationProperties::class.java)
+  }
+
+  /**
+   * Validates configuration and warns about insecure default values.
+   *
+   * Called automatically by Spring after properties are bound.
+   */
+  @PostConstruct
+  fun warnInsecureDefaults() {
+    if (auth.rotateStaleSeconds == 0L) {
+      logger.warn(
+          "ogiri.auth.rotate-stale-seconds=0 disables time-based token rotation. " +
+              "Consider setting to 3600 (1 hour) or higher for production security.")
+    }
+    if (!cookies.secure) {
+      logger.warn(
+          "ogiri.cookies.secure=false allows cookies over HTTP. " +
+              "Set to true for production deployments using HTTPS.")
+    }
+    if (!cookies.httpOnly) {
+      logger.warn(
+          "ogiri.cookies.http-only=false exposes cookies to JavaScript. " +
+              "Set to true to prevent XSS cookie theft.")
+    }
+  }
 
   /** Security filter configuration properties. */
   open class SecurityProperties {
@@ -198,6 +228,24 @@ open class OgiriConfigurationProperties {
      * See [OgiriTokenAuthenticationFilter.rotateTokensIfNeeded] for implementation.
      */
     var rotateStaleSeconds: Long = 0
+
+    /**
+     * Maximum allowed size for bearer tokens in bytes.
+     *
+     * This limit prevents memory exhaustion attacks where an attacker sends extremely large bearer
+     * tokens that would be base64 decoded and parsed. The default of 8KB is sufficient for normal
+     * JWT tokens (typically 1-2KB) while blocking potential DoS attempts.
+     *
+     * Default: 8192 (8KB) Valid Range: 256 - any positive integer
+     *
+     * Examples:
+     * - Minimal: 1024 (1KB, for very small tokens)
+     * - Default: 8192 (8KB, standard JWT size)
+     * - Large: 16384 (16KB, for tokens with extensive claims)
+     *
+     * See [com.quantipixels.ogiri.security.core.AuthHeader.parseBearerToken] for implementation.
+     */
+    @field:Min(256) var maxBearerTokenSize: Int = 8192
   }
 
   /**
@@ -238,6 +286,21 @@ open class OgiriConfigurationProperties {
      * Only used if [enabled] is true.
      */
     var intervalMs: Long = 21600000
+
+    /**
+     * Batch size for token cleanup operations.
+     *
+     * When cleaning up expired tokens, tokens are deleted in batches of this size to avoid
+     * overwhelming the database with large DELETE operations.
+     *
+     * Default: 1000 Valid Range: 100 - any positive integer
+     *
+     * Examples:
+     * - 100: Conservative, for databases with limited resources
+     * - 1000: Default, good balance for most deployments
+     * - 5000: Aggressive, for high-performance databases
+     */
+    @field:Min(100) var batchSize: Int = 1000
   }
 
   /**

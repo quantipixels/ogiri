@@ -13,11 +13,11 @@
 package com.quantipixels.ogiri.samples.kotlin.service
 
 import com.quantipixels.ogiri.samples.kotlin.entity.SampleToken
-import com.quantipixels.ogiri.samples.kotlin.repository.SampleTokenRepository
 import com.quantipixels.ogiri.security.config.OgiriConfigurationProperties
 import com.quantipixels.ogiri.security.core.IdentifierPolicy
 import com.quantipixels.ogiri.security.spi.OgiriUserDirectory
 import com.quantipixels.ogiri.security.tokens.OgiriSubTokenRegistry
+import com.quantipixels.ogiri.security.tokens.OgiriTokenRepository
 import com.quantipixels.ogiri.security.tokens.OgiriTokenService
 import com.quantipixels.ogiri.security.tokens.OgiriTokenType
 import java.time.Instant
@@ -40,7 +40,7 @@ import org.springframework.stereotype.Service
 @Service
 @Primary
 class SampleTokenService(
-    private val sampleTokenRepository: SampleTokenRepository,
+    tokenRepository: OgiriTokenRepository<SampleToken>,
     passwordEncoder: PasswordEncoder,
     userDirectory: OgiriUserDirectory,
     identifierPolicy: IdentifierPolicy,
@@ -48,7 +48,7 @@ class SampleTokenService(
     properties: OgiriConfigurationProperties,
 ) :
     OgiriTokenService<SampleToken>(
-        sampleTokenRepository,
+        tokenRepository,
         passwordEncoder,
         userDirectory,
         identifierPolicy,
@@ -92,7 +92,7 @@ class SampleTokenService(
             userId = userId,
             client = client,
             token = hashedToken,
-            tokenType = tokenType.name, // Convert enum to string ("APP" or "SUB")
+            tokenType = tokenType.name, // Convert enum to string ("app" or "sub")
             expiryAt = expiry,
             tokenSubtype = tokenSubtype,
         )

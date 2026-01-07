@@ -138,7 +138,7 @@ object TestFixtures {
       var userId: Long = 1L,
       var client: String = "test-client",
       var token: String = testHashedToken(),
-      var tokenType: String = "APP",
+      var tokenType: String = "app",
       var expiryAt: Instant = futureExpiry(),
       var createdAt: Instant = Instant.now(),
       var updatedAt: Instant = Instant.now(),
@@ -183,7 +183,7 @@ object TestFixtures {
     /**
      * Set the Ogiri token type for the builder.
      *
-     * @param tokenType Token type identifier (for example, `"APP"`).
+     * @param tokenType Token type identifier (for example, `"app"`).
      * @return This TokenBuilder instance for chaining.
      */
     fun withOgiriTokenType(tokenType: String) = apply { this.tokenType = tokenType }

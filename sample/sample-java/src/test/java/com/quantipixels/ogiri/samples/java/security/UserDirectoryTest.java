@@ -18,14 +18,18 @@ import com.quantipixels.ogiri.security.spi.OgiriUser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 class UserDirectoryTest {
 
   private SampleOgiriUserDirectory userDirectory;
+  private PasswordEncoder passwordEncoder;
 
   @BeforeEach
   void setUp() {
-    userDirectory = new SampleOgiriUserDirectory();
+    passwordEncoder = new BCryptPasswordEncoder();
+    userDirectory = new SampleOgiriUserDirectory(passwordEncoder);
   }
 
   @Test

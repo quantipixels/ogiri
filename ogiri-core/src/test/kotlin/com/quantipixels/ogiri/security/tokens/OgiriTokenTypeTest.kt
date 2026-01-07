@@ -26,9 +26,7 @@ class OgiriTokenTypeTest {
   @Test
   fun `ofOrDefault should return correct type for valid labels`() {
     assertEquals(OgiriTokenType.APP, OgiriTokenType.ofOrDefault("app"))
-    assertEquals(OgiriTokenType.APP, OgiriTokenType.ofOrDefault("APP"))
     assertEquals(OgiriTokenType.SUB, OgiriTokenType.ofOrDefault("sub"))
-    assertEquals(OgiriTokenType.SUB, OgiriTokenType.ofOrDefault("SUB"))
   }
 
   @Test

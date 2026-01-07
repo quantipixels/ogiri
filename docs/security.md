@@ -56,6 +56,84 @@ The `Authorization` header contains token information. Ensure:
 - Client-side code doesn't store tokens in localStorage (use httpOnly cookies)
 - CORS policies are properly configured
 
+### Cookie Security (v1.3.0+)
+
+Ogiri supports secure cookie-based authentication with configurable security attributes. Proper cookie configuration is critical to prevent common web vulnerabilities:
+
+**Why Cookie Security Matters:**
+
+1. **`secure: true` (HTTPS-only cookies)**
+
+   - Prevents cookie transmission over unencrypted HTTP connections
+   - Protects against network sniffing and man-in-the-middle attacks
+   - **REQUIRED for production deployments**
+   - The library logs a startup warning if disabled
+
+2. **`http-only: true` (JavaScript-inaccessible cookies)**
+
+   - Prevents client-side JavaScript from accessing auth cookies
+   - Mitigates XSS (Cross-Site Scripting) attacks
+   - Even if an attacker injects malicious JavaScript, they cannot steal tokens
+   - **REQUIRED for production deployments**
+   - The library logs a startup warning if disabled
+
+3. **`same-site: Strict` (CSRF protection)**
+
+   - Prevents cookies from being sent with cross-origin requests
+   - Mitigates CSRF (Cross-Site Request Forgery) attacks
+   - Options: `Strict` (most secure), `Lax` (allows top-level navigation), `None` (requires `secure=true`)
+   - **Recommended: `Strict` for APIs, `Lax` for web applications**
+
+4. **`path: "/"` (Cookie scope)**
+   - Limits cookie transmission to specific paths
+   - Reduces cookie exposure to unrelated endpoints
+   - **Recommended: Set to the narrowest path needed** (e.g., `/api` for API-only apps)
+
+**Secure Production Configuration:**
+
+```yaml
+ogiri:
+  cookies:
+    enabled: true
+    secure: true # HTTPS-only
+    http-only: true # No JavaScript access
+    same-site: Strict # CSRF protection
+    path: "/" # Adjust to your needs
+```
+
+**Development Configuration:**
+
+```yaml
+ogiri:
+  cookies:
+    enabled: true
+    secure: false # Allow HTTP in local development
+    http-only: true # Keep enabled even in dev
+    same-site: Lax # More permissive for testing
+    path: "/"
+```
+
+**Security Best Practices:**
+
+- **Never disable `http-only` in production** – Even if you think you need JavaScript access, find an alternative approach
+- **Always enable `secure` over HTTPS** – Deploy behind a TLS-terminating reverse proxy if needed
+- **Use `Strict` SameSite for APIs** – REST/GraphQL APIs typically don't need cross-site requests
+- **Use `Lax` SameSite for web apps** – Allows users to navigate to your site from external links
+- **Minimize cookie path scope** – If your API is under `/api`, set `path: "/api"`
+
+**Common Mistakes:**
+
+- ❌ Setting `http-only: false` to allow client-side token refresh (use a separate, non-sensitive endpoint instead)
+- ❌ Setting `secure: false` in production because you're behind a reverse proxy (configure proxy to pass `X-Forwarded-Proto` header)
+- ❌ Using `same-site: None` without understanding CORS implications
+- ❌ Setting `path: "/"` when your API is scoped to `/api/*`
+
+**Additional Resources:**
+
+- [OWASP Secure Cookie Attribute](https://owasp.org/www-community/controls/SecureCookieAttribute)
+- [OWASP HttpOnly Cookie Flag](https://owasp.org/www-community/HttpOnly)
+- [MDN: SameSite cookies](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie/SameSite)
+
 ### Sub-Tokens
 
 If using sub-tokens:
