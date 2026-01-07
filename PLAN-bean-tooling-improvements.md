@@ -9,145 +9,170 @@ Currently, integrating Ogiri requires significant boilerplate:
 4. No helpful error messages when required beans are missing
 5. Users must manually configure `PasswordEncoder`
 
-## Proposed Improvements
+## Decisions
+
+- **JPA Support:** Separate `ogiri-jpa` module (not in core)
+- **Future Adapters:** Roadmap for `ogiri-mongo`, `ogiri-redis`
+- **Scope:** All 6 improvements
+
+---
+
+## Module Architecture
+
+```
+ogiri/
+├── ogiri-core/                    # Core library (existing)
+│   └── No database dependencies
+│
+├── ogiri-jpa/                     # NEW: JPA adapter module
+│   ├── build.gradle.kts
+│   └── src/main/kotlin/
+│       └── com/quantipixels/ogiri/jpa/
+│           ├── OgiriJpaAutoConfiguration.kt
+│           ├── AbstractJpaTokenRepositoryAdapter.kt
+│           └── OgiriBaseTokenEntity.kt
+│
+├── ogiri-mongo/                   # FUTURE: MongoDB adapter
+└── ogiri-redis/                   # FUTURE: Redis adapter
+```
+
+### How Modules Work Together
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      User Application                        │
+├─────────────────────────────────────────────────────────────┤
+│  @Entity                                                     │
+│  class MyToken : OgiriBaseTokenEntity()  ◄─── extends       │
+│                                                              │
+│  @Repository                                                 │
+│  class MyTokenRepo(jpa) :                                   │
+│      AbstractJpaTokenRepositoryAdapter<MyToken>(jpa)        │
+└─────────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│                       ogiri-jpa                              │
+├─────────────────────────────────────────────────────────────┤
+│  • OgiriBaseTokenEntity (@MappedSuperclass)                 │
+│  • AbstractJpaTokenRepositoryAdapter<T>                     │
+│  • OgiriJpaAutoConfiguration                                │
+│                                                              │
+│  Dependencies:                                               │
+│    - ogiri-core (api)                                       │
+│    - spring-boot-starter-data-jpa (api)                     │
+└─────────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│                       ogiri-core                             │
+├─────────────────────────────────────────────────────────────┤
+│  • OgiriToken (interface)                                   │
+│  • OgiriTokenRepository (interface)                         │
+│  • OgiriTokenService                                        │
+│  • OgiriSecurityAutoConfiguration                           │
+│  • OgiriFailureAnalyzer                                     │
+│                                                              │
+│  Dependencies:                                               │
+│    - spring-boot-starter-security                           │
+│    - spring-boot-starter-web                                │
+│    - NO database dependencies                               │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### User Dependency Configuration
+
+**For JPA users:**
+```kotlin
+dependencies {
+    implementation("com.quantipixels.ogiri:ogiri-jpa:1.3.0")
+    // Transitively includes ogiri-core
+}
+```
+
+**For custom/other databases:**
+```kotlin
+dependencies {
+    implementation("com.quantipixels.ogiri:ogiri-core:1.3.0")
+    // Implement OgiriTokenRepository manually
+}
+```
+
+---
+
+## Improvements
 
 ### 1. Spring Configuration Processor (IDE Autocomplete)
 
-**Goal:** Enable IntelliJ/VS Code autocomplete for `ogiri.*` properties.
+**Location:** `ogiri-core`
 
 **Changes:**
-- Add `annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")` to `build.gradle.kts`
-- Create `META-INF/additional-spring-configuration-metadata.json` with:
-  - Property descriptions and default values
-  - Enum hints for `cookies.same-site` (Strict, Lax, None)
-  - Deprecation markers for future property changes
+```kotlin
+// ogiri-core/build.gradle.kts
+annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
+```
 
-**Impact:** Low risk, high developer experience improvement.
+**Impact:** IDE autocomplete for all `ogiri.*` properties in IntelliJ/VS Code.
 
 ---
 
 ### 2. Configuration Metadata with Hints
 
-**Goal:** Provide rich IDE hints beyond basic autocomplete.
-
-**File:** `ogiri-core/src/main/resources/META-INF/additional-spring-configuration-metadata.json`
+**Location:** `ogiri-core/src/main/resources/META-INF/additional-spring-configuration-metadata.json`
 
 ```json
 {
+  "properties": [
+    {
+      "name": "ogiri.auth.max-clients",
+      "type": "java.lang.Long",
+      "description": "Maximum concurrent sessions per user",
+      "defaultValue": 10
+    },
+    {
+      "name": "ogiri.auth.rotate-stale-seconds",
+      "type": "java.lang.Long",
+      "description": "Force token rotation after this age (0=disabled)",
+      "defaultValue": 0
+    }
+  ],
   "hints": [
     {
       "name": "ogiri.cookies.same-site",
       "values": [
-        { "value": "Strict", "description": "Only sent with same-site requests (most secure)" },
-        { "value": "Lax", "description": "Sent with same-site and top-level navigation" },
-        { "value": "None", "description": "Sent with all requests (requires Secure=true)" }
+        { "value": "Strict", "description": "Only same-site requests (most secure)" },
+        { "value": "Lax", "description": "Same-site + top-level navigation" },
+        { "value": "None", "description": "All requests (requires Secure=true)" }
       ]
     }
   ]
 }
 ```
 
-**Impact:** Low risk, improves discoverability.
-
 ---
 
-### 3. Abstract JPA Repository Adapter
+### 3. PasswordEncoder Auto-Configuration
 
-**Goal:** Reduce ~80 lines of adapter boilerplate to ~5 lines.
-
-**New File:** `ogiri-core/src/main/kotlin/.../jpa/AbstractJpaTokenRepositoryAdapter.kt`
-
-```kotlin
-abstract class AbstractJpaTokenRepositoryAdapter<T : OgiriToken, R : JpaRepository<T, Long>>(
-    protected val jpaRepository: R
-) : OgiriTokenRepository<T> {
-
-    override fun save(token: T): T = jpaRepository.save(token)
-    override fun findById(id: Long): T? = jpaRepository.findById(id).orElse(null)
-    override fun deleteById(id: Long) = jpaRepository.deleteById(id)
-    // ... all standard implementations
-
-    // Abstract methods users must implement (custom queries):
-    abstract fun findByUserIdOrderByUpdatedAtDesc(userId: Long): List<T>
-    abstract fun findByUserIdAndClient(userId: Long, client: String): T?
-}
-```
-
-**User code becomes:**
-```kotlin
-@Repository
-class MyTokenRepositoryAdapter(repo: MyTokenJpaRepository) :
-    AbstractJpaTokenRepositoryAdapter<MyToken, MyTokenJpaRepository>(repo) {
-
-    override fun findByUserIdOrderByUpdatedAtDesc(userId: Long) =
-        jpaRepository.findByUserIdOrderByUpdatedAtDesc(userId)
-    // ... only custom query delegations
-}
-```
-
-**Trade-off:** Adds optional JPA dependency. Should be in separate module or use `@ConditionalOnClass`.
-
-**Alternative:** Keep in core with `compileOnly("org.springframework.data:spring-data-jpa")` so it compiles but doesn't force runtime dependency.
-
----
-
-### 4. OgiriBaseToken Abstract Entity (Optional JPA Module)
-
-**Goal:** Provide a ready-to-extend JPA entity with all required fields.
-
-**Option A: In ogiri-core (compileOnly JPA)**
-
-```kotlin
-@MappedSuperclass
-abstract class OgiriBaseTokenEntity : OgiriBaseToken() {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    override var id: Long = 0
-
-    @Column(nullable = false)
-    override var userId: Long = 0
-
-    @Column(nullable = false, length = 64)
-    override var client: String = ""
-
-    // ... all 15+ fields with proper annotations
-}
-```
-
-**User code becomes:**
-```kotlin
-@Entity
-@Table(name = "tokens")
-class Token : OgiriBaseTokenEntity()
-```
-
-**Option B: Separate ogiri-jpa module**
-- New module: `ogiri-jpa` with dependency on `ogiri-core`
-- Contains JPA entity, adapter, and auto-configuration
-- Users add `implementation("com.quantipixels.ogiri:ogiri-jpa:VERSION")`
-
-**Trade-off:** Option A is simpler but adds compile-time JPA dependency to core. Option B is cleaner but adds module complexity.
-
----
-
-### 5. PasswordEncoder Auto-Configuration
-
-**Goal:** Auto-configure BCryptPasswordEncoder if none provided.
+**Location:** `ogiri-core`
 
 **Changes to `OgiriSecurityAutoConfiguration.kt`:**
 
 ```kotlin
 @Bean
 @ConditionalOnMissingBean(PasswordEncoder::class)
-fun ogiriPasswordEncoder(): PasswordEncoder = BCryptPasswordEncoder()
+fun ogiriPasswordEncoder(): PasswordEncoder {
+    logger.info("No PasswordEncoder bean found, using BCryptPasswordEncoder")
+    return BCryptPasswordEncoder()
+}
 ```
 
-**Impact:** Reduces required user configuration. Very low risk since it's conditional.
+**Benefit:** Users no longer need to define a PasswordEncoder bean manually.
 
 ---
 
-### 6. Failure Analyzer for Missing Beans
+### 4. Failure Analyzer for Missing Beans
 
-**Goal:** Provide helpful error messages instead of cryptic Spring injection failures.
+**Location:** `ogiri-core`
 
 **New File:** `ogiri-core/src/main/kotlin/.../config/OgiriFailureAnalyzer.kt`
 
@@ -157,30 +182,37 @@ class OgiriMissingBeanFailureAnalyzer : AbstractFailureAnalyzer<NoSuchBeanDefini
     override fun analyze(rootFailure: Throwable, cause: NoSuchBeanDefinitionException): FailureAnalysis? {
         val beanType = cause.beanType?.simpleName ?: return null
 
-        return when (beanType) {
-            "OgiriTokenRepository" -> FailureAnalysis(
+        return when {
+            beanType.contains("OgiriTokenRepository") -> FailureAnalysis(
                 "No OgiriTokenRepository bean found.",
                 """
                 Ogiri requires an OgiriTokenRepository<T> bean for token persistence.
 
-                For JPA, create:
-                  @Repository
-                  class MyTokenRepository(jpa: JpaRepository<MyToken, Long>) : OgiriTokenRepository<MyToken> { ... }
+                Option 1 - Use ogiri-jpa (recommended for JPA/Hibernate):
+                  Add dependency: implementation("com.quantipixels.ogiri:ogiri-jpa:VERSION")
+                  Then extend AbstractJpaTokenRepositoryAdapter
 
-                See: https://mosobande.github.io/ogiri/guides/database-integration/
+                Option 2 - Implement manually:
+                  @Repository
+                  class MyTokenRepository : OgiriTokenRepository<MyToken> { ... }
+
+                Documentation: https://mosobande.github.io/ogiri/guides/database-integration/
                 """.trimIndent(),
                 cause
             )
-            "OgiriUserDirectory" -> FailureAnalysis(
+            beanType.contains("OgiriUserDirectory") -> FailureAnalysis(
                 "No OgiriUserDirectory bean found.",
                 """
                 Ogiri requires an OgiriUserDirectory bean to resolve users.
 
                 Create:
                   @Component
-                  class MyUserDirectory : OgiriUserDirectory { ... }
+                  class MyUserDirectory : OgiriUserDirectory {
+                      override fun findById(id: Long): OgiriUser? = ...
+                      override fun loadUserByUsername(username: String): OgiriUser = ...
+                  }
 
-                See: https://mosobande.github.io/ogiri/quickstart/
+                Documentation: https://mosobande.github.io/ogiri/quickstart/
                 """.trimIndent(),
                 cause
             )
@@ -190,53 +222,294 @@ class OgiriMissingBeanFailureAnalyzer : AbstractFailureAnalyzer<NoSuchBeanDefini
 }
 ```
 
-**Register in:** `META-INF/spring.factories` or `META-INF/spring/org.springframework.boot.diagnostics.FailureAnalyzer.imports`
-
-**Impact:** Dramatically improves onboarding experience.
+**Register in:** `META-INF/spring/org.springframework.boot.diagnostics.FailureAnalyzer.imports`
 
 ---
 
-## Implementation Order (Recommended)
+### 5. Abstract JPA Repository Adapter
 
-| Priority | Item | Effort | Risk | Impact |
-|----------|------|--------|------|--------|
-| 1 | Configuration Processor + Metadata | Low | Low | High |
-| 2 | Failure Analyzer | Medium | Low | High |
-| 3 | PasswordEncoder auto-config | Low | Low | Medium |
-| 4 | Abstract JPA Adapter | Medium | Medium | High |
-| 5 | Base Token Entity | Medium | Medium | High |
+**Location:** `ogiri-jpa` (new module)
+
+**File:** `ogiri-jpa/src/main/kotlin/.../jpa/AbstractJpaTokenRepositoryAdapter.kt`
+
+```kotlin
+/**
+ * Base adapter that implements OgiriTokenRepository using Spring Data JPA.
+ *
+ * Eliminates ~80 lines of boilerplate. Users only need to:
+ * 1. Create their JPA repository interface
+ * 2. Extend this class and provide custom query delegations
+ *
+ * Example:
+ * ```kotlin
+ * @Repository
+ * class MyTokenRepositoryAdapter(jpa: MyTokenJpaRepository) :
+ *     AbstractJpaTokenRepositoryAdapter<MyToken, MyTokenJpaRepository>(jpa) {
+ *
+ *     override fun findByUserIdOrderByUpdatedAtDesc(userId: Long) =
+ *         jpaRepository.findByUserIdOrderByUpdatedAtDesc(userId)
+ *
+ *     override fun findByUserIdAndClientEquals(userId: Long, client: String) =
+ *         jpaRepository.findByUserIdAndClient(userId, client)
+ * }
+ * ```
+ */
+abstract class AbstractJpaTokenRepositoryAdapter<T : OgiriToken, R : JpaRepository<T, Long>>(
+    protected val jpaRepository: R
+) : OgiriTokenRepository<T> {
+
+    // Standard implementations provided
+    override fun save(token: T): T = jpaRepository.save(token)
+    override fun findById(id: Long): T? = jpaRepository.findById(id).orElse(null)
+    override fun deleteById(id: Long) = jpaRepository.deleteById(id)
+    override fun delete(token: T) = jpaRepository.delete(token)
+
+    // Abstract - users must implement (custom queries)
+    abstract fun findByUserIdOrderByUpdatedAtDesc(userId: Long): List<T>
+    abstract fun findByUserIdAndClientEquals(userId: Long, client: String): T?
+    abstract fun findByUserIdAndTokenSubtypeOrderByUpdatedAtDesc(userId: Long, subtype: String): List<T>
+    abstract fun findByExpiryAtBeforeCutoff(cutoff: Instant): List<T>
+    abstract fun deleteByUserIdAndClientEquals(userId: Long, client: String)
+    abstract fun deleteByUserIdAndClientIdIn(userId: Long, clientIds: Collection<String>)
+    abstract fun deleteByUserIdJpa(userId: Long)
+
+    // Implementations that delegate to abstract methods
+    override fun findAllByUserId(userId: Long): List<T> = findByUserIdOrderByUpdatedAtDesc(userId)
+    override fun findByUserIdAndClient(userId: Long, clientId: String): T? =
+        findByUserIdAndClientEquals(userId, clientId)
+    // ... etc
+}
+```
+
+**Benefit:** Reduces user code from ~80 lines to ~15 lines.
 
 ---
 
-## Questions for Review
+### 6. OgiriBaseTokenEntity (JPA MappedSuperclass)
 
-1. **JPA Support Location:** Should JPA helpers be:
-   - (A) In `ogiri-core` with `compileOnly` dependency?
-   - (B) In separate `ogiri-jpa` module?
-   - (C) Not provided (keep current approach)?
+**Location:** `ogiri-jpa` (new module)
 
-2. **MongoDB/Redis:** Should similar adapters be provided for:
-   - MongoDB (`ogiri-mongo`)?
-   - Redis (`ogiri-redis`)?
+**File:** `ogiri-jpa/src/main/kotlin/.../jpa/OgiriBaseTokenEntity.kt`
 
-3. **Base Token Entity:** Should we provide:
-   - (A) Abstract `@MappedSuperclass` for JPA?
-   - (B) Just better documentation?
-   - (C) Code generator / template?
+```kotlin
+/**
+ * Base JPA entity with all required token fields pre-configured.
+ *
+ * Users extend this class and add @Entity + @Table:
+ * ```kotlin
+ * @Entity
+ * @Table(name = "tokens")
+ * class MyToken : OgiriBaseTokenEntity()
+ * ```
+ *
+ * All 15+ fields with proper JPA annotations are inherited:
+ * - id (auto-generated)
+ * - userId, client, token, tokenType
+ * - expiryAt, tokenUpdatedAt, updatedAt, lastUsedAt
+ * - previousToken, lastToken, tokenPrefix, tokenSubtype
+ * - plainToken (transient, not persisted)
+ */
+@MappedSuperclass
+abstract class OgiriBaseTokenEntity : OgiriBaseToken() {
 
-4. **Scope:** Implement all 6 items, or subset?
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    override var id: Long = 0
+
+    @Column(name = "user_id", nullable = false)
+    override var userId: Long = 0
+
+    @Column(nullable = false, length = 64)
+    override var client: String = ""
+
+    @Column(nullable = false, length = 512)
+    override var token: String = ""
+
+    @Column(name = "token_type", nullable = false, length = 16)
+    override var tokenType: String = OgiriTokenType.APP.name
+
+    @Column(name = "expiry_at", nullable = false)
+    override var expiryAt: Instant = Instant.now()
+
+    @Column(name = "token_updated_at", nullable = false)
+    override var tokenUpdatedAt: Instant = Instant.now()
+
+    @Column(name = "updated_at", nullable = false)
+    override var updatedAt: Instant = Instant.now()
+
+    @Column(name = "last_used_at")
+    override var lastUsedAt: Instant? = null
+
+    @Column(name = "previous_token", length = 512)
+    override var previousToken: String? = null
+
+    @Column(name = "last_token", length = 512)
+    override var lastToken: String? = null
+
+    @Column(name = "token_prefix", length = 16)
+    override var tokenPrefix: String? = null
+
+    @Column(name = "token_subtype", length = 32)
+    override var tokenSubtype: String? = null
+
+    @Transient
+    override var plainToken: String? = null
+
+    @PrePersist
+    @PreUpdate
+    fun updateTimestamp() {
+        updatedAt = Instant.now()
+    }
+}
+```
+
+**Benefit:** Eliminates manual entity creation with 15+ fields and annotations.
+
+---
+
+## New Module: ogiri-jpa
+
+### build.gradle.kts
+
+```kotlin
+plugins {
+    kotlin("jvm")
+    kotlin("plugin.spring")
+    kotlin("plugin.jpa")
+    id("io.spring.dependency-management")
+}
+
+group = "com.quantipixels.ogiri"
+
+dependencies {
+    api(project(":ogiri-core"))
+    api("org.springframework.boot:spring-boot-starter-data-jpa")
+
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("com.h2database:h2")
+}
+```
+
+### Auto-Configuration
+
+```kotlin
+@Configuration
+@ConditionalOnClass(JpaRepository::class)
+@AutoConfigureAfter(OgiriSecurityAutoConfiguration::class)
+class OgiriJpaAutoConfiguration {
+    // Any JPA-specific auto-configuration beans
+}
+```
+
+### Registration
+
+**File:** `ogiri-jpa/src/main/resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`
+
+```
+com.quantipixels.ogiri.jpa.OgiriJpaAutoConfiguration
+```
+
+---
+
+## Roadmap: Future Database Adapters
+
+| Module | Database | Priority | Status |
+|--------|----------|----------|--------|
+| `ogiri-jpa` | JPA/Hibernate | High | **Planned** |
+| `ogiri-mongo` | MongoDB | Medium | Future |
+| `ogiri-redis` | Redis | Medium | Future |
+| `ogiri-jdbc` | Raw JDBC | Low | Future |
+| `ogiri-r2dbc` | Reactive SQL | Low | Future |
+
+### ogiri-mongo (Future)
+
+```kotlin
+// AbstractMongoTokenRepositoryAdapter
+// OgiriBaseTokenDocument (@Document)
+dependencies {
+    api(project(":ogiri-core"))
+    api("org.springframework.boot:spring-boot-starter-data-mongodb")
+}
+```
+
+### ogiri-redis (Future)
+
+```kotlin
+// AbstractRedisTokenRepository
+// OgiriTokenHash (@RedisHash)
+dependencies {
+    api(project(":ogiri-core"))
+    api("org.springframework.boot:spring-boot-starter-data-redis")
+}
+```
+
+---
+
+## Implementation Order
+
+| Phase | Item | Module | Effort |
+|-------|------|--------|--------|
+| 1 | Configuration Processor | ogiri-core | Low |
+| 1 | Configuration Metadata | ogiri-core | Low |
+| 1 | PasswordEncoder auto-config | ogiri-core | Low |
+| 1 | Failure Analyzer | ogiri-core | Medium |
+| 2 | Create ogiri-jpa module structure | ogiri-jpa | Medium |
+| 2 | AbstractJpaTokenRepositoryAdapter | ogiri-jpa | Medium |
+| 2 | OgiriBaseTokenEntity | ogiri-jpa | Medium |
+| 2 | Update sample apps to use ogiri-jpa | samples | Low |
+| 3 | Update documentation | docs | Medium |
 
 ---
 
 ## Files to Create/Modify
 
-### New Files
+### Phase 1: ogiri-core improvements
+
+**New Files:**
 - `ogiri-core/src/main/resources/META-INF/additional-spring-configuration-metadata.json`
 - `ogiri-core/src/main/kotlin/.../config/OgiriFailureAnalyzer.kt`
-- `ogiri-core/src/main/kotlin/.../jpa/AbstractJpaTokenRepositoryAdapter.kt` (if approved)
-- `ogiri-core/src/main/kotlin/.../jpa/OgiriBaseTokenEntity.kt` (if approved)
+- `ogiri-core/src/main/resources/META-INF/spring/org.springframework.boot.diagnostics.FailureAnalyzer.imports`
 
-### Modified Files
+**Modified Files:**
 - `ogiri-core/build.gradle.kts` (add configuration processor)
-- `ogiri-core/src/main/kotlin/.../config/OgiriSecurityAutoConfiguration.kt` (PasswordEncoder bean)
-- `ogiri-core/src/main/resources/META-INF/spring/...` (failure analyzer registration)
+- `ogiri-core/.../config/OgiriSecurityAutoConfiguration.kt` (add PasswordEncoder bean)
+
+### Phase 2: ogiri-jpa module
+
+**New Files:**
+- `ogiri-jpa/build.gradle.kts`
+- `ogiri-jpa/src/main/kotlin/com/quantipixels/ogiri/jpa/OgiriJpaAutoConfiguration.kt`
+- `ogiri-jpa/src/main/kotlin/com/quantipixels/ogiri/jpa/AbstractJpaTokenRepositoryAdapter.kt`
+- `ogiri-jpa/src/main/kotlin/com/quantipixels/ogiri/jpa/OgiriBaseTokenEntity.kt`
+- `ogiri-jpa/src/main/resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`
+
+**Modified Files:**
+- `settings.gradle.kts` (include ogiri-jpa)
+- `sample/sample-kotlin/build.gradle.kts` (use ogiri-jpa)
+- `sample/sample-java/build.gradle.kts` (use ogiri-jpa)
+
+---
+
+## Success Criteria
+
+After implementation:
+
+1. **IDE autocomplete works** for all `ogiri.*` properties
+2. **Missing bean errors** show actionable guidance instead of stack traces
+3. **JPA users** can integrate with ~20 lines instead of ~100 lines:
+   ```kotlin
+   // Entity: 2 lines
+   @Entity @Table(name = "tokens")
+   class Token : OgiriBaseTokenEntity()
+
+   // Repository: 2 lines
+   @Repository
+   interface TokenJpaRepo : JpaRepository<Token, Long> { ... }
+
+   // Adapter: ~15 lines (vs ~80 before)
+   @Repository
+   class TokenRepoAdapter(jpa: TokenJpaRepo) :
+       AbstractJpaTokenRepositoryAdapter<Token, TokenJpaRepo>(jpa) { ... }
+   ```
+4. **PasswordEncoder** is auto-configured (one less manual bean)
+5. **Roadmap documented** for future MongoDB/Redis adapters
