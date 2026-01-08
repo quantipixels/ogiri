@@ -96,6 +96,9 @@ See the [full Quickstart Guide](https://mosobande.github.io/ogiri/quickstart/) f
 ./gradlew build          # Build and test
 ./gradlew test           # Run tests only
 ./gradlew spotlessApply  # Format code
+
+# Enable git hooks (optional)
+./scripts/install.sh
 ```
 
 See [development guide](https://mosobande.github.io/ogiri/contributing/development-guide/) for contributor guidelines.

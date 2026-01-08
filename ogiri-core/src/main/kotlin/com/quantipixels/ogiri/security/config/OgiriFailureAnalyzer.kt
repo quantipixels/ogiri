@@ -29,7 +29,7 @@ class OgiriMissingBeanFailureAnalyzer :
       rootFailure: Throwable,
       cause: NoSuchBeanDefinitionException,
   ): FailureAnalysis? {
-    val beanType = cause.beanType?.simpleName ?: return null
+    val beanType = cause.beanType?.simpleName?.takeIf { it.isNotBlank() } ?: return null
 
     return when {
       beanType.contains("OgiriTokenRepository") ->
