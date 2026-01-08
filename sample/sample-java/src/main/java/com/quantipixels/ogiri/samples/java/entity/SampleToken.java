@@ -44,7 +44,9 @@ import jakarta.persistence.UniqueConstraint;
       @Index(name = "idx_user_tokens_prefix", columnList = "token_prefix"),
     },
     uniqueConstraints = {
-      @UniqueConstraint(name = "uk_user_tokens_user_client", columnNames = {"user_id", "client"}),
+      @UniqueConstraint(
+          name = "uk_user_tokens_user_client",
+          columnNames = {"user_id", "client"}),
     })
 public class SampleToken extends OgiriBaseTokenEntity {
 

@@ -31,8 +31,8 @@ import org.springframework.stereotype.Service
  * This service demonstrates how users should extend OgiriTokenService and override the
  * tokenFactory() method to instantiate their custom Token class.
  *
- * Since SampleToken extends OgiriBaseTokenEntity, it inherits all fields. The tokenFactory()
- * simply creates a new instance and sets the required properties.
+ * Since SampleToken extends OgiriBaseTokenEntity, it inherits all fields. The tokenFactory() simply
+ * creates a new instance and sets the required properties.
  */
 @Service
 @Primary
@@ -56,8 +56,8 @@ class SampleTokenService(
   /**
    * Factory method for creating SampleToken instances.
    *
-   * Since SampleToken extends OgiriBaseTokenEntity, all fields are inherited and can be set
-   * via property assignment.
+   * Since SampleToken extends OgiriBaseTokenEntity, all fields are inherited and can be set via
+   * property assignment.
    */
   override fun tokenFactory(
       userId: Long,

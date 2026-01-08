@@ -37,6 +37,7 @@ implementation("com.quantipixels.ogiri:ogiri-jpa:1.3.0")
 #### Step 2: Simplify Token Entity
 
 **Before (~250 lines):**
+
 ```kotlin
 @Entity
 @Table(name = "tokens", ...)
@@ -52,6 +53,7 @@ data class MyToken(
 ```
 
 **After (~10 lines):**
+
 ```kotlin
 @Entity
 @Table(
@@ -65,6 +67,7 @@ class MyToken : OgiriBaseTokenEntity()
 #### Step 3: Simplify Repository
 
 **Before (~90 lines):**
+
 ```kotlin
 @Repository
 class MyTokenRepositoryAdapter(
@@ -77,6 +80,7 @@ class MyTokenRepositoryAdapter(
 ```
 
 **After (~30 lines):**
+
 ```kotlin
 @Repository
 @Primary

@@ -24,7 +24,6 @@ import org.springframework.data.jpa.repository.JpaRepository
  * operations while requiring users to implement only the custom JPA query delegations.
  *
  * ## Usage
- *
  * 1. Create your JPA repository interface with custom query methods:
  * ```kotlin
  * @Repository
@@ -44,7 +43,6 @@ import org.springframework.data.jpa.repository.JpaRepository
  *     fun deleteByUserId(userId: Long)
  * }
  * ```
- *
  * 2. Create your adapter extending this class:
  * ```kotlin
  * @Repository

@@ -22,8 +22,7 @@ import org.springframework.boot.diagnostics.FailureAnalysis
  * Instead of cryptic Spring injection failures, users see actionable guidance on how to configure
  * the missing beans.
  */
-class OgiriMissingBeanFailureAnalyzer :
-    AbstractFailureAnalyzer<NoSuchBeanDefinitionException>() {
+class OgiriMissingBeanFailureAnalyzer : AbstractFailureAnalyzer<NoSuchBeanDefinitionException>() {
 
   override fun analyze(
       rootFailure: Throwable,

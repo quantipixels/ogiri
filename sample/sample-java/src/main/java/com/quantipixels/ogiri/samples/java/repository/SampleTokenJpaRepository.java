@@ -25,9 +25,9 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Pure JPA repository interface for SampleToken persistence.
  *
- * <p>Contains only the JPA-specific query methods. The adapter class
- * (SampleTokenRepositoryAdapter) extends AbstractJpaTokenRepositoryAdapter to implement
- * OgiriTokenRepository using this repository.
+ * <p>Contains only the JPA-specific query methods. The adapter class (SampleTokenRepositoryAdapter)
+ * extends AbstractJpaTokenRepositoryAdapter to implement OgiriTokenRepository using this
+ * repository.
  */
 public interface SampleTokenJpaRepository extends JpaRepository<SampleToken, Long> {
 

@@ -85,12 +85,14 @@ class SampleTokenRepositoryTest {
   fun `should find expired tokens`() {
     val now = Instant.now()
 
-    val expiredToken = createToken(testUserId, "expired-client", testToken).apply {
-      expiryAt = now.minus(1, ChronoUnit.HOURS)
-    }
-    val validToken = createToken(testUserId, "valid-client", testToken).apply {
-      expiryAt = now.plus(1, ChronoUnit.HOURS)
-    }
+    val expiredToken =
+        createToken(testUserId, "expired-client", testToken).apply {
+          expiryAt = now.minus(1, ChronoUnit.HOURS)
+        }
+    val validToken =
+        createToken(testUserId, "valid-client", testToken).apply {
+          expiryAt = now.plus(1, ChronoUnit.HOURS)
+        }
 
     tokenRepository.save(expiredToken)
     tokenRepository.save(validToken)

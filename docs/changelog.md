@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ## [1.3.0] - 2025-01-08
 
 ### Added
+
 - **New `ogiri-jpa` Module**: Dedicated JPA/Hibernate support module that reduces boilerplate by ~70%
   - `OgiriBaseTokenEntity`: `@MappedSuperclass` with all 15+ token fields pre-annotated
   - `AbstractJpaTokenRepositoryAdapter`: Base adapter eliminating ~80 lines of repository boilerplate
@@ -22,6 +23,7 @@ All notable changes to this project will be documented in this file.
 - New repository methods: `findValidTokensByPrefix`, `countByUserId`, `deleteExpiredBatch`
 
 ### Changed
+
 - **Sample Applications**: Updated to use `ogiri-jpa` module, demonstrating the simplified approach
 - **Documentation**: Restructured to highlight `ogiri-jpa` as the recommended path for JPA users
 - **CI Workflows**: Updated to build, test, and publish the new `ogiri-jpa` module
@@ -31,11 +33,13 @@ All notable changes to this project will be documented in this file.
 ### Installation
 
 **With JPA Support (Recommended):**
+
 ```kotlin
 implementation("com.quantipixels.ogiri:ogiri-jpa:1.3.0")
 ```
 
 **Core Only (Custom Persistence):**
+
 ```kotlin
 implementation("com.quantipixels.ogiri:ogiri-core:1.3.0")
 ```
@@ -43,12 +47,14 @@ implementation("com.quantipixels.ogiri:ogiri-core:1.3.0")
 ### Database Migration (Optional)
 
 For optimal performance, add `token_prefix` column:
+
 - Add `token_prefix VARCHAR(8)` column to tokens table
 - Add index on `token_prefix` (partial index for PostgreSQL recommended)
 
 See [Migration Guide](migration-guide.md#migrating-to-130) for detailed upgrade instructions.
 
 ### Upgrade Notes
+
 - This release is fully backward compatible
 - Existing `ogiri-core` users can continue without changes
 - JPA users are encouraged to migrate to `ogiri-jpa` for reduced boilerplate (see [Migration Guide](migration-guide.md))

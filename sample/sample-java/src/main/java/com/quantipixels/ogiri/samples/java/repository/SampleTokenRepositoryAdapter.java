@@ -71,8 +71,7 @@ public class SampleTokenRepositoryAdapter
   }
 
   @Override
-  protected void deleteByUserIdAndClientIdIn(
-      long userId, @NotNull Collection<String> clientIds) {
+  protected void deleteByUserIdAndClientIdIn(long userId, @NotNull Collection<String> clientIds) {
     getJpaRepository().deleteByUserIdAndClientIn(userId, clientIds);
   }
 
