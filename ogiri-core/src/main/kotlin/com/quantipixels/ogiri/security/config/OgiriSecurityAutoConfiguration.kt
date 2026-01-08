@@ -61,6 +61,17 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 @EnableConfigurationProperties(OgiriConfigurationProperties::class)
 class OgiriSecurityAutoConfiguration {
+  companion object {
+    private val logger = LoggerFactory.getLogger(OgiriSecurityAutoConfiguration::class.java)
+  }
+
+  @Bean
+  @ConditionalOnMissingBean(PasswordEncoder::class)
+  fun ogiriPasswordEncoder(): PasswordEncoder {
+    logger.info("No PasswordEncoder bean found, auto-configuring BCryptPasswordEncoder")
+    return BCryptPasswordEncoder()
+  }
+
   @Bean
   @ConditionalOnMissingBean(DefaultIdentifierPolicy::class)
   fun identifierPolicy(): DefaultIdentifierPolicy = DefaultIdentifierPolicy()

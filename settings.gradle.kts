@@ -24,6 +24,8 @@ val projectVersion =
 
 include(":ogiri-core")
 
+include(":ogiri-jpa")
+
 include(":sample:sample-java")
 
 include(":sample:sample-kotlin")
