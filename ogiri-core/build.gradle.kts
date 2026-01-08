@@ -47,6 +47,9 @@ dependencies {
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
   implementation("com.github.ben-manes.caffeine:caffeine:3.2.3")
 
+  // Configuration processor for IDE autocomplete and property hints
+  annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
+
   testImplementation("org.springframework.boot:spring-boot-starter-test") {
     exclude(module = "mockito-core")
   }
