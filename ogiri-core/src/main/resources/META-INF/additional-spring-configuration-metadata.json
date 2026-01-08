@@ -1,0 +1,149 @@
+{
+  "properties": [
+    {
+      "name": "ogiri.security.register-filter",
+      "type": "java.lang.Boolean",
+      "description": "Enable automatic registration of the ogiri SecurityFilterChain bean. Set to false to manually configure security filters.",
+      "defaultValue": true
+    },
+    {
+      "name": "ogiri.auth.register-token-service",
+      "type": "java.lang.Boolean",
+      "description": "Enable auto-registration of the default OgiriTokenService. Set to false to provide a custom token service.",
+      "defaultValue": true
+    },
+    {
+      "name": "ogiri.auth.max-clients",
+      "type": "java.lang.Long",
+      "description": "Maximum number of active APP tokens per user. When exceeded, the oldest token is revoked.",
+      "defaultValue": 10
+    },
+    {
+      "name": "ogiri.auth.batch-grace-seconds",
+      "type": "java.lang.Long",
+      "description": "Grace period (seconds) for detecting batch requests. Requests within this window don't trigger token rotation.",
+      "defaultValue": 5
+    },
+    {
+      "name": "ogiri.auth.token-lifespan-days",
+      "type": "java.lang.Long",
+      "description": "Default token lifetime in days. New tokens will expire after this duration.",
+      "defaultValue": 14
+    },
+    {
+      "name": "ogiri.auth.rotate-on-write-only",
+      "type": "java.lang.Boolean",
+      "description": "Only rotate tokens on mutating HTTP requests (POST, PUT, DELETE, PATCH). GET requests update lastUsedAt but don't trigger rotation.",
+      "defaultValue": false
+    },
+    {
+      "name": "ogiri.auth.rotate-stale-seconds",
+      "type": "java.lang.Long",
+      "description": "Force token rotation if token exceeds this age (seconds). 0 = disabled, no staleness-based rotation.",
+      "defaultValue": 0
+    },
+    {
+      "name": "ogiri.cleanup.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable the scheduled OgiriTokenCleanupJob to automatically delete expired tokens.",
+      "defaultValue": true
+    },
+    {
+      "name": "ogiri.cleanup.interval-ms",
+      "type": "java.lang.Long",
+      "description": "Interval in milliseconds between cleanup job executions. Default is 6 hours (21600000).",
+      "defaultValue": 21600000
+    }
+  ],
+  "hints": [
+    {
+      "name": "ogiri.auth.max-clients",
+      "values": [
+        {
+          "value": 5,
+          "description": "High-security: only 5 concurrent sessions"
+        },
+        {
+          "value": 10,
+          "description": "Default: reasonable for multi-device users"
+        },
+        {
+          "value": 24,
+          "description": "Relaxed: suitable for users with many devices"
+        }
+      ]
+    },
+    {
+      "name": "ogiri.auth.batch-grace-seconds",
+      "values": [
+        {
+          "value": 1,
+          "description": "Conservative: rotate frequently"
+        },
+        {
+          "value": 5,
+          "description": "Default: balance between rotation and efficiency"
+        },
+        {
+          "value": 30,
+          "description": "Relaxed: for high-traffic scenarios"
+        },
+        {
+          "value": 60,
+          "description": "Development: minimize rotation during testing"
+        }
+      ]
+    },
+    {
+      "name": "ogiri.auth.token-lifespan-days",
+      "values": [
+        {
+          "value": 7,
+          "description": "Short-lived: high security, frequent re-auth"
+        },
+        {
+          "value": 14,
+          "description": "Default: balance between security and user experience"
+        },
+        {
+          "value": 30,
+          "description": "Long-lived: minimal re-auth, lower security"
+        }
+      ]
+    },
+    {
+      "name": "ogiri.auth.rotate-stale-seconds",
+      "values": [
+        {
+          "value": 0,
+          "description": "Disabled: rely only on batch window logic"
+        },
+        {
+          "value": 3600,
+          "description": "Hourly: force rotation every hour"
+        },
+        {
+          "value": 86400,
+          "description": "Daily: force rotation every day"
+        }
+      ]
+    },
+    {
+      "name": "ogiri.cleanup.interval-ms",
+      "values": [
+        {
+          "value": 3600000,
+          "description": "1 hour: for higher-traffic applications"
+        },
+        {
+          "value": 21600000,
+          "description": "6 hours: default, good for most production use cases"
+        },
+        {
+          "value": 43200000,
+          "description": "12 hours: for lower-traffic applications"
+        }
+      ]
+    }
+  ]
+}

@@ -39,6 +39,7 @@ import org.springframework.context.MessageSource
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.AuthenticationEntryPoint
 import org.springframework.security.web.SecurityFilterChain
@@ -62,6 +63,19 @@ class OgiriSecurityAutoConfiguration {
   @Bean
   @ConditionalOnMissingBean(DefaultIdentifierPolicy::class)
   fun identifierPolicy(): DefaultIdentifierPolicy = DefaultIdentifierPolicy()
+
+  /**
+   * Auto-configure a PasswordEncoder if none is provided by the user.
+   *
+   * This eliminates the need for users to manually define a PasswordEncoder bean. BCrypt is used as
+   * the default due to its strong security properties and industry acceptance.
+   *
+   * Users can override this by providing their own PasswordEncoder bean in their application
+   * configuration.
+   */
+  @Bean
+  @ConditionalOnMissingBean(PasswordEncoder::class)
+  fun ogiriPasswordEncoder(): PasswordEncoder = BCryptPasswordEncoder()
 
   @Bean
   @ConditionalOnMissingBean(OgiriRouteCatalog::class)

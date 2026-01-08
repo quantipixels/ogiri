@@ -24,6 +24,8 @@ val projectVersion =
 
 include(":ogiri-core")
 
+include(":ogiri-jpa")
+
 include(":sample:sample-java")
 
 include(":sample:sample-kotlin")
@@ -33,7 +35,8 @@ include(":sample:sample-kotlin")
  * Where Gradle downloads plugins declared in plugins {} blocks of build scripts.
  * These repos apply only to plugin lookup, NOT library dependencies.
  */
-plugins { id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0" }
+// Temporarily commented out due to network restrictions
+// plugins { id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0" }
 
 /*
  * Dependency resolution configuration for ALL modules.

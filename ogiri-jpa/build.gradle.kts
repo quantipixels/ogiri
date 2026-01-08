@@ -3,10 +3,8 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
   kotlin("jvm")
   kotlin("plugin.spring")
-  // JPA plugin removed - library is now database-agnostic
-  // allopen plugin removed - not needed without JPA
+  kotlin("plugin.jpa")
   id("io.spring.dependency-management") version libs.versions.dependencyManagement.get()
-  jacoco
   `maven-publish`
   signing
 }
@@ -33,63 +31,35 @@ dependencyManagement {
 }
 
 dependencies {
-  api("org.springframework.boot:spring-boot-starter-security")
-  api("org.springframework.boot:spring-boot-starter-web")
-  api("org.springframework.boot:spring-boot-starter-validation")
-  api("org.springframework:spring-tx")
-  // spring-boot-starter-data-jpa removed - users choose their own persistence
-  // Users must provide one of:
-  // - spring-boot-starter-data-jpa (for JPA/Hibernate)
-  // - spring-boot-starter-data-mongodb (for MongoDB)
-  // - Custom JDBC implementation with JdbcTemplate
-  // - Other persistence mechanism of choice
+  // Core ogiri library - exposes OgiriToken, OgiriTokenRepository interfaces
+  api(project(":ogiri-core"))
+
+  // Spring Data JPA for repository support
+  api("org.springframework.boot:spring-boot-starter-data-jpa")
+
+  // Spring Boot autoconfigure for @ConditionalOnClass, etc.
   implementation("org.springframework.boot:spring-boot-autoconfigure")
-  implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-  implementation("com.github.ben-manes.caffeine:caffeine:3.2.3")
 
-  // Spring Configuration Processor for IDE autocomplete
-  annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
-
+  // Testing dependencies
   testImplementation("org.springframework.boot:spring-boot-starter-test") {
     exclude(module = "mockito-core")
   }
+  testImplementation("com.h2database:h2")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
-/**
- * Test configuration with JaCoCo code coverage reporting. Run tests: ./gradlew test Generate
- * coverage report: ./gradlew jacocoTestReport View coverage: open
- * build/reports/jacoco/test/html/index.html
- */
 tasks.withType<Test> {
   useJUnitPlatform()
-  finalizedBy(tasks.jacocoTestReport)
 }
-
-tasks.jacocoTestReport {
-  dependsOn(tasks.test)
-  reports {
-    xml.required = true
-    csv.required = false
-    html.required = true
-    html.outputLocation = layout.buildDirectory.dir("reports/jacoco/test/html")
-  }
-}
-
-/**
- * JaCoCo code coverage configuration. Enforces minimum 50% coverage for critical token
- * functionality.
- */
-jacoco { toolVersion = "0.8.11" }
 
 publishing {
   publications {
     create<MavenPublication>("mavenJava") {
       from(components["java"])
       pom {
-        name.set("ogiri")
+        name.set("ogiri-jpa")
         description.set(
-            "Spring Boot token security components with auth headers, filters, and sub-token support.")
+            "JPA adapter module for Ogiri - provides base entity and repository adapter to reduce boilerplate.")
         url.set("https://github.com/quantipixels/ogiri")
         licenses {
           license {

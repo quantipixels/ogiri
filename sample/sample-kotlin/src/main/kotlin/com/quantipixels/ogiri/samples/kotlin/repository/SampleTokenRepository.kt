@@ -12,102 +12,52 @@
  */
 package com.quantipixels.ogiri.samples.kotlin.repository
 
+import com.quantipixels.ogiri.jpa.AbstractJpaTokenRepositoryAdapter
 import com.quantipixels.ogiri.samples.kotlin.entity.SampleToken
-import com.quantipixels.ogiri.security.tokens.OgiriTokenRepository
 import java.time.Instant
-import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.data.jpa.repository.Modifying
-import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
-import org.springframework.transaction.annotation.Transactional
 
 /**
- * Sample JPA implementation of TokenRepository.
+ * Sample token repository adapter using ogiri-jpa module.
  *
- * This demonstrates how to implement TokenRepository using Spring Data JPA. It extends both
- * JpaRepository (for JPA persistence) and TokenRepository (for the ogiri abstraction), providing
- * implementations for all required methods.
+ * This demonstrates the simplified approach using AbstractJpaTokenRepositoryAdapter from ogiri-jpa.
+ * The adapter reduces boilerplate by providing standard CRUD implementations and requiring only
+ * delegation to custom JPA query methods.
  *
- * The default JPA query methods derive queries from method names:
- * - findByUserIdAndClientEquals -> SELECT where user_id = ? AND client_id = ?
- * - findByExpiryAtBefore -> SELECT where expiry_at < ?
- * - deleteByUserIdAndClientEquals -> DELETE where user_id = ? AND client_id = ?
- * - deleteByExpiryAtBefore -> DELETE where expiry_at < ?
+ * Implementation steps:
+ * 1. Extend AbstractJpaTokenRepositoryAdapter<SampleToken, SampleTokenJpaRepository>
+ * 2. Implement abstract methods by delegating to the JPA repository
+ *
+ * Benefits:
+ * - Reduces implementation from ~100 lines to ~20 lines
+ * - Type-safe delegation to JPA repository methods
+ * - Maintains clear separation between OgiriTokenRepository contract and JPA implementation
+ * - Standard CRUD operations (save, findById, delete) provided by base class
+ *
+ * Before (manual implementation): ~100 lines with all method implementations After (using adapter):
+ * ~20 lines with just delegation methods
  */
 @Repository
-interface SampleTokenRepository :
-    JpaRepository<SampleToken, Long>, OgiriTokenRepository<SampleToken> {
-  override fun findAllByUserId(userId: Long): List<SampleToken> =
-      findByUserIdOrderByUpdatedAtDesc(userId)
+class SampleTokenRepository(jpa: SampleTokenJpaRepository) :
+    AbstractJpaTokenRepositoryAdapter<SampleToken, SampleTokenJpaRepository>(jpa) {
 
-  override fun findByUserIdAndClient(
-      userId: Long,
-      clientId: String,
-  ): SampleToken? = findByUserIdAndClientJpa(userId, clientId).orElse(null)
+  override fun findByUserIdOrderByUpdatedAtDesc(userId: Long) =
+      jpaRepository.findByUserIdOrderByUpdatedAtDesc(userId)
 
-  override fun findByExpiryAtBefore(cutoff: Instant): List<SampleToken> =
-      findByExpiryAtBeforeCutoff(cutoff)
+  override fun findByUserIdAndClientEquals(userId: Long, client: String) =
+      jpaRepository.findByUserIdAndClient(userId, client)
 
-  override fun findAllByUserIdAndTokenSubtype(
-      userId: Long,
-      tokenSubtype: String,
-  ): List<SampleToken> = findByUserIdAndTokenSubtypeOrderByUpdatedAtDesc(userId, tokenSubtype)
+  override fun findByUserIdAndTokenSubtypeOrderByUpdatedAtDesc(userId: Long, subtype: String) =
+      jpaRepository.findByUserIdAndTokenSubtypeOrderByUpdatedAtDesc(userId, subtype)
 
-  override fun deleteByUserIdAndClient(
-      userId: Long,
-      clientId: String,
-  ) = deleteByUserIdAndClientJpa(userId, clientId)
+  override fun findByExpiryAtBeforeCutoff(cutoff: Instant) =
+      jpaRepository.findByExpiryAtBefore(cutoff)
 
-  override fun deleteByUserIdAndClientIn(
-      userId: Long,
-      clientIds: Collection<String>,
-  ) = deleteByUserIdAndClientJpaIn(userId, clientIds)
+  override fun deleteByUserIdAndClientEquals(userId: Long, client: String) =
+      jpaRepository.deleteByUserIdAndClient(userId, client)
 
-  override fun deleteByUserId(userId: Long) = deleteByUserIdJpa(userId)
+  override fun deleteByUserIdAndClientIdIn(userId: Long, clientIds: Collection<String>) =
+      jpaRepository.deleteByUserIdAndClientIn(userId, clientIds)
 
-  @Query("SELECT t FROM SampleToken t WHERE t.userId = ?1 ORDER BY t.updatedAt DESC, t.id DESC")
-  fun findByUserIdOrderByUpdatedAtDesc(userId: Long): List<SampleToken>
-
-  @Query("SELECT t FROM SampleToken t WHERE t.userId = ?1 AND t.client = ?2")
-  fun findByUserIdAndClientJpa(
-      userId: Long,
-      client: String,
-  ): java.util.Optional<SampleToken>
-
-  @Query("SELECT t FROM SampleToken t WHERE t.expiryAt < ?1")
-  fun findByExpiryAtBeforeCutoff(expiryAt: Instant): List<SampleToken>
-
-  @Query(
-      "SELECT t FROM SampleToken t WHERE t.userId = ?1 AND t.tokenSubtype = ?2 ORDER BY t.updatedAt DESC, t.id DESC")
-  fun findByUserIdAndTokenSubtypeOrderByUpdatedAtDesc(
-      userId: Long,
-      tokenSubtype: String,
-  ): List<SampleToken>
-
-  @Transactional
-  @Modifying
-  @Query("DELETE FROM SampleToken t WHERE t.userId = ?1 AND t.client = ?2")
-  fun deleteByUserIdAndClientJpa(
-      userId: Long,
-      client: String,
-  )
-
-  @Transactional
-  @Modifying
-  @Query("DELETE FROM SampleToken t WHERE t.userId = ?1 AND t.client IN ?2")
-  fun deleteByUserIdAndClientJpaIn(
-      userId: Long,
-      clients: Collection<String>,
-  )
-
-  @Transactional
-  @Modifying
-  @Query("DELETE FROM SampleToken t WHERE t.userId = ?1")
-  fun deleteByUserIdJpa(userId: Long)
-
-  /** Delete token. */
-  @Transactional
-  @Modifying
-  @Query("DELETE FROM SampleToken t WHERE t = ?1")
-  override fun delete(token: SampleToken)
+  override fun deleteByUserIdJpa(userId: Long) = jpaRepository.deleteByUserId(userId)
 }
