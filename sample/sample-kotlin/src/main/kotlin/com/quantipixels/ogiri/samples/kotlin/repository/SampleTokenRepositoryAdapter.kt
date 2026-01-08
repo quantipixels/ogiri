@@ -41,7 +41,8 @@ class SampleTokenRepositoryAdapter(
   override fun findByUserIdAndTokenSubtypeOrderByUpdatedAtDesc(
       userId: Long,
       subtype: String,
-  ): List<SampleToken> = getJpaRepository().findByUserIdAndTokenSubtypeOrderByUpdatedAtDesc(userId, subtype)
+  ): List<SampleToken> =
+      getJpaRepository().findByUserIdAndTokenSubtypeOrderByUpdatedAtDesc(userId, subtype)
 
   override fun findByExpiryAtBeforeCutoff(cutoff: Instant): List<SampleToken> =
       getJpaRepository().findByExpiryAtBefore(cutoff)

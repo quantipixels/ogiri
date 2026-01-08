@@ -52,8 +52,7 @@ class TokenServiceIntegrationTest {
         }
     tokenRepository.save(token)
 
-    val savedToken =
-        tokenRepository.findByUserIdAndClientEquals(testUserId, testClient).orElse(null)
+    val savedToken = tokenRepository.findByUserIdAndClient(testUserId, testClient).orElse(null)
     assertNotNull(savedToken)
     assertEquals(testUserId, savedToken!!.userId)
     assertEquals(testClient, savedToken.client)
@@ -74,7 +73,7 @@ class TokenServiceIntegrationTest {
     tokenRepository.save(token1)
 
     // Rotate token by deleting old and saving new
-    tokenRepository.deleteByUserIdAndClientEquals(testUserId, testClient)
+    tokenRepository.deleteByUserIdAndClient(testUserId, testClient)
     tokenRepository.flush() // Ensure delete is flushed before saving new token
 
     val token2 =
@@ -86,8 +85,7 @@ class TokenServiceIntegrationTest {
         }
     tokenRepository.save(token2)
 
-    val rotatedToken =
-        tokenRepository.findByUserIdAndClientEquals(testUserId, testClient).orElse(null)
+    val rotatedToken = tokenRepository.findByUserIdAndClient(testUserId, testClient).orElse(null)
     assertNotNull(rotatedToken)
     assertEquals("token-hash-2", rotatedToken!!.token)
   }
@@ -133,9 +131,9 @@ class TokenServiceIntegrationTest {
         }
     tokenRepository.save(subToken)
 
-    val mainSaved = tokenRepository.findByUserIdAndClientEquals(testUserId, testClient).orElse(null)
+    val mainSaved = tokenRepository.findByUserIdAndClient(testUserId, testClient).orElse(null)
     val subSaved =
-        tokenRepository.findByUserIdAndClientEquals(testUserId, "$testClient.device").orElse(null)
+        tokenRepository.findByUserIdAndClient(testUserId, "$testClient.device").orElse(null)
 
     assertNotNull(mainSaved)
     assertNotNull(subSaved)
@@ -166,7 +164,7 @@ class TokenServiceIntegrationTest {
         }
     tokenRepository.save(validToken)
 
-    val expiredTokens = tokenRepository.findByExpiryAtBeforeCutoff(now)
+    val expiredTokens = tokenRepository.findByExpiryAtBefore(now)
     assertEquals(1, expiredTokens.size)
 
     tokenRepository.deleteAll(expiredTokens)

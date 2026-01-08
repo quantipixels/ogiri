@@ -138,7 +138,8 @@ class MultiClientSessionTest {
     // Create initial token
     tokenService.createNewAuthToken(TEST_USER_ID, "mobile");
 
-    SampleToken firstToken = tokenRepository.findByUserIdAndClient(TEST_USER_ID, "mobile");
+    SampleToken firstToken =
+        tokenRepository.findByUserIdAndClient(TEST_USER_ID, "mobile").orElse(null);
     Long firstId = firstToken.getId();
 
     // Create token for same client again (should update)

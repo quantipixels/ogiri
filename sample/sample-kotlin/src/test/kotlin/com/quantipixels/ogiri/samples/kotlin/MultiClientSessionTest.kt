@@ -135,7 +135,7 @@ class MultiClientSessionTest {
     // Create initial token
     tokenService.createNewAuthToken(testUserId, "mobile")
 
-    val firstToken = tokenRepository.findByUserIdAndClientEquals(testUserId, "mobile").orElse(null)
+    val firstToken = tokenRepository.findByUserIdAndClient(testUserId, "mobile").orElse(null)
     val firstId = firstToken!!.id
 
     // Create token for same client again (should update)

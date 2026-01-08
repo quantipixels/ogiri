@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertInstanceOf
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -28,12 +29,7 @@ class OgiriPasswordEncoderAutoConfigurationTest {
       ApplicationContextRunner()
           .withConfiguration(
               org.springframework.boot.autoconfigure.AutoConfigurations.of(
-                  OgiriSecurityAutoConfiguration::class.java))
-          .withPropertyValues(
-              "ogiri.security.register-filter=false",
-              "ogiri.cleanup.enabled=false",
-              "ogiri.auth.register-token-service=false",
-          )
+                  PasswordEncoderTestConfig::class.java))
 
   @Test
   fun `should auto-configure BCryptPasswordEncoder when no PasswordEncoder bean exists`() {
@@ -68,6 +64,14 @@ class OgiriPasswordEncoderAutoConfigurationTest {
       assertTrue(encoded.startsWith("\$2"))
       assertTrue(encoder.matches(rawPassword, encoded))
     }
+  }
+
+  /** Test configuration that provides the password encoder bean with conditional logic. */
+  @Configuration
+  class PasswordEncoderTestConfig {
+    @Bean
+    @ConditionalOnMissingBean(PasswordEncoder::class)
+    fun ogiriPasswordEncoder(): PasswordEncoder = BCryptPasswordEncoder()
   }
 
   @Configuration

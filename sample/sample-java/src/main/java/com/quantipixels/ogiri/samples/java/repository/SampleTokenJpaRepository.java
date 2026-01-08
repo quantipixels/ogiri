@@ -36,6 +36,11 @@ public interface SampleTokenJpaRepository extends JpaRepository<SampleToken, Lon
   @Query("SELECT t FROM SampleToken t WHERE t.userId = ?1 ORDER BY t.updatedAt DESC, t.id DESC")
   List<SampleToken> findByUserIdOrderByUpdatedAtDesc(Long userId);
 
+  /** Find all tokens for a user (any order). */
+  @Transactional(readOnly = true)
+  @Query("SELECT t FROM SampleToken t WHERE t.userId = ?1")
+  List<SampleToken> findAllByUserId(Long userId);
+
   /** Find a specific token by user ID and client identifier. */
   @Transactional(readOnly = true)
   @Query("SELECT t FROM SampleToken t WHERE t.userId = ?1 AND t.client = ?2")

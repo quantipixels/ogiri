@@ -55,7 +55,8 @@ class TokenRotationTest {
     assertNotNull(authHeader.getExpiry());
 
     // Verify token persisted
-    SampleToken savedToken = tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT);
+    SampleToken savedToken =
+        tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT).orElse(null);
     assertNotNull(savedToken);
     assertEquals(TEST_USER_ID, savedToken.getUserId());
     assertEquals(TEST_CLIENT, savedToken.getClient());
@@ -68,7 +69,8 @@ class TokenRotationTest {
     String firstToken = firstAuth.getAccessToken();
 
     // Simulate time passing beyond grace period
-    SampleToken token = tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT);
+    SampleToken token =
+        tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT).orElse(null);
     token.setLastUsedAt(Instant.now().minus(10, ChronoUnit.SECONDS));
     tokenRepository.save(token);
     tokenRepository.flush();
@@ -86,7 +88,8 @@ class TokenRotationTest {
     // Create initial token
     tokenService.createNewAuthToken(TEST_USER_ID, TEST_CLIENT);
 
-    SampleToken token = tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT);
+    SampleToken token =
+        tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT).orElse(null);
     String originalHash = token.getToken();
 
     // Simulate update that preserves last token
@@ -96,7 +99,8 @@ class TokenRotationTest {
     tokenRepository.flush();
 
     // Verify last token preserved
-    SampleToken updated = tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT);
+    SampleToken updated =
+        tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT).orElse(null);
     assertEquals("new-hash-value", updated.getToken());
     assertEquals(originalHash, updated.getLastToken());
   }
@@ -106,7 +110,8 @@ class TokenRotationTest {
     // Create token with all three tiers
     AuthHeader auth = tokenService.createNewAuthToken(TEST_USER_ID, TEST_CLIENT);
 
-    SampleToken token = tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT);
+    SampleToken token =
+        tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT).orElse(null);
     String currentHash = token.getToken();
 
     // Set up three-tier history
@@ -115,7 +120,8 @@ class TokenRotationTest {
     tokenRepository.save(token);
     tokenRepository.flush();
 
-    SampleToken updated = tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT);
+    SampleToken updated =
+        tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT).orElse(null);
     assertNotNull(updated.getToken());
     assertEquals("previous-hash", updated.getLastToken());
     assertEquals("oldest-hash", updated.getPreviousToken());
@@ -126,13 +132,13 @@ class TokenRotationTest {
     tokenService.createNewAuthToken(TEST_USER_ID, TEST_CLIENT);
 
     // Verify token exists
-    assertNotNull(tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT));
+    assertNotNull(tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT).orElse(null));
 
     // Delete
     tokenService.deleteToken(TEST_USER_ID, TEST_CLIENT);
 
     // Verify deleted
-    assertNull(tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT));
+    assertNull(tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT).orElse(null));
   }
 
   @Test
@@ -177,7 +183,7 @@ class TokenRotationTest {
     int deleted = tokenService.cleanupExpiredTokens(Instant.now());
 
     assertEquals(1, deleted);
-    assertNull(tokenRepository.findByUserIdAndClient(TEST_USER_ID, "expired-client"));
-    assertNotNull(tokenRepository.findByUserIdAndClient(TEST_USER_ID, "valid-client"));
+    assertNull(tokenRepository.findByUserIdAndClient(TEST_USER_ID, "expired-client").orElse(null));
+    assertNotNull(tokenRepository.findByUserIdAndClient(TEST_USER_ID, "valid-client").orElse(null));
   }
 }

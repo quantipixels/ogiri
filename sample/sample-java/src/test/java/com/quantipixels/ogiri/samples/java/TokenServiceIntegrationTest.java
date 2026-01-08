@@ -51,7 +51,8 @@ class TokenServiceIntegrationTest {
     token.setPlainToken("plain-token-value");
     tokenRepository.save(token);
 
-    SampleToken savedToken = tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT);
+    SampleToken savedToken =
+        tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT).orElse(null);
     assertNotNull(savedToken);
     assertEquals(TEST_USER_ID, savedToken.getUserId());
     assertEquals(TEST_CLIENT, savedToken.getClient());
@@ -80,7 +81,8 @@ class TokenServiceIntegrationTest {
     token2.setExpiryAt(Instant.now().plusSeconds(3600));
     tokenRepository.save(token2);
 
-    SampleToken rotatedToken = tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT);
+    SampleToken rotatedToken =
+        tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT).orElse(null);
     assertNotNull(rotatedToken);
     assertEquals("token-hash-2", rotatedToken.getToken());
   }
@@ -121,9 +123,10 @@ class TokenServiceIntegrationTest {
     subToken.setTokenSubtype("device");
     tokenRepository.save(subToken);
 
-    SampleToken mainSaved = tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT);
+    SampleToken mainSaved =
+        tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT).orElse(null);
     SampleToken subSaved =
-        tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT + ".device");
+        tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT + ".device").orElse(null);
 
     assertNotNull(mainSaved);
     assertNotNull(subSaved);

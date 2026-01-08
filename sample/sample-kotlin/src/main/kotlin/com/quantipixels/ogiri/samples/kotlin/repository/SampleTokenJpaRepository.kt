@@ -35,6 +35,10 @@ interface SampleTokenJpaRepository : JpaRepository<SampleToken, Long> {
   fun findByUserIdOrderByUpdatedAtDesc(userId: Long): List<SampleToken>
 
   @Transactional(readOnly = true)
+  @Query("SELECT t FROM SampleToken t WHERE t.userId = ?1")
+  fun findAllByUserId(userId: Long): List<SampleToken>
+
+  @Transactional(readOnly = true)
   @Query("SELECT t FROM SampleToken t WHERE t.userId = ?1 AND t.client = ?2")
   fun findByUserIdAndClient(
       userId: Long,

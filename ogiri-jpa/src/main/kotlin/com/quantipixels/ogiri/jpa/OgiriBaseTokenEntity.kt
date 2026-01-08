@@ -72,9 +72,9 @@ abstract class OgiriBaseTokenEntity : OgiriBaseToken() {
   /** Hashed token value (never plaintext). */
   @Column(name = "token_hash", nullable = false, length = 512) override var token: String = ""
 
-  /** Token type classifier ("APP" or "SUB"). */
+  /** Token type classifier ("app" or "sub"). */
   @Column(name = "token_type", nullable = false, length = 16)
-  override var tokenType: String = OgiriTokenType.APP.name
+  override var tokenType: String = OgiriTokenType.APP.label
 
   /** Token expiration time (UTC) - should be indexed for cleanup queries. */
   @Column(name = "expiry_at", nullable = false) override var expiryAt: Instant = Instant.now()

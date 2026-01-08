@@ -56,8 +56,7 @@ class TokenRotationTest {
     assertNotNull(authHeader.expiry)
 
     // Verify token persisted
-    val savedToken =
-        tokenRepository.findByUserIdAndClientEquals(testUserId, testClient).orElse(null)
+    val savedToken = tokenRepository.findByUserIdAndClient(testUserId, testClient).orElse(null)
     assertNotNull(savedToken)
     assertEquals(testUserId, savedToken!!.userId)
     assertEquals(testClient, savedToken.client)
@@ -70,7 +69,7 @@ class TokenRotationTest {
     val firstToken = firstAuth.accessToken
 
     // Simulate time passing beyond grace period
-    val token = tokenRepository.findByUserIdAndClientEquals(testUserId, testClient).orElse(null)
+    val token = tokenRepository.findByUserIdAndClient(testUserId, testClient).orElse(null)
     token!!.lastUsedAt = Instant.now().minus(10, ChronoUnit.SECONDS)
     tokenRepository.save(token)
     tokenRepository.flush()
@@ -88,7 +87,7 @@ class TokenRotationTest {
     // Create initial token
     tokenService.createNewAuthToken(testUserId, testClient)
 
-    val token = tokenRepository.findByUserIdAndClientEquals(testUserId, testClient).orElse(null)
+    val token = tokenRepository.findByUserIdAndClient(testUserId, testClient).orElse(null)
     val originalHash = token!!.token
 
     // Simulate update that preserves last token
@@ -98,7 +97,7 @@ class TokenRotationTest {
     tokenRepository.flush()
 
     // Verify last token preserved
-    val updated = tokenRepository.findByUserIdAndClientEquals(testUserId, testClient).orElse(null)
+    val updated = tokenRepository.findByUserIdAndClient(testUserId, testClient).orElse(null)
     assertEquals("new-hash-value", updated!!.token)
     assertEquals(originalHash, updated.lastToken)
   }
@@ -108,7 +107,7 @@ class TokenRotationTest {
     // Create token with all three tiers
     tokenService.createNewAuthToken(testUserId, testClient)
 
-    val token = tokenRepository.findByUserIdAndClientEquals(testUserId, testClient).orElse(null)
+    val token = tokenRepository.findByUserIdAndClient(testUserId, testClient).orElse(null)
 
     // Set up three-tier history
     token!!.lastToken = "previous-hash"
@@ -116,7 +115,7 @@ class TokenRotationTest {
     tokenRepository.save(token)
     tokenRepository.flush()
 
-    val updated = tokenRepository.findByUserIdAndClientEquals(testUserId, testClient).orElse(null)
+    val updated = tokenRepository.findByUserIdAndClient(testUserId, testClient).orElse(null)
     assertNotNull(updated!!.token)
     assertEquals("previous-hash", updated.lastToken)
     assertEquals("oldest-hash", updated.previousToken)
@@ -127,13 +126,13 @@ class TokenRotationTest {
     tokenService.createNewAuthToken(testUserId, testClient)
 
     // Verify token exists
-    assertNotNull(tokenRepository.findByUserIdAndClientEquals(testUserId, testClient).orElse(null))
+    assertNotNull(tokenRepository.findByUserIdAndClient(testUserId, testClient).orElse(null))
 
     // Delete
     tokenService.deleteToken(testUserId, testClient)
 
     // Verify deleted
-    assertNull(tokenRepository.findByUserIdAndClientEquals(testUserId, testClient).orElse(null))
+    assertNull(tokenRepository.findByUserIdAndClient(testUserId, testClient).orElse(null))
   }
 
   @Test
@@ -180,9 +179,7 @@ class TokenRotationTest {
     val deleted = tokenService.cleanupExpiredTokens(Instant.now())
 
     assertEquals(1, deleted)
-    assertNull(
-        tokenRepository.findByUserIdAndClientEquals(testUserId, "expired-client").orElse(null))
-    assertNotNull(
-        tokenRepository.findByUserIdAndClientEquals(testUserId, "valid-client").orElse(null))
+    assertNull(tokenRepository.findByUserIdAndClient(testUserId, "expired-client").orElse(null))
+    assertNotNull(tokenRepository.findByUserIdAndClient(testUserId, "valid-client").orElse(null))
   }
 }
