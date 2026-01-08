@@ -4,6 +4,39 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.3.0] - 2025-01-08
+
+### Added
+- **New `ogiri-jpa` Module**: Dedicated JPA/Hibernate support module that reduces boilerplate by ~70%
+  - `OgiriBaseTokenEntity`: `@MappedSuperclass` with all 15+ token fields pre-annotated
+  - `AbstractJpaTokenRepositoryAdapter`: Base adapter eliminating ~80 lines of repository boilerplate
+  - `OgiriJpaAutoConfiguration`: Spring Boot auto-configuration for the JPA module
+- **PasswordEncoder Auto-Configuration**: Automatically provides `BCryptPasswordEncoder` when no `PasswordEncoder` bean exists
+- **OgiriMissingBeanFailureAnalyzer**: Helpful error messages when required beans are missing, with specific guidance for each bean type
+- **Configuration Processor**: IDE autocomplete support for `ogiri.*` properties
+
+### Changed
+- **Sample Applications**: Updated to use `ogiri-jpa` module, demonstrating the simplified approach
+- **Documentation**: Restructured to highlight `ogiri-jpa` as the recommended path for JPA users
+- **CI Workflows**: Updated to build, test, and publish the new `ogiri-jpa` module
+
+### Installation
+
+**With JPA Support (Recommended):**
+```kotlin
+implementation("com.quantipixels.ogiri:ogiri-jpa:1.3.0")
+```
+
+**Core Only (Custom Persistence):**
+```kotlin
+implementation("com.quantipixels.ogiri:ogiri-core:1.3.0")
+```
+
+### Upgrade Notes
+- This release is fully backward compatible
+- Existing `ogiri-core` users can continue without changes
+- JPA users are encouraged to migrate to `ogiri-jpa` for reduced boilerplate (see [Migration Guide](migration-guide.md))
+
 ## [1.2.0] - 2025-12-12
 
 ### Added

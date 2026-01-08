@@ -34,5 +34,6 @@ jobs:
           name: build-artifacts-${{ matrix.java-version }}
           path: |
             ogiri-core/build/
+            ogiri-jpa/build/
             sample/*/build/
           retention-days: 1

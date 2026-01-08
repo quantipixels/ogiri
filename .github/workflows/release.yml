@@ -52,14 +52,23 @@ jobs:
             ## Release ${{ steps.version.outputs.VERSION }}
 
             ### Artifacts
-            Published to Maven Central: `com.quantipixels.ogiri:ogiri-core:${{ steps.version.outputs.VERSION }}`
+            Published to Maven Central:
+            - `com.quantipixels.ogiri:ogiri-core:${{ steps.version.outputs.VERSION }}`
+            - `com.quantipixels.ogiri:ogiri-jpa:${{ steps.version.outputs.VERSION }}`
 
             ### Installation
+
+            **With JPA Support (Recommended):**
+            ```gradle
+            implementation 'com.quantipixels.ogiri:ogiri-jpa:${{ steps.version.outputs.VERSION }}'
+            ```
+
+            **Core Only:**
             ```gradle
             implementation 'com.quantipixels.ogiri:ogiri-core:${{ steps.version.outputs.VERSION }}'
             ```
 
-            For details, see [CHANGELOG](./CHANGELOG.md) and [README](./README.md).
+            For details, see [Changelog](https://mosobande.github.io/ogiri/changelog/) and [Documentation](https://mosobande.github.io/ogiri/).
           draft: false
           prerelease: false
         env:

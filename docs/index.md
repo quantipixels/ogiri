@@ -16,8 +16,10 @@ Add the dependency and implement two interfaces:
 === "Kotlin"
 
     ```kotlin
-    // 1. Add dependency
-    implementation("com.quantipixels.ogiri:ogiri-core:{{ config.extra.ogiri_version }}")
+    // 1. Add dependency (choose one)
+    implementation("com.quantipixels.ogiri:ogiri-jpa:{{ config.extra.ogiri_version }}")  // For JPA (recommended)
+    // OR
+    implementation("com.quantipixels.ogiri:ogiri-core:{{ config.extra.ogiri_version }}") // For custom persistence
 
     // 2. Connect to your user system
     @Component
@@ -39,8 +41,10 @@ Add the dependency and implement two interfaces:
 === "Java"
 
     ```java
-    // 1. Add dependency
-    // implementation("com.quantipixels.ogiri:ogiri-core:{{ config.extra.ogiri_version }}")
+    // 1. Add dependency (choose one)
+    // implementation("com.quantipixels.ogiri:ogiri-jpa:{{ config.extra.ogiri_version }}")  // For JPA (recommended)
+    // OR
+    // implementation("com.quantipixels.ogiri:ogiri-core:{{ config.extra.ogiri_version }}") // For custom persistence
 
     // 2. Connect to your user system
     @Component
@@ -79,7 +83,7 @@ That's it. Ògiri auto-configures the security filter chain.
 - [Quickstart](quickstart.md) - Get running in 5 minutes
 - [Interface-First Design](interface-first-design.md) - Architecture and design philosophy
 - [Implementation Guide](implementation-guide.md) - Complete step-by-step implementation
-- [Migration Guide](migration-guide.md) - Upgrading to 1.2.0
+- [Migration Guide](migration-guide.md) - Upgrading between versions
 
 ### Integration & Configuration
 
