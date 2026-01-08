@@ -13,7 +13,7 @@
 package com.quantipixels.ogiri.samples.kotlin
 
 import com.quantipixels.ogiri.samples.kotlin.entity.SampleToken
-import com.quantipixels.ogiri.samples.kotlin.repository.SampleTokenRepository
+import com.quantipixels.ogiri.samples.kotlin.repository.SampleTokenJpaRepository
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -30,7 +30,7 @@ import org.springframework.transaction.annotation.Transactional
 @ActiveProfiles("test")
 @Transactional
 class TokenServiceIntegrationTest {
-  @Autowired private lateinit var tokenRepository: SampleTokenRepository
+  @Autowired private lateinit var tokenRepository: SampleTokenJpaRepository
 
   private val testUserId = 1L
   private val testClient = "test-app"
@@ -43,13 +43,13 @@ class TokenServiceIntegrationTest {
   @Test
   fun `should create and save new token`() {
     val token =
-        SampleToken(
-            userId = testUserId,
-            client = testClient,
-            token = "hashed-token-value",
-            expiryAt = Instant.now().plusSeconds(3600),
-        )
-    token.plainToken = "plain-token-value"
+        SampleToken().apply {
+          userId = testUserId
+          client = testClient
+          token = "hashed-token-value"
+          expiryAt = Instant.now().plusSeconds(3600)
+          plainToken = "plain-token-value"
+        }
     tokenRepository.save(token)
 
     val savedToken =
@@ -65,12 +65,12 @@ class TokenServiceIntegrationTest {
   fun `should support token rotation with grace period`() {
     // Save initial token
     val token1 =
-        SampleToken(
-            userId = testUserId,
-            client = testClient,
-            token = "token-hash-1",
-            expiryAt = Instant.now().plusSeconds(3600),
-        )
+        SampleToken().apply {
+          userId = testUserId
+          client = testClient
+          token = "token-hash-1"
+          expiryAt = Instant.now().plusSeconds(3600)
+        }
     tokenRepository.save(token1)
 
     // Rotate token by deleting old and saving new
@@ -78,12 +78,12 @@ class TokenServiceIntegrationTest {
     tokenRepository.flush() // Ensure delete is flushed before saving new token
 
     val token2 =
-        SampleToken(
-            userId = testUserId,
-            client = testClient,
-            token = "token-hash-2",
-            expiryAt = Instant.now().plusSeconds(3600),
-        )
+        SampleToken().apply {
+          userId = testUserId
+          client = testClient
+          token = "token-hash-2"
+          expiryAt = Instant.now().plusSeconds(3600)
+        }
     tokenRepository.save(token2)
 
     val rotatedToken =
@@ -96,14 +96,14 @@ class TokenServiceIntegrationTest {
   fun `should handle multiple concurrent clients for same user`() {
     val clients = listOf("mobile", "web", "desktop")
 
-    for (client in clients) {
+    for (clientName in clients) {
       val token =
-          SampleToken(
-              userId = testUserId,
-              client = client,
-              token = "hash-$client",
-              expiryAt = Instant.now().plusSeconds(3600),
-          )
+          SampleToken().apply {
+            userId = testUserId
+            client = clientName
+            token = "hash-$clientName"
+            expiryAt = Instant.now().plusSeconds(3600)
+          }
       tokenRepository.save(token)
     }
 
@@ -115,22 +115,22 @@ class TokenServiceIntegrationTest {
   @Test
   fun `should support sub-tokens`() {
     val mainToken =
-        SampleToken(
-            userId = testUserId,
-            client = testClient,
-            token = "main-token",
-            expiryAt = Instant.now().plusSeconds(3600),
-        )
+        SampleToken().apply {
+          userId = testUserId
+          client = testClient
+          token = "main-token"
+          expiryAt = Instant.now().plusSeconds(3600)
+        }
     tokenRepository.save(mainToken)
 
     val subToken =
-        SampleToken(
-            userId = testUserId,
-            client = "$testClient.device",
-            token = "sub-token",
-            expiryAt = Instant.now().plusSeconds(1800),
-            tokenSubtype = "device",
-        )
+        SampleToken().apply {
+          userId = testUserId
+          client = "$testClient.device"
+          token = "sub-token"
+          expiryAt = Instant.now().plusSeconds(1800)
+          tokenSubtype = "device"
+        }
     tokenRepository.save(subToken)
 
     val mainSaved = tokenRepository.findByUserIdAndClientEquals(testUserId, testClient).orElse(null)
@@ -149,21 +149,21 @@ class TokenServiceIntegrationTest {
     val now = Instant.now()
 
     val expiredToken =
-        SampleToken(
-            userId = testUserId,
-            client = "expired-client",
-            token = "expired-hash",
-            expiryAt = now.minus(1, ChronoUnit.HOURS),
-        )
+        SampleToken().apply {
+          userId = testUserId
+          client = "expired-client"
+          token = "expired-hash"
+          expiryAt = now.minus(1, ChronoUnit.HOURS)
+        }
     tokenRepository.save(expiredToken)
 
     val validToken =
-        SampleToken(
-            userId = testUserId,
-            client = "valid-client",
-            token = "valid-hash",
-            expiryAt = now.plus(1, ChronoUnit.HOURS),
-        )
+        SampleToken().apply {
+          userId = testUserId
+          client = "valid-client"
+          token = "valid-hash"
+          expiryAt = now.plus(1, ChronoUnit.HOURS)
+        }
     tokenRepository.save(validToken)
 
     val expiredTokens = tokenRepository.findByExpiryAtBeforeCutoff(now)

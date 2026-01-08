@@ -15,7 +15,7 @@ package com.quantipixels.ogiri.samples.java;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.quantipixels.ogiri.samples.java.entity.SampleToken;
-import com.quantipixels.ogiri.samples.java.repository.SampleTokenRepository;
+import com.quantipixels.ogiri.samples.java.repository.SampleTokenJpaRepository;
 import com.quantipixels.ogiri.samples.java.service.SampleTokenService;
 import com.quantipixels.ogiri.security.core.AuthHeader;
 import java.time.Instant;
@@ -33,7 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 class TokenRotationTest {
 
   @Autowired private SampleTokenService tokenService;
-  @Autowired private SampleTokenRepository tokenRepository;
+  @Autowired private SampleTokenJpaRepository tokenRepository;
 
   private static final Long TEST_USER_ID = 1L;
   private static final String TEST_USERNAME = "user1"; // Username for user ID 1
@@ -163,9 +163,11 @@ class TokenRotationTest {
   @Test
   void shouldCleanupExpiredTokens() {
     // Create expired token directly
-    SampleToken expiredToken =
-        new SampleToken(
-            TEST_USER_ID, "expired-client", "hash", Instant.now().minus(1, ChronoUnit.HOURS));
+    SampleToken expiredToken = new SampleToken();
+    expiredToken.setUserId(TEST_USER_ID);
+    expiredToken.setClient("expired-client");
+    expiredToken.setToken("hash");
+    expiredToken.setExpiryAt(Instant.now().minus(1, ChronoUnit.HOURS));
     tokenRepository.save(expiredToken);
 
     // Create valid token

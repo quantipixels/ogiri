@@ -15,7 +15,7 @@ package com.quantipixels.ogiri.samples.java;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.quantipixels.ogiri.samples.java.entity.SampleToken;
-import com.quantipixels.ogiri.samples.java.repository.SampleTokenRepository;
+import com.quantipixels.ogiri.samples.java.repository.SampleTokenJpaRepository;
 import com.quantipixels.ogiri.samples.java.service.SampleTokenService;
 import java.util.List;
 import java.util.Set;
@@ -33,7 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 class MultiClientSessionTest {
 
   @Autowired private SampleTokenService tokenService;
-  @Autowired private SampleTokenRepository tokenRepository;
+  @Autowired private SampleTokenJpaRepository tokenRepository;
 
   private static final Long TEST_USER_ID = 1L;
 

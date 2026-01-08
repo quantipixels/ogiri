@@ -12,7 +12,7 @@
  */
 package com.quantipixels.ogiri.samples.kotlin
 
-import com.quantipixels.ogiri.samples.kotlin.repository.SampleTokenRepository
+import com.quantipixels.ogiri.samples.kotlin.repository.SampleTokenJpaRepository
 import com.quantipixels.ogiri.samples.kotlin.service.SampleTokenService
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -32,7 +32,7 @@ import org.springframework.transaction.annotation.Transactional
 class MultiClientSessionTest {
 
   @Autowired private lateinit var tokenService: SampleTokenService
-  @Autowired private lateinit var tokenRepository: SampleTokenRepository
+  @Autowired private lateinit var tokenRepository: SampleTokenJpaRepository
 
   private val testUserId = 1L
 

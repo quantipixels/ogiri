@@ -13,7 +13,7 @@
 package com.quantipixels.ogiri.samples.kotlin
 
 import com.quantipixels.ogiri.samples.kotlin.entity.SampleToken
-import com.quantipixels.ogiri.samples.kotlin.repository.SampleTokenRepository
+import com.quantipixels.ogiri.samples.kotlin.repository.SampleTokenJpaRepository
 import com.quantipixels.ogiri.samples.kotlin.service.SampleTokenService
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -34,7 +34,7 @@ import org.springframework.transaction.annotation.Transactional
 class TokenRotationTest {
 
   @Autowired private lateinit var tokenService: SampleTokenService
-  @Autowired private lateinit var tokenRepository: SampleTokenRepository
+  @Autowired private lateinit var tokenRepository: SampleTokenJpaRepository
 
   private val testUserId = 1L
   private val testUsername = "user1" // Username for user ID 1
@@ -165,13 +165,12 @@ class TokenRotationTest {
   fun `should cleanup expired tokens`() {
     // Create expired token directly
     val expiredToken =
-        SampleToken(
-            id = 0,
-            userId = testUserId,
-            client = "expired-client",
-            token = "hash",
-            expiryAt = Instant.now().minus(1, ChronoUnit.HOURS),
-        )
+        SampleToken().apply {
+          userId = testUserId
+          client = "expired-client"
+          token = "hash"
+          expiryAt = Instant.now().minus(1, ChronoUnit.HOURS)
+        }
     tokenRepository.save(expiredToken)
 
     // Create valid token
