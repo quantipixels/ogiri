@@ -31,30 +31,30 @@ class SampleTokenRepositoryAdapter(
 ) : AbstractJpaTokenRepositoryAdapter<SampleToken, SampleTokenJpaRepository>(jpaRepository) {
 
   override fun findByUserIdOrderByUpdatedAtDesc(userId: Long): List<SampleToken> =
-      jpaRepository.findByUserIdOrderByUpdatedAtDesc(userId)
+      getJpaRepository().findByUserIdOrderByUpdatedAtDesc(userId)
 
   override fun findByUserIdAndClientEquals(
       userId: Long,
       client: String,
-  ): SampleToken? = jpaRepository.findByUserIdAndClient(userId, client).orElse(null)
+  ): SampleToken? = getJpaRepository().findByUserIdAndClient(userId, client).orElse(null)
 
   override fun findByUserIdAndTokenSubtypeOrderByUpdatedAtDesc(
       userId: Long,
       subtype: String,
-  ): List<SampleToken> = jpaRepository.findByUserIdAndTokenSubtypeOrderByUpdatedAtDesc(userId, subtype)
+  ): List<SampleToken> = getJpaRepository().findByUserIdAndTokenSubtypeOrderByUpdatedAtDesc(userId, subtype)
 
   override fun findByExpiryAtBeforeCutoff(cutoff: Instant): List<SampleToken> =
-      jpaRepository.findByExpiryAtBefore(cutoff)
+      getJpaRepository().findByExpiryAtBefore(cutoff)
 
   override fun deleteByUserIdAndClientEquals(
       userId: Long,
       client: String,
-  ) = jpaRepository.deleteByUserIdAndClient(userId, client)
+  ) = getJpaRepository().deleteByUserIdAndClient(userId, client)
 
   override fun deleteByUserIdAndClientIdIn(
       userId: Long,
       clientIds: Collection<String>,
-  ) = jpaRepository.deleteByUserIdAndClientIn(userId, clientIds)
+  ) = getJpaRepository().deleteByUserIdAndClientIn(userId, clientIds)
 
-  override fun deleteByUserIdJpa(userId: Long) = jpaRepository.deleteByUserId(userId)
+  override fun deleteByUserIdJpa(userId: Long) = getJpaRepository().deleteByUserId(userId)
 }

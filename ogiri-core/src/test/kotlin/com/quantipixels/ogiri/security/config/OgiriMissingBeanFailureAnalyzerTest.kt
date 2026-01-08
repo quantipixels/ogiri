@@ -12,7 +12,7 @@
  */
 package com.quantipixels.ogiri.security.config
 
-import com.quantipixels.ogiri.security.spi.OgiriRouteRegistry
+import com.quantipixels.ogiri.security.routes.OgiriRouteRegistry
 import com.quantipixels.ogiri.security.spi.OgiriUserDirectory
 import com.quantipixels.ogiri.security.tokens.OgiriTokenRepository
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -30,7 +30,7 @@ class OgiriMissingBeanFailureAnalyzerTest {
   fun `should analyze missing OgiriTokenRepository`() {
     val exception = NoSuchBeanDefinitionException(OgiriTokenRepository::class.java)
 
-    val analysis = analyzer.analyze(exception, exception)
+    val analysis = analyzer.analyze(exception)
 
     assertNotNull(analysis)
     assertEquals("No OgiriTokenRepository bean found.", analysis!!.description)
@@ -43,7 +43,7 @@ class OgiriMissingBeanFailureAnalyzerTest {
   fun `should analyze missing OgiriUserDirectory`() {
     val exception = NoSuchBeanDefinitionException(OgiriUserDirectory::class.java)
 
-    val analysis = analyzer.analyze(exception, exception)
+    val analysis = analyzer.analyze(exception)
 
     assertNotNull(analysis)
     assertEquals("No OgiriUserDirectory bean found.", analysis!!.description)
@@ -57,7 +57,7 @@ class OgiriMissingBeanFailureAnalyzerTest {
   fun `should analyze missing OgiriRouteRegistry`() {
     val exception = NoSuchBeanDefinitionException(OgiriRouteRegistry::class.java)
 
-    val analysis = analyzer.analyze(exception, exception)
+    val analysis = analyzer.analyze(exception)
 
     assertNotNull(analysis)
     assertEquals("No OgiriRouteRegistry bean found.", analysis!!.description)
@@ -70,7 +70,7 @@ class OgiriMissingBeanFailureAnalyzerTest {
   fun `should return null for unrelated bean types`() {
     val exception = NoSuchBeanDefinitionException(String::class.java)
 
-    val analysis = analyzer.analyze(exception, exception)
+    val analysis = analyzer.analyze(exception)
 
     assertNull(analysis)
   }
@@ -80,7 +80,7 @@ class OgiriMissingBeanFailureAnalyzerTest {
     // Create exception without bean type info
     val exception = NoSuchBeanDefinitionException("someBean")
 
-    val analysis = analyzer.analyze(exception, exception)
+    val analysis = analyzer.analyze(exception)
 
     assertNull(analysis)
   }
@@ -89,7 +89,7 @@ class OgiriMissingBeanFailureAnalyzerTest {
   fun `should include cause in analysis`() {
     val exception = NoSuchBeanDefinitionException(OgiriTokenRepository::class.java)
 
-    val analysis = analyzer.analyze(exception, exception)
+    val analysis = analyzer.analyze(exception)
 
     assertNotNull(analysis)
     assertEquals(exception, analysis!!.cause)

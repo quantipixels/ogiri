@@ -80,8 +80,11 @@ import org.springframework.data.jpa.repository.JpaRepository
  * @param R The JPA repository type
  */
 abstract class AbstractJpaTokenRepositoryAdapter<T : OgiriToken, R : JpaRepository<T, Long>>(
-    protected val jpaRepository: R,
+    private val jpaRepository: R,
 ) : OgiriTokenRepository<T> {
+
+  /** Returns the underlying JPA repository for use in subclass implementations. */
+  protected fun getJpaRepository(): R = jpaRepository
 
   // ========== Standard implementations (provided) ==========
 

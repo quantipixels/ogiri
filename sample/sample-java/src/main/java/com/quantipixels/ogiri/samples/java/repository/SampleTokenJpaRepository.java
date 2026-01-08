@@ -54,6 +54,22 @@ public interface SampleTokenJpaRepository extends JpaRepository<SampleToken, Lon
   @Query("SELECT t FROM SampleToken t WHERE t.expiryAt < ?1")
   List<SampleToken> findByExpiryAtBefore(Instant expiryAt);
 
+  /** Count tokens by user ID. */
+  @Transactional(readOnly = true)
+  @Query("SELECT COUNT(t) FROM SampleToken t WHERE t.userId = ?1")
+  long countByUserId(Long userId);
+
+  /** Find valid tokens by prefix. */
+  @Transactional(readOnly = true)
+  @Query(
+      "SELECT t FROM SampleToken t WHERE t.tokenPrefix = ?1 AND t.tokenType = 'APP' AND t.expiryAt > ?2")
+  List<SampleToken> findValidByPrefix(String prefix, Instant now);
+
+  /** Find all tokens by token type. */
+  @Transactional(readOnly = true)
+  @Query("SELECT t FROM SampleToken t WHERE t.tokenType = ?1")
+  List<SampleToken> findByTokenType(String tokenType);
+
   /** Delete a token by user ID and client identifier. */
   @Transactional
   @Modifying
@@ -71,4 +87,10 @@ public interface SampleTokenJpaRepository extends JpaRepository<SampleToken, Lon
   @Modifying
   @Query("DELETE FROM SampleToken t WHERE t.userId = ?1")
   void deleteByUserId(Long userId);
+
+  /** Delete expired tokens and return count. */
+  @Transactional
+  @Modifying
+  @Query("DELETE FROM SampleToken t WHERE t.expiryAt < ?1")
+  int deleteByExpiryAtBefore(Instant cutoff);
 }

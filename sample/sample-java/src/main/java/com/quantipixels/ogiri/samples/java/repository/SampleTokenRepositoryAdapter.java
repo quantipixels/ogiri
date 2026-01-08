@@ -83,50 +83,30 @@ public class SampleTokenRepositoryAdapter
 
   @Override
   public int deleteByExpiryAtBefore(Instant cutoff) {
-    return jpaRepository.deleteByExpiryAtBeforeCutoff(cutoff);
+    return getJpaRepository().deleteByExpiryAtBefore(cutoff);
   }
 
   @Override
   public int deleteExpiredBatch(Instant cutoff, int batchSize) {
-    // Default implementation: delegate to deleteByExpiryAtBefore
-    // For production, you should override with a batched implementation using native queries
-    var expired = jpaRepository.findByExpiryAtBeforeCutoff(cutoff);
+    // For production, you should override with a batched native query
+    var expired = getJpaRepository().findByExpiryAtBefore(cutoff);
     var toDelete = expired.stream().limit(batchSize).toList();
-    jpaRepository.deleteAll(toDelete);
+    getJpaRepository().deleteAll(toDelete);
     return toDelete.size();
   }
 
   @Override
   public List<SampleToken> findValidTokensByPrefix(String prefix, Instant now) {
-    // Default implementation using filtering
-    // For production, you should override with an indexed query:
-    // @Query("SELECT t FROM SampleToken t WHERE t.tokenPrefix = :prefix AND t.tokenType = 'APP' AND
-    // t.expiryAt > :now")
-    // List<SampleToken> findValidByPrefix(@Param("prefix") String prefix, @Param("now") Instant
-    // now);
-    return jpaRepository.findAll().stream()
-        .filter(t -> prefix.equals(t.getTokenPrefix()))
-        .filter(t -> "app".equals(t.getTokenType()))
-        .filter(t -> t.getExpiryAt().isAfter(now))
-        .toList();
+    return getJpaRepository().findValidByPrefix(prefix, now);
   }
 
   @Override
   public List<SampleToken> findAllByTokenType(String tokenType) {
-    // Default implementation using filtering
-    // For production, you should override with a native query:
-    // @Query("SELECT t FROM SampleToken t WHERE t.tokenType = :tokenType")
-    // List<SampleToken> findByTokenType(@Param("tokenType") String tokenType);
-    return jpaRepository.findAll().stream()
-        .filter(t -> tokenType.equals(t.getTokenType()))
-        .toList();
+    return getJpaRepository().findByTokenType(tokenType);
   }
 
   @Override
   public long countByUserId(long userId) {
-    // For production, you should override with a COUNT query:
-    // @Query("SELECT COUNT(t) FROM SampleToken t WHERE t.userId = :userId")
-    // long countByUserId(@Param("userId") long userId);
-    return jpaRepository.countByUserId(userId);
+    return getJpaRepository().countByUserId(userId);
   }
 }
