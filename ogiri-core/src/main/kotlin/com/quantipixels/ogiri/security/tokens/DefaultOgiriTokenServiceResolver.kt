@@ -20,12 +20,24 @@ class DefaultOgiriTokenServiceResolver(
     private val properties: OgiriConfigurationProperties,
     private val beanFactory: ConfigurableListableBeanFactory,
 ) : OgiriTokenServiceResolver {
+  /**
+   * Resolve the single OgiriTokenService bean to use for token operations.
+   *
+   * Selects and returns one OgiriTokenService from the registered beans, preferring a single
+   * registered bean or a single bean marked `@Primary`. If no service is available or multiple
+   * candidates exist without a single primary, resolution fails.
+   *
+   * @return The selected OgiriTokenService instance.
+   * @throws IllegalStateException if no OgiriTokenService beans are found or if multiple beans are
+   *   found without a single `@Primary` candidate.
+   */
   override fun resolve(): OgiriTokenService<*> {
     if (tokenServices.isEmpty()) {
       val tokenServiceIsEnabled = properties.auth.registerTokenService
       if (tokenServiceIsEnabled) {
         error(
-            "No OgiriTokenService bean found. Provide a custom OgiriTokenService or enable the default via ogiri.auth.register-token-service=true.")
+            "No OgiriTokenService bean found despite ogiri.auth.register-token-service=true. " +
+                "Ensure a valid OgiriTokenRepository bean exists, or provide a custom OgiriTokenService implementation.")
       }
       error(
           "No OgiriTokenService bean found. Provide a custom OgiriTokenService (default creation disabled via ogiri.auth.register-token-service=false).")

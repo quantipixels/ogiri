@@ -26,8 +26,8 @@ db.createCollection("tokens", {
                 },
                 tokenType: {
                     bsonType: "string",
-                    enum: ["APP", "device", "chat"],
-                    description: "Token type (APP or custom sub-token)"
+                    enum: ["app", "sub"],
+                    description: "Token type (app or sub)"
                 },
                 tokenSubtype: {
                     bsonType: ["string", "null"],
@@ -69,7 +69,6 @@ db.createCollection("tokens", {
 // Create indexes for performance
 db.tokens.createIndex({ userId: 1, client: 1 }, { unique: true });
 db.tokens.createIndex({ userId: 1 });
-db.tokens.createIndex({ expiryAt: 1 });
 
 // TTL index to automatically delete expired tokens after 1 hour grace period
 db.tokens.createIndex(

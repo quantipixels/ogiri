@@ -4,24 +4,51 @@ Get ogiri integrated into your Spring Boot application in 5 minutes.
 
 ## 1. Add Dependency
 
-**Gradle (Kotlin DSL):**
-```kotlin
-implementation("com.quantipixels.ogiri:ogiri-core:{{ config.extra.ogiri_version }}")
-```
+=== "JPA (Recommended)"
 
-**Gradle (Groovy):**
-```groovy
-implementation 'com.quantipixels.ogiri:ogiri-core:{{ config.extra.ogiri_version }}'
-```
+    **Gradle (Kotlin DSL):**
+    ```kotlin
+    implementation("com.quantipixels.ogiri:ogiri-jpa:{{ config.extra.ogiri_version }}")
+    ```
 
-**Maven:**
-```xml
-<dependency>
-  <groupId>com.quantipixels.ogiri</groupId>
-  <artifactId>ogiri-core</artifactId>
-  <version>{{ config.extra.ogiri_version }}</version>
-</dependency>
-```
+    **Gradle (Groovy):**
+    ```groovy
+    implementation 'com.quantipixels.ogiri:ogiri-jpa:{{ config.extra.ogiri_version }}'
+    ```
+
+    **Maven:**
+    ```xml
+    <dependency>
+      <groupId>com.quantipixels.ogiri</groupId>
+      <artifactId>ogiri-jpa</artifactId>
+      <version>{{ config.extra.ogiri_version }}</version>
+    </dependency>
+    ```
+
+    Includes `ogiri-core` and `spring-boot-starter-data-jpa` transitively. **Reduces boilerplate by ~70%.**
+
+=== "Core Only"
+
+    **Gradle (Kotlin DSL):**
+    ```kotlin
+    implementation("com.quantipixels.ogiri:ogiri-core:{{ config.extra.ogiri_version }}")
+    ```
+
+    **Gradle (Groovy):**
+    ```groovy
+    implementation 'com.quantipixels.ogiri:ogiri-core:{{ config.extra.ogiri_version }}'
+    ```
+
+    **Maven:**
+    ```xml
+    <dependency>
+      <groupId>com.quantipixels.ogiri</groupId>
+      <artifactId>ogiri-core</artifactId>
+      <version>{{ config.extra.ogiri_version }}</version>
+    </dependency>
+    ```
+
+    For MongoDB, Redis, or custom persistence implementations.
 
 ## 2. Implement Required Interfaces
 
@@ -101,7 +128,7 @@ Declares which routes bypass authentication:
     ```kotlin
     @Component
     class MyRouteRegistry : OgiriRouteRegistry {
-      override fun registrations() = listOf(
+      override fun routes() = listOf(
         OgiriRoute.post("/api/auth/login"),
         OgiriRoute.post("/api/auth/register"),
         OgiriRoute.get("/api/health"),
@@ -115,7 +142,7 @@ Declares which routes bypass authentication:
     @Component
     public class MyRouteRegistry implements OgiriRouteRegistry {
       @Override
-      public List<OgiriRoute> registrations() {
+      public List<OgiriRoute> routes() {
         return List.of(
           OgiriRoute.post("/api/auth/login"),
           OgiriRoute.post("/api/auth/register"),
@@ -125,25 +152,27 @@ Declares which routes bypass authentication:
     }
     ```
 
-### OgiriTokenRepository
+### Token Persistence
 
-Implement token persistence. For JPA:
+If using `ogiri-jpa`, create a simple token entity extending `OgiriBaseTokenEntity`:
 
 === "Kotlin"
 
     ```kotlin
-    @Repository
-    interface MyTokenRepository : JpaRepository<Token, Long>, OgiriTokenRepository<Token>
+    @Entity
+    @Table(name = "user_tokens")
+    class MyToken : OgiriBaseTokenEntity()
     ```
 
 === "Java"
 
     ```java
-    @Repository
-    public interface MyTokenRepository extends JpaRepository<Token, Long>, OgiriTokenRepository<Token> {}
+    @Entity
+    @Table(name = "user_tokens")
+    public class MyToken extends OgiriBaseTokenEntity {}
     ```
 
-See [Database Integration](database.md) for MongoDB, Redis, and custom implementations.
+Then create your repository adapter. See [Database Integration](database.md) for the complete setup with JPA, MongoDB, Redis, and custom implementations.
 
 ## 3. Issue Tokens on Login
 
@@ -189,7 +218,8 @@ See [Database Integration](database.md) for MongoDB, Redis, and custom implement
 Ògiri auto-configures the security filter chain. Authenticated requests will have their tokens validated and rotated automatically.
 
 **Response headers after login:**
-```
+
+```text
 access-token: <token-hash>
 client: web
 uid: 123
@@ -197,7 +227,8 @@ expiry: 2025-12-25T00:00:00Z
 ```
 
 **Client sends on subsequent requests:**
-```
+
+```text
 access-token: <token-hash>
 client: web
 uid: 123

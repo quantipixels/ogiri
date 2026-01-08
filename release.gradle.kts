@@ -22,6 +22,8 @@ tasks.register("release") {
   group = "release"
   description = "Release the project to Maven Central"
 
+  finalizedBy("publish")
+
   doLast {
     val version = project.findProperty("version")?.toString() ?: "0.1.0"
     val isSnapshot = version.endsWith("-SNAPSHOT")
@@ -29,9 +31,6 @@ tasks.register("release") {
     println("📦 Releasing version: $version")
     println("🔐 Snapshot: $isSnapshot")
     println("✅ Ready to publish to Maven Central")
-
-    // Execute publish task
-    project.exec { commandLine("./gradlew", "publish") }
   }
 }
 
@@ -59,16 +58,48 @@ tasks.register("bumpVersion") {
   }
 }
 
+/**
+ * Bumps the patch component of a semantic version string and returns the resulting snapshot
+ * version.
+ *
+ * If the input ends with "-SNAPSHOT" that suffix is ignored for parsing. For versions with at least
+ * three dot-separated segments the patch segment is incremented and "-SNAPSHOT" is appended. For
+ * shorter versions ".1-SNAPSHOT" is appended to the sanitized input.
+ *
+ * @param version The version string to bump (may include a trailing "-SNAPSHOT").
+ * @return The new version string with a trailing "-SNAPSHOT".
+ * @throws IllegalArgumentException if the version has a third segment that cannot be parsed as an
+ *   integer.
+ */
 fun bumpPatchVersion(version: String): String {
   val sanitized = version.replace("-SNAPSHOT", "")
   val parts = sanitized.split(".")
   return if (parts.size >= 3) {
-    "${parts[0]}.${parts[1]}.${parts[2].toInt() + 1}-SNAPSHOT"
+    val patch =
+        parts[2].toIntOrNull()
+            ?: throw IllegalArgumentException(
+                "Invalid version format for auto-bumping: '$version'. " +
+                    "Patch segment '${parts[2]}' is not a number. Please provide newVersion manually.")
+    "${parts[0]}.${parts[1]}.${patch + 1}-SNAPSHOT"
   } else {
     "$sanitized.1-SNAPSHOT"
   }
 }
 
+/**
+ * Updates occurrences of a specific version assignment in the given file to a new version.
+ *
+ * Matches lines of the form `version = "x.y.z"` or `project.version = 'x.y.z'` (allowing
+ * surrounding whitespace), replaces only when the assigned value exactly equals `oldVersion`, and
+ * preserves the surrounding quotes and any `project.` prefix. If the file does not exist the
+ * function logs a warning and returns without error. If a change is made the file is overwritten
+ * and a confirmation is logged.
+ *
+ * @param file The file to scan and potentially update.
+ * @param oldVersion The exact version string to replace (must match the assigned value in the
+ *   file).
+ * @param newVersion The version string to write in place of `oldVersion`.
+ */
 fun updateVersionInFile(file: File, oldVersion: String, newVersion: String) {
   if (!file.exists()) {
     println("⚠️  File not found: ${file.absolutePath}")
@@ -76,7 +107,14 @@ fun updateVersionInFile(file: File, oldVersion: String, newVersion: String) {
   }
 
   val content = file.readText()
-  val updated = content.replace(oldVersion, newVersion)
+  val versionRegex =
+      Regex(
+          """^(\s*(?:project\.)?version\s*=\s*["'])${Regex.escape(oldVersion)}(["'])""",
+          RegexOption.MULTILINE)
+  val updated =
+      versionRegex.replace(content) { matchResult ->
+        "${matchResult.groupValues[1]}$newVersion${matchResult.groupValues[2]}"
+      }
 
   if (content != updated) {
     file.writeText(updated)

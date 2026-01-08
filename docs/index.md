@@ -16,8 +16,10 @@ Add the dependency and implement two interfaces:
 === "Kotlin"
 
     ```kotlin
-    // 1. Add dependency
-    implementation("com.quantipixels.ogiri:ogiri-core:{{ config.extra.ogiri_version }}")
+    // 1. Add dependency (choose one)
+    implementation("com.quantipixels.ogiri:ogiri-jpa:{{ config.extra.ogiri_version }}")  // For JPA (recommended)
+    // OR
+    implementation("com.quantipixels.ogiri:ogiri-core:{{ config.extra.ogiri_version }}") // For custom persistence
 
     // 2. Connect to your user system
     @Component
@@ -25,22 +27,24 @@ Add the dependency and implement two interfaces:
       override fun findById(id: Long) = userService.getById(id)
       override fun findByUsername(username: String) = userService.getByUsername(username)
       override fun findByEmail(email: String) = userService.getByEmail(email)
-      override fun loadUserByUsername(username: String) = userService.getByUsername(username)!!
+      override fun loadUserByUsername(username: String) = userService.getByUsername(username) ?: throw UsernameNotFoundException("User not found: $username")
       override fun recordSuccessfulLogin(userId: Long) { userService.recordLogin(userId) }
     }
 
     // 3. Declare public routes
     @Component
     class MyRouteRegistry : OgiriRouteRegistry {
-      override fun registrations() = listOf(OgiriRoute.post("/api/auth/**"))
+      override fun routes() = listOf(OgiriRoute.post("/api/auth/**"))
     }
     ```
 
 === "Java"
 
     ```java
-    // 1. Add dependency
-    // implementation("com.quantipixels.ogiri:ogiri-core:{{ config.extra.ogiri_version }}")
+    // 1. Add dependency (choose one)
+    // implementation("com.quantipixels.ogiri:ogiri-jpa:{{ config.extra.ogiri_version }}")  // For JPA (recommended)
+    // OR
+    // implementation("com.quantipixels.ogiri:ogiri-core:{{ config.extra.ogiri_version }}") // For custom persistence
 
     // 2. Connect to your user system
     @Component
@@ -54,7 +58,11 @@ Add the dependency and implement two interfaces:
       @Override public OgiriUser findById(Long id) { return userService.getById(id); }
       @Override public OgiriUser findByUsername(String username) { return userService.getByUsername(username); }
       @Override public OgiriUser findByEmail(String email) { return userService.getByEmail(email); }
-      @Override public OgiriUser loadUserByUsername(String username) { return userService.getByUsername(username); }
+       @Override public OgiriUser loadUserByUsername(String username) {
+        OgiriUser user = userService.getByUsername(username);
+        if (user == null) throw new UsernameNotFoundException("User not found: " + username);
+        return user;
+      }
       @Override public void recordSuccessfulLogin(Long userId) { userService.recordLogin(userId); }
     }
 
@@ -62,7 +70,7 @@ Add the dependency and implement two interfaces:
     @Component
     public class MyRouteRegistry implements OgiriRouteRegistry {
       @Override
-      public List<OgiriRoute> registrations() {
+      public List<OgiriRoute> routes() {
         return List.of(OgiriRoute.post("/api/auth/**"));
       }
     }
@@ -79,7 +87,7 @@ That's it. Ògiri auto-configures the security filter chain.
 - [Quickstart](quickstart.md) - Get running in 5 minutes
 - [Interface-First Design](interface-first-design.md) - Architecture and design philosophy
 - [Implementation Guide](implementation-guide.md) - Complete step-by-step implementation
-- [Migration Guide](migration-guide.md) - Upgrading to 1.2.0
+- [Migration Guide](migration-guide.md) - Upgrading between versions
 
 ### Integration & Configuration
 

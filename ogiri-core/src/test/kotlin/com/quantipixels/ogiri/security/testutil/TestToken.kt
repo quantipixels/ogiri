@@ -32,8 +32,8 @@ data class TestToken(
     override val client: String,
     /** Token hash. */
     override var token: String,
-    /** Token type ("APP" or "SUB"). */
-    override val tokenType: String = "APP",
+    /** Token type ("app" or "sub"). */
+    override val tokenType: String = "app",
     /** Expiration time. */
     override var expiryAt: Instant,
     /** Creation time. */
@@ -56,7 +56,15 @@ data class TestToken(
    * plainToken from BaseToken.
    */
   companion object {
-    /** Create a test token with minimal required fields. */
+    /**
+     * Create a TestToken populated with the minimal fields commonly needed in tests.
+     *
+     * @param userId The ID of the token owner.
+     * @param client The client identifier associated with the token.
+     * @param token The stored token value (e.g., a hashed token).
+     * @param expiryAt The instant when the token expires.
+     * @return A TestToken instance with the provided values and defaults for remaining fields.
+     */
     fun create(
         userId: Long = 1L,
         client: String = "test-client",
@@ -70,7 +78,13 @@ data class TestToken(
             expiryAt = expiryAt,
         )
 
-    /** Create an expired test token. */
+    /**
+     * Constructs a TestToken with an expiry time already in the past.
+     *
+     * @param userId The user ID to assign to the token.
+     * @param client The client identifier to assign to the token.
+     * @return A TestToken whose `expiryAt` is set to one second before the current instant.
+     */
     fun expired(
         userId: Long = 1L,
         client: String = "test-client",
@@ -88,7 +102,7 @@ data class TestToken(
         userId: Long = 1L,
         client: String = "test-client",
         token: String = "hashed-token",
-        tokenType: String = "APP",
+        tokenType: String = "app",
         expiryAt: Instant = Instant.now().plusSeconds(3600),
         createdAt: Instant = Instant.now(),
         updatedAt: Instant = Instant.now(),

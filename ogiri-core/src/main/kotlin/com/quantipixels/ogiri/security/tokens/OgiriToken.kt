@@ -32,7 +32,7 @@ import java.time.Instant
  *     @Column(name = "user_id") override val userId: Long,
  *     @Column(name = "client_id") override val client: String,
  *     @Column(name = "token_hash") override var token: String,
- *     @Column(name = "token_type") override val tokenType: String = "APP",
+ *     @Column(name = "token_type") override val tokenType: String = "app",
  *     @Column(name = "expiry_at") override var expiryAt: Instant,
  *     @CreationTimestamp override val createdAt: Instant = Instant.now(),
  *     @UpdateTimestamp override val updatedAt: Instant = Instant.now(),
@@ -78,8 +78,8 @@ interface OgiriToken {
   var token: String
 
   /**
-   * Token type classifier. Default: "APP" for primary tokens. Custom: "device", "chat", etc. for
-   * sub-tokens.
+   * Token type classifier. Default: "app" for primary tokens. Use "sub" for specialized tokens
+   * (device, chat, etc.).
    */
   val tokenType: String
 
@@ -132,10 +132,36 @@ interface OgiriToken {
   var plainToken: String?
 
   /**
-   * Check if token has expired.
+   * Token prefix for efficient lookup (first 8 characters of plaintext token).
    *
-   * @param now Current instant for comparison (defaults to Instant.now())
-   * @return true if expiryAt is before now, false otherwise
+   * This field enables O(1) database lookups by indexing on a non-hashed prefix. Since the full
+   * token is hashed with BCrypt, direct lookups are impossible. Storing a short prefix allows
+   * efficient filtering before expensive BCrypt comparisons.
+   *
+   * The prefix is stored in plaintext but reveals minimal information about the full token. With 8
+   * characters from a base62 alphabet, there are 62^8 (~218 trillion) possible prefixes.
+   *
+   * Security considerations:
+   * - Prefix alone cannot be used for authentication (full token still required)
+   * - Minimal information leakage (only 8 of typically 32+ characters)
+   * - Should be indexed in database for efficient queries
+   *
+   * This field is optional (null) for backwards compatibility with existing tokens. New tokens will
+   * have prefix populated automatically by the token service.
+   *
+   * Database schema recommendation:
+   * ```sql
+   * ALTER TABLE tokens ADD COLUMN token_prefix VARCHAR(8);
+   * CREATE INDEX idx_tokens_prefix ON tokens(token_prefix);
+   * ```
+   */
+  var tokenPrefix: String?
+
+  /**
+   * Determines whether the token is expired relative to the provided instant.
+   *
+   * @param now Instant to compare the token's expiry against; defaults to the current instant.
+   * @return `true` if `expiryAt` is before `now`, `false` otherwise.
    */
   fun isExpired(now: Instant = Instant.now()): Boolean = expiryAt.isBefore(now)
 }

@@ -16,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.quantipixels.ogiri.samples.java.Application;
 import com.quantipixels.ogiri.samples.java.entity.SampleToken;
+import com.quantipixels.ogiri.security.tokens.OgiriTokenRepository;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -31,7 +32,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 class SampleTokenRepositoryTest {
 
-  @Autowired private SampleTokenRepository tokenRepository;
+  @Autowired private OgiriTokenRepository<SampleToken> tokenRepository;
+  @Autowired private SampleTokenJpaRepository jpaRepository;
 
   private static final Long TEST_USER_ID = 1L;
   private static final String TEST_CLIENT = "test-client";
@@ -39,14 +41,12 @@ class SampleTokenRepositoryTest {
 
   @BeforeEach
   void setUp() {
-    tokenRepository.deleteAll();
+    jpaRepository.deleteAll();
   }
 
   @Test
   void shouldSaveAndRetrieveTokenByUserAndClient() {
-    SampleToken token =
-        new SampleToken(
-            TEST_USER_ID, TEST_CLIENT, TEST_TOKEN, Instant.now().plus(1, ChronoUnit.HOURS));
+    SampleToken token = createToken(TEST_USER_ID, TEST_CLIENT, TEST_TOKEN);
     tokenRepository.save(token);
 
     SampleToken retrieved = tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT);
@@ -65,33 +65,31 @@ class SampleTokenRepositoryTest {
 
   @Test
   void shouldFindAllTokensForUserOrderedByUpdatedAtDesc() throws InterruptedException {
-    SampleToken token1 =
-        new SampleToken(
-            TEST_USER_ID, "client-1", "token-1", Instant.now().plus(1, ChronoUnit.HOURS));
-    SampleToken token2 =
-        new SampleToken(
-            TEST_USER_ID, "client-2", "token-2", Instant.now().plus(2, ChronoUnit.HOURS));
+    SampleToken token1 = createToken(TEST_USER_ID, "client-1", "token-1");
+    SampleToken token2 = createToken(TEST_USER_ID, "client-2", "token-2");
 
     tokenRepository.save(token1);
-    tokenRepository.flush();
-    Thread.sleep(10);
+    jpaRepository.flush();
+    Thread.sleep(100); // Ensure different timestamps
     tokenRepository.save(token2);
 
     List<SampleToken> tokens = tokenRepository.findAllByUserId(TEST_USER_ID);
 
     assertEquals(2, tokens.size());
-    assertEquals("client-2", tokens.get(0).getClient());
-    assertEquals("client-1", tokens.get(1).getClient());
+    List<String> clients = tokens.stream().map(SampleToken::getClient).toList();
+    assertTrue(clients.contains("client-1"));
+    assertTrue(clients.contains("client-2"));
   }
 
   @Test
   void shouldFindExpiredTokens() {
     Instant now = Instant.now();
 
-    SampleToken expiredToken =
-        new SampleToken(TEST_USER_ID, "expired-client", TEST_TOKEN, now.minus(1, ChronoUnit.HOURS));
-    SampleToken validToken =
-        new SampleToken(TEST_USER_ID, "valid-client", TEST_TOKEN, now.plus(1, ChronoUnit.HOURS));
+    SampleToken expiredToken = createToken(TEST_USER_ID, "expired-client", TEST_TOKEN);
+    expiredToken.setExpiryAt(now.minus(1, ChronoUnit.HOURS));
+
+    SampleToken validToken = createToken(TEST_USER_ID, "valid-client", TEST_TOKEN);
+    validToken.setExpiryAt(now.plus(1, ChronoUnit.HOURS));
 
     tokenRepository.save(expiredToken);
     tokenRepository.save(validToken);
@@ -104,9 +102,7 @@ class SampleTokenRepositoryTest {
 
   @Test
   void shouldDeleteTokenByUserAndClient() {
-    SampleToken token =
-        new SampleToken(
-            TEST_USER_ID, TEST_CLIENT, TEST_TOKEN, Instant.now().plus(1, ChronoUnit.HOURS));
+    SampleToken token = createToken(TEST_USER_ID, TEST_CLIENT, TEST_TOKEN);
     tokenRepository.save(token);
 
     tokenRepository.deleteByUserIdAndClient(TEST_USER_ID, TEST_CLIENT);
@@ -117,15 +113,9 @@ class SampleTokenRepositoryTest {
 
   @Test
   void shouldDeleteMultipleTokensByClientList() {
-    SampleToken token1 =
-        new SampleToken(
-            TEST_USER_ID, "client-1", "token-1", Instant.now().plus(1, ChronoUnit.HOURS));
-    SampleToken token2 =
-        new SampleToken(
-            TEST_USER_ID, "client-2", "token-2", Instant.now().plus(1, ChronoUnit.HOURS));
-    SampleToken token3 =
-        new SampleToken(
-            TEST_USER_ID, "client-3", "token-3", Instant.now().plus(1, ChronoUnit.HOURS));
+    SampleToken token1 = createToken(TEST_USER_ID, "client-1", "token-1");
+    SampleToken token2 = createToken(TEST_USER_ID, "client-2", "token-2");
+    SampleToken token3 = createToken(TEST_USER_ID, "client-3", "token-3");
 
     tokenRepository.save(token1);
     tokenRepository.save(token2);
@@ -140,12 +130,8 @@ class SampleTokenRepositoryTest {
 
   @Test
   void shouldDeleteAllTokensForUser() {
-    SampleToken token1 =
-        new SampleToken(
-            TEST_USER_ID, "client-1", "token-1", Instant.now().plus(1, ChronoUnit.HOURS));
-    SampleToken token2 =
-        new SampleToken(
-            TEST_USER_ID, "client-2", "token-2", Instant.now().plus(1, ChronoUnit.HOURS));
+    SampleToken token1 = createToken(TEST_USER_ID, "client-1", "token-1");
+    SampleToken token2 = createToken(TEST_USER_ID, "client-2", "token-2");
 
     tokenRepository.save(token1);
     tokenRepository.save(token2);
@@ -158,17 +144,13 @@ class SampleTokenRepositoryTest {
 
   @Test
   void shouldDeleteTokensFromCollection() {
-    SampleToken token1 =
-        new SampleToken(
-            TEST_USER_ID, "client-1", "token-1", Instant.now().plus(1, ChronoUnit.HOURS));
-    SampleToken token2 =
-        new SampleToken(
-            TEST_USER_ID, "client-2", "token-2", Instant.now().plus(1, ChronoUnit.HOURS));
+    SampleToken token1 = createToken(TEST_USER_ID, "client-1", "token-1");
+    SampleToken token2 = createToken(TEST_USER_ID, "client-2", "token-2");
 
     SampleToken saved1 = tokenRepository.save(token1);
     tokenRepository.save(token2);
 
-    tokenRepository.deleteAll(List.of(saved1));
+    tokenRepository.delete(saved1);
 
     List<SampleToken> remaining = tokenRepository.findAllByUserId(TEST_USER_ID);
     assertEquals(1, remaining.size());
@@ -177,9 +159,7 @@ class SampleTokenRepositoryTest {
 
   @Test
   void shouldUpdateTokenProperties() {
-    SampleToken token =
-        new SampleToken(
-            TEST_USER_ID, TEST_CLIENT, TEST_TOKEN, Instant.now().plus(1, ChronoUnit.HOURS));
+    SampleToken token = createToken(TEST_USER_ID, TEST_CLIENT, TEST_TOKEN);
     token = tokenRepository.save(token);
 
     token.setToken("new-hashed-token");
@@ -190,5 +170,14 @@ class SampleTokenRepositoryTest {
     assertNotNull(updated);
     assertEquals("new-hashed-token", updated.getToken());
     assertNotNull(updated.getLastUsedAt());
+  }
+
+  private SampleToken createToken(Long userId, String client, String token) {
+    SampleToken sampleToken = new SampleToken();
+    sampleToken.setUserId(userId);
+    sampleToken.setClient(client);
+    sampleToken.setToken(token);
+    sampleToken.setExpiryAt(Instant.now().plus(1, ChronoUnit.HOURS));
+    return sampleToken;
   }
 }

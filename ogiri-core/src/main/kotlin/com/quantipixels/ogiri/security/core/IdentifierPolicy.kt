@@ -28,6 +28,13 @@ class DefaultIdentifierPolicy(
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-".toCharArray()
   private val validator = Regex("^[A-Za-z0-9._-]{1,64}$")
 
+  /**
+   * Generates an identifier of the configured length composed of characters from the allowed
+   * alphabet.
+   *
+   * @return A string identifier whose length equals the policy's `length` and that contains only
+   *   characters from `A–Z`, `a–z`, `0–9`, `.`, `_`, and `-`.
+   */
   override fun generate(): String {
     val builder = StringBuilder(length)
     repeat(length) { builder.append(alphabet[random.nextInt(alphabet.size)]) }

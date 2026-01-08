@@ -31,6 +31,7 @@ fi
 
 # Build and deploy with mike
 echo -e "${BLUE}Building documentation...${NC}"
+export RELEASE_VERSION="$VERSION"
 mkdocs build -q
 
 echo -e "${BLUE}Deploying version $VERSION to GitHub Pages...${NC}"

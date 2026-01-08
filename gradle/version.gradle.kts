@@ -8,7 +8,7 @@
  * 1. Environment variable RELEASE_VERSION - Manual releases & CI/CD
  * 2. Gradle property -PRELEASE_VERSION - Local builds
  * 3. .ogiri-version file - Default version
- * 4. Fallback: 1.0.2 (if file doesn't exist)
+ * 4. Fallback: UNVERSIONED (if file doesn't exist)
  *
  * Usage:
  *   gradle build                              # Uses version from .ogiri-version

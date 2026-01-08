@@ -7,6 +7,7 @@ The Ogiri security library uses an **interface-first design pattern** to provide
 > "Program to interfaces, not implementations"
 
 This means:
+
 1. **Define what the library needs** via interfaces (`OgiriToken`, `OgiriTokenRepository`, `OgiriTokenService`)
 2. **Don't prescribe how users implement it** - no forced inheritance
 3. **Provide convenient base implementations** for simple cases (`OgiriBaseToken`)
@@ -57,6 +58,7 @@ interface OgiriTokenRepository<T : OgiriToken> {
 ```
 
 Implement with:
+
 - Spring Data JPA
 - JDBC Template
 - MongoDB
@@ -73,7 +75,7 @@ open class OgiriTokenService<T : OgiriToken>(
     private val passwordEncoder: PasswordEncoder,
     private val userDirectory: OgiriUserDirectory,
     private val identifierPolicy: IdentifierPolicy,
-    private val subTokenRegistry: SubTokenRegistry,
+    private val subTokenRegistry: OgiriSubTokenRegistry,
     protected val properties: OgiriConfigurationProperties,
 )
 ```
@@ -114,6 +116,7 @@ data class MyToken(
 ```
 
 **Advantages:**
+
 - Complete flexibility over token structure
 - Can add custom fields freely
 - Can inherit from your own base class (via mixin if needed in Kotlin, multiple inheritance patterns in Java)
@@ -140,6 +143,7 @@ data class MyToken(
 ```
 
 **Advantages:**
+
 - Sensible defaults for optional properties
 - Less boilerplate code
 - Still provides all required properties
@@ -199,7 +203,7 @@ class MyTokenService(
     passwordEncoder: PasswordEncoder,
     userDirectory: OgiriUserDirectory,
     identifierPolicy: IdentifierPolicy,
-    subTokenRegistry: SubTokenRegistry,
+    subTokenRegistry: OgiriSubTokenRegistry,
     properties: OgiriConfigurationProperties,
 ) : OgiriTokenService<MyToken>(
     repository,
@@ -232,22 +236,26 @@ class MyTokenService(
 ## Design Benefits
 
 ### 1. Flexibility
+
 - No inheritance constraints
 - Your token can extend your own base class
 - Add custom fields without modifying library code
 - Use any persistence layer
 
 ### 2. Testability
+
 - Implement `OgiriToken` with a simple data class for tests
 - No need for database setup in unit tests
 - Mock `OgiriTokenRepository` easily
 
 ### 3. Composition
+
 - Mix and match implementations
 - Use different token types for different purposes
 - Easy to extend without modifying existing code
 
 ### 4. Clarity
+
 - Interfaces document the contract explicitly
 - No implicit dependencies on base classes
 - Easy to understand what's required
@@ -282,7 +290,7 @@ data class UserToken(
     override var token: String,
 
     @Column(name = "token_type", nullable = false)
-    override val tokenType: String = "APP",
+    override val tokenType: String = "app",
 
     @Column(name = "expiry_at", nullable = false)
     override var expiryAt: Instant,
@@ -331,7 +339,7 @@ class UserTokenService(
     passwordEncoder: PasswordEncoder,
     userDirectory: OgiriUserDirectory,
     identifierPolicy: IdentifierPolicy,
-    subTokenRegistry: SubTokenRegistry,
+    subTokenRegistry: OgiriSubTokenRegistry,
     properties: OgiriConfigurationProperties,
 ) : OgiriTokenService<UserToken>(
     repository, passwordEncoder, userDirectory,

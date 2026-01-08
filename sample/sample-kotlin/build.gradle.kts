@@ -28,13 +28,13 @@ dependencyManagement {
 }
 
 dependencies {
-  implementation(project(":ogiri-core"))
+  implementation(project(":ogiri-jpa"))
+  // ogiri-jpa transitively includes ogiri-core and spring-boot-starter-data-jpa
   implementation("org.springframework.boot:spring-boot-starter-web")
-  implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 
   // Database drivers
-  implementation("com.h2database:h2:2.4.240")
+  runtimeOnly("com.h2database:h2:2.4.240")
   runtimeOnly("org.postgresql:postgresql:42.7.8")
 
   testImplementation("org.springframework.boot:spring-boot-starter-test") {

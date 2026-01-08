@@ -15,7 +15,7 @@ package com.quantipixels.ogiri.samples.java;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.quantipixels.ogiri.samples.java.entity.SampleToken;
-import com.quantipixels.ogiri.samples.java.repository.SampleTokenRepository;
+import com.quantipixels.ogiri.samples.java.repository.SampleTokenJpaRepository;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -31,7 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 class TokenServiceIntegrationTest {
 
-  @Autowired private SampleTokenRepository tokenRepository;
+  @Autowired private SampleTokenJpaRepository tokenRepository;
 
   private static final Long TEST_USER_ID = 1L;
   private static final String TEST_CLIENT = "test-app";
@@ -43,36 +43,46 @@ class TokenServiceIntegrationTest {
 
   @Test
   void shouldCreateAndSaveNewToken() {
-    SampleToken token =
-        new SampleToken(
-            TEST_USER_ID, TEST_CLIENT, "hashed-token-value", Instant.now().plusSeconds(3600));
+    SampleToken token = new SampleToken();
+    token.setUserId(TEST_USER_ID);
+    token.setClient(TEST_CLIENT);
+    token.setToken("hashed-token-value");
+    token.setExpiryAt(Instant.now().plusSeconds(3600));
     token.setPlainToken("plain-token-value");
     tokenRepository.save(token);
 
-    SampleToken savedToken = tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT);
+    SampleToken savedToken =
+        tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT).orElse(null);
     assertNotNull(savedToken);
     assertEquals(TEST_USER_ID, savedToken.getUserId());
     assertEquals(TEST_CLIENT, savedToken.getClient());
     assertEquals("hashed-token-value", savedToken.getToken());
-    assertEquals("APP", savedToken.getTokenType());
+    assertEquals("app", savedToken.getTokenType());
   }
 
   @Test
   void shouldSupportTokenRotationWithGracePeriod() {
     // Save initial token
-    SampleToken token1 =
-        new SampleToken(TEST_USER_ID, TEST_CLIENT, "token-hash-1", Instant.now().plusSeconds(3600));
+    SampleToken token1 = new SampleToken();
+    token1.setUserId(TEST_USER_ID);
+    token1.setClient(TEST_CLIENT);
+    token1.setToken("token-hash-1");
+    token1.setExpiryAt(Instant.now().plusSeconds(3600));
     tokenRepository.save(token1);
 
     // Rotate token by deleting old and saving new
     tokenRepository.deleteByUserIdAndClient(TEST_USER_ID, TEST_CLIENT);
     tokenRepository.flush(); // Ensure delete is flushed before saving new token
 
-    SampleToken token2 =
-        new SampleToken(TEST_USER_ID, TEST_CLIENT, "token-hash-2", Instant.now().plusSeconds(3600));
+    SampleToken token2 = new SampleToken();
+    token2.setUserId(TEST_USER_ID);
+    token2.setClient(TEST_CLIENT);
+    token2.setToken("token-hash-2");
+    token2.setExpiryAt(Instant.now().plusSeconds(3600));
     tokenRepository.save(token2);
 
-    SampleToken rotatedToken = tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT);
+    SampleToken rotatedToken =
+        tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT).orElse(null);
     assertNotNull(rotatedToken);
     assertEquals("token-hash-2", rotatedToken.getToken());
   }
@@ -82,8 +92,11 @@ class TokenServiceIntegrationTest {
     List<String> clients = List.of("mobile", "web", "desktop");
 
     for (String client : clients) {
-      SampleToken token =
-          new SampleToken(TEST_USER_ID, client, "hash-" + client, Instant.now().plusSeconds(3600));
+      SampleToken token = new SampleToken();
+      token.setUserId(TEST_USER_ID);
+      token.setClient(client);
+      token.setToken("hash-" + client);
+      token.setExpiryAt(Instant.now().plusSeconds(3600));
       tokenRepository.save(token);
     }
 
@@ -94,25 +107,31 @@ class TokenServiceIntegrationTest {
 
   @Test
   void shouldSupportSubTokens() {
-    SampleToken mainToken =
-        new SampleToken(TEST_USER_ID, TEST_CLIENT, "main-token", Instant.now().plusSeconds(3600));
+    SampleToken mainToken = new SampleToken();
+    mainToken.setUserId(TEST_USER_ID);
+    mainToken.setClient(TEST_CLIENT);
+    mainToken.setToken("main-token");
+    mainToken.setExpiryAt(Instant.now().plusSeconds(3600));
     tokenRepository.save(mainToken);
 
-    SampleToken subToken =
-        new SampleToken(
-            TEST_USER_ID, TEST_CLIENT + ".device", "sub-token", Instant.now().plusSeconds(1800));
-    subToken.setTokenType("SUB");
+    SampleToken subToken = new SampleToken();
+    subToken.setUserId(TEST_USER_ID);
+    subToken.setClient(TEST_CLIENT + ".device");
+    subToken.setToken("sub-token");
+    subToken.setExpiryAt(Instant.now().plusSeconds(1800));
+    subToken.setTokenType("sub");
     subToken.setTokenSubtype("device");
     tokenRepository.save(subToken);
 
-    SampleToken mainSaved = tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT);
+    SampleToken mainSaved =
+        tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT).orElse(null);
     SampleToken subSaved =
-        tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT + ".device");
+        tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT + ".device").orElse(null);
 
     assertNotNull(mainSaved);
     assertNotNull(subSaved);
-    assertEquals("APP", mainSaved.getTokenType());
-    assertEquals("SUB", subSaved.getTokenType());
+    assertEquals("app", mainSaved.getTokenType());
+    assertEquals("sub", subSaved.getTokenType());
     assertEquals("device", subSaved.getTokenSubtype());
   }
 
@@ -120,14 +139,18 @@ class TokenServiceIntegrationTest {
   void shouldCleanupExpiredTokens() {
     Instant now = Instant.now();
 
-    SampleToken expiredToken =
-        new SampleToken(
-            TEST_USER_ID, "expired-client", "expired-hash", now.minus(3600, ChronoUnit.SECONDS));
+    SampleToken expiredToken = new SampleToken();
+    expiredToken.setUserId(TEST_USER_ID);
+    expiredToken.setClient("expired-client");
+    expiredToken.setToken("expired-hash");
+    expiredToken.setExpiryAt(now.minus(3600, ChronoUnit.SECONDS));
     tokenRepository.save(expiredToken);
 
-    SampleToken validToken =
-        new SampleToken(
-            TEST_USER_ID, "valid-client", "valid-hash", now.plus(3600, ChronoUnit.SECONDS));
+    SampleToken validToken = new SampleToken();
+    validToken.setUserId(TEST_USER_ID);
+    validToken.setClient("valid-client");
+    validToken.setToken("valid-hash");
+    validToken.setExpiryAt(now.plus(3600, ChronoUnit.SECONDS));
     tokenRepository.save(validToken);
 
     List<SampleToken> expiredTokens = tokenRepository.findByExpiryAtBefore(now);

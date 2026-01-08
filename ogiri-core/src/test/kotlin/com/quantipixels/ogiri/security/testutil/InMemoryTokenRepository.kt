@@ -28,20 +28,29 @@ import java.util.concurrent.atomic.AtomicLong
 class InMemoryTokenRepository : OgiriTokenRepository<TestToken> {
   private val tokens = mutableListOf<TestToken>()
   private val idSequence = AtomicLong(1L)
+  private var clock: Instant = Instant.now()
 
-  /** Clear all tokens from the repository. Useful for test cleanup. */
+  /** Removes all tokens from the repository in a thread-safe manner. */
   fun clear() {
     synchronized(tokens) { tokens.clear() }
   }
 
-  /** Get all tokens currently in the repository. Useful for assertions in tests. */
+  /**
+   * Provide a snapshot of all tokens stored in the repository.
+   *
+   * @return A list containing a copy of all stored TestToken entries.
+   */
   fun getAllTokens(): List<TestToken> {
     synchronized(tokens) {
       return tokens.toList()
     }
   }
 
-  /** Get the count of tokens in the repository. */
+  /**
+   * Retrieves the number of tokens currently stored in the repository.
+   *
+   * @return The number of tokens currently stored in the repository.
+   */
   fun getCount(): Int {
     synchronized(tokens) {
       return tokens.size
@@ -49,46 +58,81 @@ class InMemoryTokenRepository : OgiriTokenRepository<TestToken> {
   }
 
   /**
-   * Save or update a token. If id is 0, generates a new ID and inserts. If id > 0, updates existing
-   * token.
+   * Advance the repository's internal clock by one second to simulate time progression in tests.
+   */
+  fun incrementClock() {
+    synchronized(tokens) { clock = clock.plusSeconds(1) }
+  }
+
+  /**
+   * Insert or update a token in the repository.
+   *
+   * When the token's id is 0 a new id is assigned, the token's transient `plainToken` is preserved,
+   * and `updatedAt` is set to the repository clock; otherwise the existing token with the same id
+   * is replaced and its `updatedAt` is set to the repository clock.
+   *
+   * @param token The token to save or update.
+   * @return The saved token with an assigned id for inserts and an updated `updatedAt` timestamp.
    */
   override fun save(token: TestToken): TestToken {
     synchronized(tokens) {
       return if (token.id == 0L) {
-        // Insert: generate new ID and preserve transient plainToken
+        // Insert: generate new ID and preserve transient properties
         val newToken = token.copy(id = idSequence.getAndIncrement())
         newToken.plainToken = token.plainToken // Preserve transient property
+        newToken.tokenPrefix = token.tokenPrefix // Preserve inherited mutable property
+        newToken.updatedAt = clock // Use repository's clock for deterministic testing
         tokens.add(newToken)
         newToken
       } else {
         // Update: remove old, add new
         tokens.removeIf { it.id == token.id }
+        token.updatedAt = clock // Use repository's clock for deterministic testing
         tokens.add(token)
         token
       }
     }
   }
 
-  /** Find a token by ID. */
+  /**
+   * Finds the token with the given ID.
+   *
+   * @param id The token ID to look up.
+   * @return The matching TestToken if found, `null` otherwise.
+   */
   override fun findById(id: Long): TestToken? {
     synchronized(tokens) {
       return tokens.find { it.id == id }
     }
   }
 
-  /** Delete a token by ID. */
+  /**
+   * Removes the token with the given id from the repository if present.
+   *
+   * @param id The token id to delete.
+   */
   override fun deleteById(id: Long) {
     synchronized(tokens) { tokens.removeIf { it.id == id } }
   }
 
-  /** Find all tokens for a user. */
+  /**
+   * Retrieve all tokens belonging to the specified user.
+   *
+   * @return A list of TestToken objects associated with the provided user ID.
+   */
   override fun findAllByUserId(userId: Long): List<TestToken> {
     synchronized(tokens) {
       return tokens.filter { it.userId == userId }
     }
   }
 
-  /** Find all tokens for a user with the given subtype. */
+  /**
+   * Finds all tokens for the specified user that have the given token subtype.
+   *
+   * @param userId The id of the user whose tokens to search.
+   * @param tokenSubtype The token subtype to match.
+   * @return A list of TestToken instances matching the given `userId` and `tokenSubtype`.
+   */
   override fun findAllByUserIdAndTokenSubtype(
       userId: Long,
       tokenSubtype: String,
@@ -98,7 +142,11 @@ class InMemoryTokenRepository : OgiriTokenRepository<TestToken> {
     }
   }
 
-  /** Find the token for a user and client. */
+  /**
+   * Retrieves the token for the specified user and client.
+   *
+   * @return The token matching the given `userId` and `clientId`, or `null` if none exists.
+   */
   override fun findByUserIdAndClient(
       userId: Long,
       clientId: String,
@@ -108,14 +156,25 @@ class InMemoryTokenRepository : OgiriTokenRepository<TestToken> {
     }
   }
 
-  /** Find all tokens that have expired before a cutoff time. */
+  /**
+   * Returns all tokens whose `expiryAt` timestamp is before the given cutoff `Instant`.
+   *
+   * @param cutoff The cutoff instant; tokens with `expiryAt` strictly before this value are
+   *   returned.
+   * @return A list of tokens that expired before `cutoff`.
+   */
   override fun findByExpiryAtBefore(cutoff: Instant): List<TestToken> {
     synchronized(tokens) {
       return tokens.filter { it.expiryAt.isBefore(cutoff) }
     }
   }
 
-  /** Delete the token for a user and client. */
+  /**
+   * Deletes all tokens that belong to the specified user and client.
+   *
+   * @param userId The user's ID whose tokens should be deleted.
+   * @param clientId The client identifier to match when deleting tokens.
+   */
   override fun deleteByUserIdAndClient(
       userId: Long,
       clientId: String,
@@ -123,7 +182,13 @@ class InMemoryTokenRepository : OgiriTokenRepository<TestToken> {
     synchronized(tokens) { tokens.removeIf { it.userId == userId && it.client == clientId } }
   }
 
-  /** Delete tokens for multiple clients. */
+  /**
+   * Remove all tokens that belong to the given user and whose client is in the provided collection.
+   *
+   * @param userId The user's ID whose tokens should be removed.
+   * @param clientIds The collection of client identifiers; any token whose client is contained in
+   *   this collection will be deleted.
+   */
   override fun deleteByUserIdAndClientIn(
       userId: Long,
       clientIds: Collection<String>,
@@ -134,5 +199,49 @@ class InMemoryTokenRepository : OgiriTokenRepository<TestToken> {
   /** Delete all tokens for a user. */
   override fun deleteByUserId(userId: Long) {
     synchronized(tokens) { tokens.removeIf { it.userId == userId } }
+  }
+
+  /**
+   * Find all valid (non-expired) APP tokens matching the given prefix.
+   *
+   * @param prefix The 8-character token prefix to search for
+   * @param now Current instant for expiry comparison
+   * @return List of matching non-expired APP tokens
+   */
+  override fun findValidTokensByPrefix(
+      prefix: String,
+      now: Instant,
+  ): List<TestToken> {
+    synchronized(tokens) {
+      return tokens.filter {
+        it.tokenPrefix == prefix &&
+            it.tokenType.equals("app", ignoreCase = true) &&
+            !it.expiryAt.isBefore(now)
+      }
+    }
+  }
+
+  /**
+   * Find all tokens of a specific type.
+   *
+   * @param tokenType The token type to filter by
+   * @return List of tokens matching the type
+   */
+  override fun findAllByTokenType(tokenType: String): List<TestToken> {
+    synchronized(tokens) {
+      return tokens.filter { it.tokenType.equals(tokenType, ignoreCase = true) }
+    }
+  }
+
+  /**
+   * Count the number of tokens for a user.
+   *
+   * @param userId The user ID to count tokens for
+   * @return Number of tokens belonging to the user
+   */
+  override fun countByUserId(userId: Long): Long {
+    synchronized(tokens) {
+      return tokens.count { it.userId == userId }.toLong()
+    }
   }
 }

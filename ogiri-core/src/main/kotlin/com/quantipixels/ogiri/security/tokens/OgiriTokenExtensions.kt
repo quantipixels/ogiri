@@ -18,38 +18,52 @@ package com.quantipixels.ogiri.security.tokens
  * @param type The token type to filter by
  * @return List of tokens matching the given type
  */
+/**
+ * Filter the collection to tokens that match the specified OgiriTokenType.
+ *
+ * @param type The OgiriTokenType to keep.
+ * @return A list containing only tokens whose `tokenType` resolves to `type`.
+ */
 fun <T : OgiriToken> Collection<T>.filterByOgiriTokenType(type: OgiriTokenType): List<T> = filter {
   OgiriTokenType.of(it.tokenType) == type
 }
 
-/** Filter tokens to return only APP tokens. */
+/**
+ * Filters the collection to tokens of type APP.
+ *
+ * @return A list of tokens whose token type corresponds to `OgiriTokenType.APP`.
+ */
 fun <T : OgiriToken> Collection<T>.appTokens(): List<T> = filterByOgiriTokenType(OgiriTokenType.APP)
 
-/** Filter tokens to return only SUB tokens. */
+/**
+ * Return tokens whose OgiriTokenType is SUB.
+ *
+ * @return A list containing only tokens with type SUB.
+ */
 fun <T : OgiriToken> Collection<T>.subTokens(): List<T> = filterByOgiriTokenType(OgiriTokenType.SUB)
 
 /**
- * Extract client IDs from a collection of APP tokens.
+ * Collects unique client IDs from the tokens in this collection.
  *
- * @return Set of unique client IDs
+ * @return A set of client ID strings present in the collection.
  */
 fun <T : OgiriToken> Collection<T>.clientIds(): Set<String> = map { it.client }.toSet()
 
 /**
- * Filter tokens by multiple client IDs.
+ * Filters tokens whose `client` value is contained in the provided set.
  *
- * @param clientIds The client IDs to filter by
- * @return List of tokens with clients in the given set
+ * @param clientIds Set of client IDs to include.
+ * @return List of tokens with a `client` present in `clientIds`.
  */
 fun <T : OgiriToken> Collection<T>.filterByClientIds(clientIds: Set<String>): List<T> = filter {
   it.client in clientIds
 }
 
 /**
- * Invert filter - find tokens NOT in the given client IDs.
+ * Exclude tokens whose client is in the provided set.
  *
- * @param clientIds The client IDs to exclude
- * @return List of tokens with clients NOT in the given set
+ * @param clientIds Set of client IDs to exclude.
+ * @return List of tokens whose `client` is not contained in `clientIds`.
  */
 fun <T : OgiriToken> Collection<T>.filterOutClientIds(clientIds: Set<String>): List<T> = filter {
   it.client !in clientIds

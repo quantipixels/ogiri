@@ -63,31 +63,21 @@ open class OgiriTokenAuthenticationFilter(
     get() = properties.auth.rotateStaleSeconds
 
   /**
-   * Core filter execution - runs once per HTTP request.
+   * Authenticate the incoming HTTP request, populate the SecurityContext, and append refreshed auth
+   * headers when tokens rotate.
    *
-   * **Request lifecycle:**
-   * 1. Check if request can skip authentication (public routes, preflight, already authenticated)
-   * 2. Extract and validate token from request headers
-   * 3. Load user from directory and verify token matches stored hash
-   * 4. Detect batch requests and decide whether to rotate token
-   * 5. Populate SecurityContext with authenticated user
-   * 6. Append refreshed headers if token was rotated
-   * 7. Delegate to entry point on authentication failure
+   * Performs authentication unless the request is exempted by the bypass decider. When
+   * authentication succeeds the filter sets the SecurityContext with the authenticated OgiriUser
+   * and, if a token rotation produced a new AuthHeader, appends refreshed authentication headers to
+   * the response. On authentication failure the security context is cleared and the configured
+   * AuthenticationEntryPoint is invoked.
    *
-   * **Token rotation policy:**
-   * - Within batch grace window: Update lastUsedAt only, return no new headers
-   * - Outside batch window or forced rotation: Issue new token, return refreshed headers
-   * - Force rotation if token age exceeds rotateStaleSeconds (if configured)
-   *
-   * **Configuration from [OgiriConfigurationProperties]:**
-   * - `ogiri.auth.rotate-on-write-only`: Only rotate on POST/PUT/DELETE/PATCH
-   * - `ogiri.auth.rotate-stale-seconds`: Force rotation if token exceeds this age
-   *
-   * @param request HTTP request with authentication headers (access-token, client, uid, expiry)
-   * @param response HTTP response where refreshed headers will be appended if token rotated
-   * @param filterChain Servlet filter chain to continue processing
-   * @throws ServletException if filter processing fails
-   * @throws IOException if request/response I/O fails
+   * @param request HTTP request containing authentication headers or bearer token.
+   * @param response HTTP response where rotated authentication headers will be added when
+   *   applicable.
+   * @param filterChain Filter chain to continue request processing after authentication handling.
+   * @throws ServletException if filter processing fails.
+   * @throws IOException if reading from or writing to the request/response fails.
    */
   @Throws(ServletException::class, IOException::class)
   override fun doFilterInternal(
@@ -104,7 +94,7 @@ open class OgiriTokenAuthenticationFilter(
       val authResult = authenticateRequest(request)
       afterAuth(request, response, authResult)
       if (authResult != null) {
-        authResult.authHeader?.let { response.appendAuthHeaders(it) }
+        authResult.authHeader?.let { response.appendAuthHeaders(it, properties.cookies) }
         SecurityContextHolder.getContext().authentication =
             buildAuthentication(authResult.user, request)
       }
@@ -117,8 +107,28 @@ open class OgiriTokenAuthenticationFilter(
     filterChain.doFilter(request, response)
   }
 
+  /**
+   * Invoked before authentication is attempted for the incoming request.
+   *
+   * Default implementation does nothing; override to perform any preparatory work (for example
+   * request inspection, logging, or tracing) before authentication begins.
+   *
+   * @param request the HTTP request that will be authenticated
+   */
   protected open fun beforeAuth(request: HttpServletRequest) {}
 
+  /**
+   * Extension point called after an authentication attempt to allow subclasses to react to the
+   * result.
+   *
+   * Implementations may inspect or modify the request and response, perform logging, metrics, or
+   * other side effects.
+   *
+   * @param request The current HTTP request.
+   * @param response The current HTTP response.
+   * @param authResult The authentication result if authentication succeeded, or `null` if no
+   *   authentication was performed.
+   */
   protected open fun afterAuth(
       request: HttpServletRequest,
       response: HttpServletResponse,
@@ -136,7 +146,7 @@ open class OgiriTokenAuthenticationFilter(
    * 3. Validate client and uid identifiers using [IdentifierPolicy]
    * 4. Verify token is APP token (not sub-token)
    * 5. Load user from [OgiriUserDirectory], throw if not found
-   * 6. Validate token hash matches stored token via [TokenService.validToken]
+   * 6. Validate token hash matches stored token via [OgiriTokenService.validToken]
    * 7. Detect batch requests and decide token rotation
    *
    * **Batch detection:**
@@ -154,15 +164,14 @@ open class OgiriTokenAuthenticationFilter(
    * @throws BadCredentialsException if client/uid fails identifier validation
    */
   /**
-   * Extract authentication headers with fallback to Bearer token parsing.
+   * Extract authentication header values, falling back to parsing a Bearer token from the
+   * Authorization header.
    *
-   * Attempts to extract authentication in the following order:
-   * 1. Individual headers: access-token, client, uid, expiry, access-token-kind
-   * 2. Cookies: access-token, client, uid, expiry
-   * 3. Authorization Bearer header: Base64-encoded JSON with same fields
+   * Checks for authentication in this order: individual headers (access-token, client, uid, expiry,
+   * token-type), cookies, then a Base64-encoded JSON Bearer token.
    *
-   * @param request HTTP request
-   * @return AuthHeader with parsed values, or empty if no auth found
+   * @return AuthHeader containing parsed authentication fields, or an empty AuthHeader if no
+   *   authentication information is found.
    */
   protected open fun extractAuthHeaderWithBearer(request: HttpServletRequest): AuthHeader {
     val headerToken = request.extractAuthHeader()
@@ -170,7 +179,8 @@ open class OgiriTokenAuthenticationFilter(
 
     // Try Bearer token as fallback
     val authHeader = request.getHeader("Authorization") ?: return headerToken
-    val fields = parseBearerToken(authHeader) ?: return headerToken
+    val fields =
+        parseBearerToken(authHeader, properties.auth.maxBearerTokenSize) ?: return headerToken
 
     return AuthHeader(
         accessToken = fields["access-token"],
@@ -181,6 +191,19 @@ open class OgiriTokenAuthenticationFilter(
     )
   }
 
+  /**
+   * Authenticates the incoming HTTP request using APP tokens and produces an authentication result.
+   *
+   * Attempts to extract and validate an auth header (or Bearer token), validate client and uid
+   * identifiers, ensure the token kind is APP, load and verify the user, and decide whether to
+   * rotate or extend token buffers.
+   *
+   * @param request The HTTP servlet request to authenticate.
+   * @return An AuthResult containing the authenticated OgiriUser and optionally a refreshed
+   *   AuthHeader, or `null` if no valid authentication header was present.
+   * @throws AuthenticationException If client or uid identifiers are invalid, the token kind is not
+   *   APP, the user cannot be loaded, or the access token is invalid.
+   */
   @Throws(AuthenticationException::class)
   protected open fun authenticateRequest(request: HttpServletRequest): AuthResult? {
     beforeAuth(request)
@@ -212,26 +235,13 @@ open class OgiriTokenAuthenticationFilter(
   }
 
   /**
-   * Decide whether to rotate the token based on request method and staleness.
+   * Determines whether a new auth token should be issued for the request and returns it when
+   * created.
    *
-   * **Decision logic:**
-   * 1. If rotateOnWriteOnly=true and request is GET/HEAD: Skip rotation (return null)
-   * 2. If rotateStaleSeconds > 0: Check if token exceeds age threshold
-   * 3. Otherwise: Always rotate token
+   * Rotation may be suppressed for safe methods when configured, and may be gated by a staleness
+   * threshold.
    *
-   * @param user Authenticated user
-   * @param client Client identifier
-   * @param method HTTP method (GET, POST, PUT, DELETE, PATCH, etc.)
-   * @return New AuthHeader if rotation occurred, null if skipped
-   *
-   * Configuration:
-   * - `ogiri.auth.rotate-on-write-only`: If true, skip rotation for safe methods (GET, HEAD)
-   * - `ogiri.auth.rotate-stale-seconds`: If > 0, only rotate if token age exceeds this threshold
-   *
-   * Example with rotate-on-write-only=true, rotate-stale-seconds=0:
-   * - GET /api/data: No rotation (returns null)
-   * - POST /api/data: Rotation (returns new AuthHeader)
-   * - PUT /api/data: Rotation (returns new AuthHeader)
+   * @return New `AuthHeader` when a rotation occurs, `null` when no rotation is performed.
    */
   private fun rotateTokensIfNeeded(
       user: OgiriUser,
@@ -249,14 +259,39 @@ open class OgiriTokenAuthenticationFilter(
     else null
   }
 
+  /**
+   * Determines whether an HTTP method is considered safe (no side effects).
+   *
+   * @return `true` if the method equals `GET` or `HEAD` (case-insensitive), `false` otherwise.
+   */
   private fun isSafeMethod(method: String): Boolean =
       method.equals("GET", ignoreCase = true) || method.equals("HEAD", ignoreCase = true)
 
+  /**
+   * Validates that the provided token kind represents an APP token.
+   *
+   * @param kind Nullable token kind string; if null a default token type will be used.
+   * @throws BadCredentialsException Thrown with message "error.auth.bad_token_type" when the token
+   *   kind is not `APP`.
+   */
   private fun ensureAppToken(kind: String?) {
-    val tokenKind = OgiriTokenType.ofOrDefault(kind)
-    if (tokenKind != OgiriTokenType.APP) throw BadCredentialsException("error.auth.bad_token_type")
+    try {
+      val tokenKind = OgiriTokenType.ofOrDefault(kind)
+      if (tokenKind != OgiriTokenType.APP)
+          throw BadCredentialsException("error.auth.bad_token_type")
+    } catch (e: IllegalArgumentException) {
+      throw BadCredentialsException("error.auth.bad_token_kind", e)
+    }
   }
 
+  /**
+   * Validate an identifier string against the configured IdentifierPolicy.
+   *
+   * @param value The identifier to validate (e.g., client or uid).
+   * @param errorCode The error code/message to use when throwing on invalid input.
+   * @throws org.springframework.security.authentication.BadCredentialsException if the identifier
+   *   is invalid.
+   */
   private fun validateIdentifier(
       value: String,
       errorCode: String,
@@ -264,6 +299,14 @@ open class OgiriTokenAuthenticationFilter(
     if (!identifierPolicy.isValid(value)) throw BadCredentialsException(errorCode)
   }
 
+  /**
+   * Create an Authentication token representing the given user for the current request.
+   *
+   * @param user The authenticated OgiriUser to set as the principal.
+   * @param request The HTTP request used to populate authentication details.
+   * @return A `UsernamePasswordAuthenticationToken` with the user's authorities, masked
+   *   credentials, and request-derived details.
+   */
   private fun buildAuthentication(
       user: OgiriUser,
       request: HttpServletRequest,

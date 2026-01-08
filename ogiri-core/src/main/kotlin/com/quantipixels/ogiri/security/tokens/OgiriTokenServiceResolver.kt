@@ -13,5 +13,11 @@
 package com.quantipixels.ogiri.security.tokens
 
 interface OgiriTokenServiceResolver {
+  /**
+   * Resolve and provide the active OgiriTokenService implementation.
+   *
+   * @return an instance of [OgiriTokenService] with an unspecified generic type representing the
+   *   resolved token service implementation.
+   */
   fun resolve(): OgiriTokenService<*>
 }
