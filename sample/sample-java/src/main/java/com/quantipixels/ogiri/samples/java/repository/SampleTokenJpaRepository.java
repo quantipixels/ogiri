@@ -32,14 +32,17 @@ import org.springframework.transaction.annotation.Transactional;
 public interface SampleTokenJpaRepository extends JpaRepository<SampleToken, Long> {
 
   /** Find all tokens for a user, ordered by updated_at DESC. */
+  @Transactional(readOnly = true)
   @Query("SELECT t FROM SampleToken t WHERE t.userId = ?1 ORDER BY t.updatedAt DESC, t.id DESC")
   List<SampleToken> findByUserIdOrderByUpdatedAtDesc(Long userId);
 
   /** Find a specific token by user ID and client identifier. */
+  @Transactional(readOnly = true)
   @Query("SELECT t FROM SampleToken t WHERE t.userId = ?1 AND t.client = ?2")
   Optional<SampleToken> findByUserIdAndClient(Long userId, String client);
 
   /** Find all tokens for a user with a specific subtype. */
+  @Transactional(readOnly = true)
   @Query(
       "SELECT t FROM SampleToken t WHERE t.userId = ?1 AND t.tokenSubtype = ?2 "
           + "ORDER BY t.updatedAt DESC, t.id DESC")
@@ -47,6 +50,7 @@ public interface SampleTokenJpaRepository extends JpaRepository<SampleToken, Lon
       Long userId, String tokenSubtype);
 
   /** Find all tokens that expired before a specific cutoff time. */
+  @Transactional(readOnly = true)
   @Query("SELECT t FROM SampleToken t WHERE t.expiryAt < ?1")
   List<SampleToken> findByExpiryAtBefore(Instant expiryAt);
 

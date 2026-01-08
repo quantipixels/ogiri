@@ -58,7 +58,7 @@ See [Migration Guide](migration-guide.md#migrating-to-130) for detailed upgrade 
 ### Added
 
 - Comprehensive test suite for token and security services
-- Secure cookie support with configurable attributes
+- Initial secure cookie support with secure defaults (enhanced with properties in 1.3.0)
 - Token cleanup optimization with batched deletion
 - Fallback error messages in OgiriAuthenticationEntryPoint to prevent 500 errors when messages.properties is missing
 

@@ -30,15 +30,18 @@ import org.springframework.transaction.annotation.Transactional
 @Repository
 interface SampleTokenJpaRepository : JpaRepository<SampleToken, Long> {
 
+  @Transactional(readOnly = true)
   @Query("SELECT t FROM SampleToken t WHERE t.userId = ?1 ORDER BY t.updatedAt DESC, t.id DESC")
   fun findByUserIdOrderByUpdatedAtDesc(userId: Long): List<SampleToken>
 
+  @Transactional(readOnly = true)
   @Query("SELECT t FROM SampleToken t WHERE t.userId = ?1 AND t.client = ?2")
   fun findByUserIdAndClient(
       userId: Long,
       client: String,
   ): Optional<SampleToken>
 
+  @Transactional(readOnly = true)
   @Query(
       "SELECT t FROM SampleToken t WHERE t.userId = ?1 AND t.tokenSubtype = ?2 ORDER BY t.updatedAt DESC, t.id DESC")
   fun findByUserIdAndTokenSubtypeOrderByUpdatedAtDesc(
@@ -46,6 +49,7 @@ interface SampleTokenJpaRepository : JpaRepository<SampleToken, Long> {
       tokenSubtype: String,
   ): List<SampleToken>
 
+  @Transactional(readOnly = true)
   @Query("SELECT t FROM SampleToken t WHERE t.expiryAt < ?1")
   fun findByExpiryAtBefore(cutoff: Instant): List<SampleToken>
 
