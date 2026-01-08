@@ -52,7 +52,7 @@ data class Token(
     override var token: String = "",
 
     @Column(name = "token_type", nullable = false)
-    override val tokenType: String = "APP",
+    override val tokenType: String = "app",
 
     @Column(name = "expiry_at", nullable = false)
     override var expiryAt: Instant = Instant.now(),
@@ -71,6 +71,7 @@ data class Token(
 ```
 
 **Key Points:**
+
 - All abstract properties from `OgiriBaseToken` must be implemented
 - Optional properties (`tokenSubtype`, `lastToken`, etc.) have defaults
 - `plainToken` is automatically managed as transient
@@ -101,7 +102,7 @@ data class CustomToken(
     override var token: String = "",
 
     @Column(name = "token_type", nullable = false)
-    override val tokenType: String = "APP",
+    override val tokenType: String = "app",
 
     @Column(name = "expiry_at", nullable = false)
     override var expiryAt: Instant = Instant.now(),
@@ -142,6 +143,7 @@ data class CustomToken(
 ```
 
 **Advantages:**
+
 - Add custom columns freely (`deviceId`, `userAgent`)
 - Full control over the table structure
 - Can implement your own inheritance patterns
@@ -303,7 +305,7 @@ class TokenService(
     passwordEncoder: PasswordEncoder,
     userDirectory: OgiriUserDirectory,
     identifierPolicy: IdentifierPolicy,
-    subTokenRegistry: SubTokenRegistry,
+    subTokenRegistry: OgiriSubTokenRegistry,
     properties: OgiriConfigurationProperties,
 ) : OgiriTokenService<Token>(
     repository,
@@ -324,7 +326,6 @@ class TokenService(
         tokenType: TokenType,
         expiry: Instant,
         tokenSubtype: String?,
-        plainTokenValue: String,
     ): Token = Token(
         userId = userId,
         client = client,
@@ -332,7 +333,6 @@ class TokenService(
         tokenType = tokenType.label,
         expiryAt = expiry,
         tokenSubtype = tokenSubtype,
-        plainToken = plainTokenValue
     )
 }
 ```
@@ -408,7 +408,7 @@ data class User(
 
 ```gradle
 dependencies {
-    implementation 'com.quantipixels:ogiri-security:2.0.0'
+    implementation 'com.quantipixels:ogiri-security:1.2.0'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.postgresql:postgresql:14.0'
@@ -431,14 +431,14 @@ spring:
 
 ogiri:
   auth:
-    max-clients: 10              # Max concurrent clients per user
-    batch-grace-seconds: 5       # Grace period for batch requests
-    token-lifespan-days: 14      # Token validity duration
+    max-clients: 10 # Max concurrent clients per user
+    batch-grace-seconds: 5 # Grace period for batch requests
+    token-lifespan-days: 14 # Token validity duration
   security:
-    register-filter: true        # Auto-register Ogiri filter
+    register-filter: true # Auto-register Ogiri filter
   cleanup:
     enabled: true
-    cron: "0 0 * * * *"          # Daily cleanup of expired tokens
+    interval-ms: 21600000 # Daily cleanup of expired tokens
 ```
 
 ### Step 3: Create Security Configuration
@@ -595,6 +595,7 @@ class AuthenticationIntegrationTest {
 ---
 
 For more details, see:
+
 - [Interface-First Design](interface-first-design.md)
 - [Configuration Guide](configuration.md)
 - [Database Integration](database.md)

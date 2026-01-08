@@ -31,6 +31,9 @@ public class SampleRouteRegistry implements OgiriRouteRegistry {
     return List.of(
         new OgiriRoute(HttpMethod.POST, "/api/auth/login", true, false, null),
         new OgiriRoute(HttpMethod.GET, "/api/health", true, false, null),
-        new OgiriRoute(HttpMethod.GET, "/api/docs/**", true, false, null));
+        new OgiriRoute(HttpMethod.GET, "/api/docs/**", true, false, null)
+        // Note: /api/auth/logout and /api/demo/** endpoints require authentication,
+        // so they are NOT listed here. Only public routes should be registered.
+        );
   }
 }

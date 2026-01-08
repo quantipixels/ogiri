@@ -336,6 +336,9 @@ class RedisTokenRepository(
     override fun save(token: Token): Token {
         val key = "token:${token.userId}:${token.client}"
         val ttl = Duration.between(Instant.now(), token.expiryAt)
+        if (ttl.isNegative || ttl.isZero) {
+            return token // Don't store already-expired tokens
+        }
         redisTemplate.opsForValue().set(key, token, ttl)
         return token
     }
@@ -423,12 +426,12 @@ CREATE TABLE user_tokens (
     user_id BIGINT NOT NULL,
     client VARCHAR(255) NOT NULL,
     token VARCHAR(255) NOT NULL,
-    token_type VARCHAR(50) NOT NULL DEFAULT 'APP',
+    token_type VARCHAR(50) NOT NULL DEFAULT 'app',
+    token_prefix VARCHAR(8),           -- For O(1) token lookup (v1.3.0+)
     expiry_at TIMESTAMP NOT NULL,
     last_token VARCHAR(255),
     previous_token VARCHAR(255),
     token_subtype VARCHAR(50),
-    token_prefix VARCHAR(50),
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
     token_updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
@@ -437,8 +440,94 @@ CREATE TABLE user_tokens (
     UNIQUE (user_id, client)
 );
 
+-- Required indexes
 CREATE INDEX idx_user_tokens_user_id ON user_tokens (user_id);
 CREATE INDEX idx_user_tokens_expiry ON user_tokens (expiry_at);
+
+-- Performance optimization: Enables O(1) token lookup instead of O(n) BCrypt comparisons
+CREATE INDEX idx_user_tokens_prefix ON user_tokens (token_prefix)
+  WHERE token_type = 'app' AND expiry_at > NOW();
+```
+
+## Recommended Indexes
+
+For optimal performance, ensure these indexes exist:
+
+| Index                          | Columns                  | Purpose                 |
+| ------------------------------ | ------------------------ | ----------------------- |
+| `idx_user_tokens_user_id`      | `user_id`                | User token lookups      |
+| `idx_user_tokens_expiry`       | `expiry_at`              | Cleanup job performance |
+| `idx_user_tokens_prefix`       | `token_prefix`           | O(1) token validation   |
+| `idx_user_tokens_user_client`  | `user_id, client_id`     | Unique token lookup     |
+| `idx_user_tokens_user_subtype` | `user_id, token_subtype` | Sub-token queries       |
+
+### Adding Token Prefix Index (Migration)
+
+For existing databases, add the `token_prefix` column and index:
+
+```sql
+-- PostgreSQL
+ALTER TABLE user_tokens ADD COLUMN token_prefix VARCHAR(8);
+CREATE INDEX idx_user_tokens_prefix ON user_tokens (token_prefix)
+  WHERE token_type = 'app' AND expiry_at > NOW();
+
+-- MySQL
+ALTER TABLE user_tokens ADD COLUMN token_prefix VARCHAR(8);
+CREATE INDEX idx_user_tokens_prefix ON user_tokens (token_prefix);
+
+-- Note: Existing tokens will have NULL token_prefix.
+-- The token service falls back to scanning all tokens when prefix is NULL,
+-- ensuring backwards compatibility. New tokens will populate this field automatically.
+```
+
+## Repository Methods
+
+The `OgiriTokenRepository<T>` interface includes the following methods:
+
+### Core Methods (Required)
+
+| Method                                  | Description                      |
+| --------------------------------------- | -------------------------------- |
+| `findByUserIdAndClient(userId, client)` | Find token by user and client ID |
+| `save(token)`                           | Create or update token           |
+| `delete(token)`                         | Delete token                     |
+| `deleteExpiredTokens(expiryBefore)`     | Delete all expired tokens        |
+
+### Performance Optimization Methods (v1.3.0+)
+
+These methods have default implementations but can be overridden for database-specific optimization:
+
+| Method                                  | Description                         | Default Behavior                       |
+| --------------------------------------- | ----------------------------------- | -------------------------------------- |
+| `findValidTokensByPrefix(prefix, now)`  | O(1) token lookup by prefix         | Falls back to scanning all user tokens |
+| `countByUserId(userId)`                 | Count active tokens for user        | Loads all tokens and counts            |
+| `deleteExpiredBatch(cutoff, batchSize)` | Batched deletion for large datasets | Calls `deleteExpiredTokens`            |
+
+**Example: Optimized PostgreSQL Implementation**
+
+```kotlin
+@Repository
+interface AppTokenRepository : JpaRepository<AppToken, Long>, OgiriTokenRepository<AppToken> {
+
+  @Query("""
+    SELECT t FROM AppToken t
+    WHERE t.tokenPrefix = :prefix
+      AND t.expiryAt > :now
+      AND t.tokenType = 'app'
+  """)
+  override fun findValidTokensByPrefix(prefix: String, now: Instant): List<AppToken>
+
+  @Query("SELECT COUNT(t) FROM AppToken t WHERE t.userId = :userId")
+  override fun countByUserId(userId: Long): Long
+
+  @Modifying
+  @Query("""
+    DELETE FROM AppToken t
+    WHERE t.expiryAt < :cutoff
+    LIMIT :batchSize
+  """)
+  override fun deleteExpiredBatch(cutoff: Instant, batchSize: Int): Int
+}
 ```
 
 ---
@@ -448,5 +537,8 @@ CREATE INDEX idx_user_tokens_expiry ON user_tokens (expiry_at);
 1. **Use `ogiri-jpa`** - Reduces boilerplate by ~70% for JPA users
 2. **Always hash tokens** - Never store plaintext tokens
 3. **Index `expiryAt`** - Enables fast cleanup queries
-4. **Use connection pooling** - HikariCP recommended for production
-5. **Monitor table size** - Archive old tokens if needed
+4. **Index `token_prefix`** - Enables O(1) token lookups (v1.3.0+)
+5. **Use connection pooling** - HikariCP recommended for production
+6. **Monitor table size** - Archive old tokens if needed
+7. **Test with your database** - Different databases have quirks
+8. **Override performance methods** - Provide database-specific optimizations

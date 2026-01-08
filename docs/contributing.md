@@ -24,6 +24,7 @@ cd ogiri
 Before reporting, check [existing issues](https://github.com/mosobande/ogiri/issues).
 
 Include:
+
 - Ògiri version
 - Java/Spring Boot version
 - Steps to reproduce
@@ -32,6 +33,7 @@ Include:
 ### Proposing Features
 
 Open an issue describing:
+
 - Problem being solved
 - Proposed solution
 - Alternative approaches considered
@@ -57,7 +59,7 @@ Open an issue describing:
 
 Use [Conventional Commits](https://www.conventionalcommits.org/):
 
-```
+```text
 feat: add chat sub-token renewal
 fix: prevent expired token renewal
 docs: add multi-tenant setup guide
@@ -69,20 +71,25 @@ refactor: extract common validation logic
 
 ```markdown
 ## Description
+
 Brief description of changes
 
 ## Motivation
+
 Fixes #123 / Related to #456
 
 ## Changes
+
 - Change 1
 - Change 2
 
 ## Testing
+
 - [ ] Unit tests added
 - [ ] Manual testing performed
 
 ## Checklist
+
 - [ ] Tests pass (`./gradlew test`)
 - [ ] Code formatted (`./gradlew spotlessApply`)
 - [ ] Documentation updated
@@ -91,12 +98,14 @@ Fixes #123 / Related to #456
 ## Areas for Contribution
 
 **High Priority:**
+
 - R2DBC examples for reactive SQL
 - Spring Data JDBC integration guide
 - GraphQL authentication example
 - Performance benchmarking
 
 **Medium Priority:**
+
 - Additional NoSQL examples (Firestore, DynamoDB)
 - OAuth2 integration examples
 - Rate limiting examples

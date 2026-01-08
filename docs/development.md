@@ -11,14 +11,14 @@ Guide for contributors working on the ogiri codebase.
 
 ## Build Commands
 
-| Command | Description |
-|---------|-------------|
-| `./gradlew build` | Compile all modules and run tests |
-| `./gradlew test` | Run test suite only |
-| `./gradlew :ogiri-core:test` | Run core library tests only |
-| `./gradlew clean` | Remove build artifacts |
-| `./gradlew spotlessApply` | Auto-format code |
-| `./gradlew spotlessCheck` | Verify formatting |
+| Command                      | Description                       |
+| ---------------------------- | --------------------------------- |
+| `./gradlew build`            | Compile all modules and run tests |
+| `./gradlew test`             | Run test suite only               |
+| `./gradlew :ogiri-core:test` | Run core library tests only       |
+| `./gradlew clean`            | Remove build artifacts            |
+| `./gradlew spotlessApply`    | Auto-format code                  |
+| `./gradlew spotlessCheck`    | Verify formatting                 |
 
 ### Running Samples
 
@@ -31,7 +31,7 @@ Requires PostgreSQL on `localhost:5432`. See [sample/README.md](../sample/README
 
 ## Project Structure
 
-```
+```text
 ogiri/
 ├── ogiri-core/                      # Main library (published to Maven Central)
 │   ├── src/main/kotlin/             # Source code
@@ -81,13 +81,13 @@ Coverage report: `ogiri-core/build/reports/jacoco/test/html/index.html`
 
 ### Current Coverage
 
-| Component                      | Coverage  |
-|--------------------------------|-----------|
-| AuthenticationBypassDecider    | 100%      |
-| AuthHeader                     | 90%       |
-| OgiriTokenAuthenticationFilter | 70%       |
-| OgiriTokenService (sub-tokens) | 25%       |
-| OgiriSecurityAutoConfiguration | 0%        |
+| Component                      | Coverage |
+| ------------------------------ | -------- |
+| AuthenticationBypassDecider    | 100%     |
+| AuthHeader                     | 90%      |
+| OgiriTokenAuthenticationFilter | 70%      |
+| OgiriTokenService (sub-tokens) | 25%      |
+| OgiriSecurityAutoConfiguration | 0%       |
 
 ## Git Hooks
 
@@ -104,7 +104,7 @@ Install hooks for code quality enforcement:
 
 Use [Conventional Commits](https://www.conventionalcommits.org/):
 
-```
+```text
 feat: add chat sub-token renewal
 fix: adjust expiry parsing
 refactor: extract validation logic
@@ -161,6 +161,7 @@ git push origin main v1.0.2
 ```
 
 GitHub Actions will:
+
 - Build and test
 - Sign artifacts with GPG
 - Publish to Maven Central
@@ -169,7 +170,7 @@ GitHub Actions will:
 ### CI/CD Workflows
 
 | Workflow       | Trigger        | Purpose                  |
-|----------------|----------------|--------------------------|
+| -------------- | -------------- | ------------------------ |
 | `build.yml`    | All pushes     | Compile modules          |
 | `test.yml`     | All pushes     | Run tests with coverage  |
 | `lint.yml`     | All pushes     | Verify formatting        |
@@ -181,7 +182,7 @@ GitHub Actions will:
 Configure in GitHub repository settings:
 
 | Secret            | Purpose                |
-|-------------------|------------------------|
+| ----------------- | ---------------------- |
 | `OSSRH_USERNAME`  | Sonatype username      |
 | `OSSRH_PASSWORD`  | Sonatype password      |
 | `GPG_KEY_ID`      | GPG key ID             |
@@ -189,6 +190,7 @@ Configure in GitHub repository settings:
 | `GPG_PRIVATE_KEY` | Base64-encoded GPG key |
 
 Export GPG key:
+
 ```bash
 gpg --export-secret-key <KEY_ID> | base64
 ```
@@ -215,7 +217,7 @@ export OSSRH_PASSWORD=your_password
 
 ### Adding a Sub-Token Type
 
-1. Implement `SubTokenRegistration` bean
+1. Implement `OgiriSubTokenRegistration` bean
 2. Define `name`, `clientIdFor()`, `expiry()`, `includeByDefault`
 3. Add tests in `TokenServiceSubTokenTest`
 4. Document in `docs/sub-tokens.md`

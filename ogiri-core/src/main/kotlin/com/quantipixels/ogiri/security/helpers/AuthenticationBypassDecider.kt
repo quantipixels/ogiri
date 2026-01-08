@@ -24,6 +24,13 @@ import org.springframework.security.core.context.SecurityContextHolder
 class AuthenticationBypassDecider(
     private val routeCatalog: OgiriRouteCatalog,
 ) {
+  /**
+   * Determines whether authentication may be skipped for the given HTTP request.
+   *
+   * @param request The incoming HTTP servlet request to evaluate.
+   * @return `true` if the request is already authenticated, matches a whitelist entry, is a CORS
+   *   preflight request, or targets a public route; `false` otherwise.
+   */
   fun canSkip(request: HttpServletRequest): Boolean {
     val isAuthenticated = SecurityContextHolder.getContext().authentication != null
     val isWhitelisted = SecurityHelpers.isWhitelisted(request.requestURI)

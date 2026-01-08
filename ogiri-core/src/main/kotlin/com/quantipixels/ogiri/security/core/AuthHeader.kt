@@ -12,9 +12,16 @@
  */
 package com.quantipixels.ogiri.security.core
 
+import com.fasterxml.jackson.core.JsonProcessingException
+import com.quantipixels.ogiri.security.config.OgiriConfigurationProperties
+import jakarta.servlet.http.Cookie
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
+import java.io.IOException
 import java.util.Base64
+import org.slf4j.LoggerFactory
+
+private val logger = LoggerFactory.getLogger(AuthHeader::class.java)
 
 const val ACCESS_TOKEN = "access-token"
 const val CLIENT = "client"
@@ -22,6 +29,22 @@ const val UID = "uid"
 const val TOKEN_TYPE = "token-type"
 const val EXPIRY = "expiry"
 const val ACCESS_TOKEN_KIND = "access-token-kind"
+
+/**
+ * Default maximum allowed size for bearer tokens in bytes.
+ *
+ * This limit prevents memory exhaustion attacks where an attacker sends extremely large bearer
+ * tokens that would be base64 decoded and parsed. 8KB is sufficient for normal JWT tokens while
+ * blocking potential DoS attempts.
+ *
+ * This constant is used as a fallback default. Applications should configure the limit via:
+ * ```yaml
+ * ogiri:
+ *   auth:
+ *     max-bearer-token-size: 8192
+ * ```
+ */
+const val DEFAULT_MAX_BEARER_TOKEN_SIZE = 8192
 
 private val mapper = JsonCodec.mapper
 
@@ -33,7 +56,12 @@ data class AuthHeader(
     var kind: String? = null,
     var subTokens: Map<String, SubTokenHeader>? = null,
 ) {
-  /** Simple validity check to prevent running verification against empty headers. */
+  /**
+   * Indicates whether the auth header contains non-blank accessToken, client, uid, and expiry.
+   *
+   * @return `true` if accessToken, client, uid, and expiry are all present and not blank, `false`
+   *   otherwise.
+   */
   fun isValid(): Boolean =
       !accessToken.isNullOrBlank() &&
           !client.isNullOrBlank() &&
@@ -48,9 +76,27 @@ data class SubTokenHeader(
     val expiry: String? = null,
 )
 
+/**
+ * Get the value of the cookie with the given name.
+ *
+ * @param name The cookie name to look up.
+ * @return The cookie value, or `null` if no cookie with that name exists.
+ */
 private fun HttpServletRequest.cookieValue(name: String): String? =
     cookies?.firstOrNull { it.name == name }?.value
 
+/**
+ * Extracts authentication values from the HTTP request, preferring explicit headers and falling
+ * back to cookies.
+ *
+ * Reads the ACCESS_TOKEN header first; if present, returns an AuthHeader populated from the
+ * ACCESS_TOKEN, CLIENT, UID, EXPIRY and ACCESS_TOKEN_KIND request headers. If the ACCESS_TOKEN
+ * header is missing or blank, returns an AuthHeader populated from the ACCESS_TOKEN, CLIENT, UID
+ * and EXPIRY cookies and the ACCESS_TOKEN_KIND header.
+ *
+ * @return An AuthHeader containing the extracted access token, client, uid, expiry, kind, and any
+ *   defaulted subTokens.
+ */
 fun HttpServletRequest.extractAuthHeader(): AuthHeader {
   var accessToken = getHeader(ACCESS_TOKEN)
   if (!accessToken.isNullOrBlank()) {
@@ -68,7 +114,24 @@ fun HttpServletRequest.extractAuthHeader(): AuthHeader {
   return AuthHeader(accessToken, client, uid, expiry, kind)
 }
 
-fun HttpServletResponse.appendAuthHeaders(authHeaders: AuthHeader?) {
+/**
+ * Adds authentication headers to this response based on the provided AuthHeader.
+ *
+ * If `authHeaders` is null the response is left unchanged. For non-null input this sets standard
+ * headers (access token, client, uid, token type "Bearer", token kind, expiry) when their values
+ * are present. For each sub-token entry it emits two headers: the sub-token key with the sub-token
+ * value, and `<sub-key>-authorization` containing a Base64-encoded JSON payload with `client`,
+ * `token`, and `expiry`. If the main access token is present it also sets the `Authorization`
+ * header to `Bearer ` followed by a Base64-encoded JSON payload containing `access_token`,
+ * `client`, `uid`, `token_type`, and `expiry`.
+ *
+ * @param authHeaders Authentication header data; when null no headers are added.
+ * @param cookieConfig Optional cookie configuration; when provided, secure cookies are also set.
+ */
+fun HttpServletResponse.appendAuthHeaders(
+    authHeaders: AuthHeader?,
+    cookieConfig: OgiriConfigurationProperties.CookieProperties? = null,
+) {
   if (authHeaders == null) return
 
   fun setIfNotBlank(
@@ -117,30 +180,97 @@ fun HttpServletResponse.appendAuthHeaders(authHeaders: AuthHeader?) {
     val encoded = Base64.getEncoder().encodeToString(json.toByteArray(Charsets.UTF_8))
     setHeader("Authorization", "Bearer $encoded")
   }
+
+  // Set secure cookies if enabled
+  if (cookieConfig != null && cookieConfig.enabled) {
+    appendAuthCookies(authHeaders, cookieConfig)
+  }
 }
 
 /**
- * Parse an Authorization Bearer token into a map of fields.
+ * Sets secure authentication cookies based on the provided AuthHeader and cookie configuration.
  *
- * Expects format: `Bearer <base64-encoded-json>` where JSON contains: `{"access-token": "...",
- * "client": "...", "uid": "...", "expiry": "...", ...}`
+ * Creates cookies with security attributes (HttpOnly, Secure, SameSite) to prevent XSS and CSRF
+ * attacks. Each cookie is configured according to the provided [cookieConfig].
  *
- * @param bearer The bearer token string (with or without "Bearer " prefix)
- * @return Map of parsed fields, or null if parsing fails
- *
- * Example:
- * ```
- * val bearer = "Bearer eyJhY2Nlc3MtdG9rZW4iOiJ4eXoiLCAiY2xpZW50IjogIndlYiJ9"
- * val fields = parseBearerToken(bearer)
- * // fields = {"access-token" -> "xyz", "client" -> "web", ...}
- * ```
+ * @param authHeaders Authentication header data containing token values.
+ * @param cookieConfig Cookie configuration specifying security attributes.
  */
-fun parseBearerToken(bearer: String): Map<String, String>? =
-    try {
-      val token = bearer.trim().removePrefix("Bearer ").trim()
-      val json = String(Base64.getDecoder().decode(token), Charsets.UTF_8)
-      @Suppress("UNCHECKED_CAST")
-      mapper.readValue(json, Map::class.java) as? Map<String, String>
-    } catch (e: Exception) {
-      null
+fun HttpServletResponse.appendAuthCookies(
+    authHeaders: AuthHeader,
+    cookieConfig: OgiriConfigurationProperties.CookieProperties,
+) {
+  fun addSecureCookie(
+      name: String,
+      value: String?,
+  ) {
+    if (value.isNullOrBlank()) return
+    val cookie =
+        Cookie(name, value).apply {
+          isHttpOnly = cookieConfig.httpOnly
+          secure = cookieConfig.secure
+          path = cookieConfig.path
+          // SameSite is set via setAttribute (Servlet 6.0+)
+          setAttribute("SameSite", cookieConfig.sameSite)
+        }
+    addCookie(cookie)
+  }
+
+  addSecureCookie(ACCESS_TOKEN, authHeaders.accessToken)
+  addSecureCookie(CLIENT, authHeaders.client)
+  addSecureCookie(UID, authHeaders.uid)
+  addSecureCookie(EXPIRY, authHeaders.expiry)
+}
+
+/**
+ * Parses an Authorization Bearer token string into a map of fields.
+ *
+ * Expects format `Bearer <base64-encoded-json>` where the decoded JSON contains string key/value
+ * pairs such as `{"access-token":"...","client":"...","uid":"...","expiry":"..."}`.
+ *
+ * This function includes size validation to prevent memory exhaustion attacks. Tokens exceeding the
+ * specified maximum size are rejected before decoding.
+ *
+ * @param bearer The bearer token string, with or without the `Bearer ` prefix.
+ * @param maxSize Maximum allowed token size in bytes (default: [DEFAULT_MAX_BEARER_TOKEN_SIZE]).
+ * @return A map of parsed string fields, or `null` if the token is too large, base64 decoding
+ *   fails, or JSON parsing fails.
+ */
+fun parseBearerToken(
+    bearer: String,
+    maxSize: Int = DEFAULT_MAX_BEARER_TOKEN_SIZE
+): Map<String, String>? {
+  val token = bearer.trim().removePrefix("Bearer ").trim()
+
+  // Validate size before Base64 decoding to prevent memory exhaustion attacks
+  if (token.length > maxSize) {
+    logger.warn(
+        "Bearer token exceeds maximum size: {} bytes (max: {})",
+        token.length,
+        maxSize,
+    )
+    return null
+  }
+
+  return try {
+    val json = String(Base64.getDecoder().decode(token), Charsets.UTF_8)
+
+    // Also validate decoded JSON size as a secondary check
+    if (json.length > maxSize) {
+      logger.warn("Decoded bearer token exceeds maximum size: {} bytes", json.length)
+      return null
     }
+
+    @Suppress("UNCHECKED_CAST")
+    mapper.readValue(json, Map::class.java) as? Map<String, String>
+  } catch (e: IllegalArgumentException) {
+    logger.debug("Failed to decode Base64 bearer token: {}", e.message)
+    null
+  } catch (e: JsonProcessingException) {
+    logger.debug("Failed to parse bearer token JSON: {}", e.message)
+    null
+  } catch (e: IOException) {
+    logger.debug("I/O error parsing bearer token: {}", e.message)
+    null
+  }
+}

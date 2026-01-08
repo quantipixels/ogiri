@@ -60,11 +60,10 @@ jobs:
             mike deploy --push --update-aliases "$VERSION" latest
             mike set-default --push latest
           else
-            # Branch push: use version file, set as latest (dev)
+            # Branch push: use version file
             VERSION=$(cat .ogiri-version)
-            echo "Deploying dev docs: $VERSION (latest)"
-            mike deploy --push --update-aliases "$VERSION" latest
-            mike set-default --push latest
+            echo "Deploying docs for version: $VERSION"
+            mike deploy --push "$VERSION"
           fi
 
       - name: Verify deployment

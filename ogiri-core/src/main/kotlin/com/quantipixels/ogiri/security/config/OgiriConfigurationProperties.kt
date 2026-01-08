@@ -12,8 +12,10 @@
  */
 package com.quantipixels.ogiri.security.config
 
+import jakarta.annotation.PostConstruct
 import jakarta.validation.Valid
 import jakarta.validation.constraints.Min
+import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.validation.annotation.Validated
 
@@ -40,7 +42,7 @@ import org.springframework.validation.annotation.Validated
  *     register-token-service: true
  *   cleanup:
  *     enabled: true
- *     cron: "0 0 * * * *"
+ *     interval-ms: 21600000
  * ```
  */
 @Validated
@@ -63,6 +65,40 @@ open class OgiriConfigurationProperties {
    * database.
    */
   val cleanup: CleanupProperties = CleanupProperties()
+
+  /** Cookie configuration for authentication responses. */
+  val cookies: CookieProperties = CookieProperties()
+
+  /** Token comparison cache configuration. */
+  val cache: CacheProperties = CacheProperties()
+
+  companion object {
+    private val logger = LoggerFactory.getLogger(OgiriConfigurationProperties::class.java)
+  }
+
+  /**
+   * Validates configuration and warns about insecure default values.
+   *
+   * Called automatically by Spring after properties are bound.
+   */
+  @PostConstruct
+  fun warnInsecureDefaults() {
+    if (auth.rotateStaleSeconds == 0L) {
+      logger.warn(
+          "ogiri.auth.rotate-stale-seconds=0 disables time-based token rotation. " +
+              "Consider setting to 3600 (1 hour) or higher for production security.")
+    }
+    if (!cookies.secure) {
+      logger.warn(
+          "ogiri.cookies.secure=false allows cookies over HTTP. " +
+              "Set to true for production deployments using HTTPS.")
+    }
+    if (!cookies.httpOnly) {
+      logger.warn(
+          "ogiri.cookies.http-only=false exposes cookies to JavaScript. " +
+              "Set to true to prevent XSS cookie theft.")
+    }
+  }
 
   /** Security filter configuration properties. */
   open class SecurityProperties {
@@ -192,6 +228,24 @@ open class OgiriConfigurationProperties {
      * See [OgiriTokenAuthenticationFilter.rotateTokensIfNeeded] for implementation.
      */
     var rotateStaleSeconds: Long = 0
+
+    /**
+     * Maximum allowed size for bearer tokens in bytes.
+     *
+     * This limit prevents memory exhaustion attacks where an attacker sends extremely large bearer
+     * tokens that would be base64 decoded and parsed. The default of 8KB is sufficient for normal
+     * JWT tokens (typically 1-2KB) while blocking potential DoS attempts.
+     *
+     * Default: 8192 (8KB) Valid Range: 256 - any positive integer
+     *
+     * Examples:
+     * - Minimal: 1024 (1KB, for very small tokens)
+     * - Default: 8192 (8KB, standard JWT size)
+     * - Large: 16384 (16KB, for tokens with extensive claims)
+     *
+     * See [com.quantipixels.ogiri.security.core.AuthHeader.parseBearerToken] for implementation.
+     */
+    @field:Min(256) var maxBearerTokenSize: Int = 8192
   }
 
   /**
@@ -232,5 +286,102 @@ open class OgiriConfigurationProperties {
      * Only used if [enabled] is true.
      */
     var intervalMs: Long = 21600000
+
+    /**
+     * Batch size for token cleanup operations.
+     *
+     * When cleaning up expired tokens, tokens are deleted in batches of this size to avoid
+     * overwhelming the database with large DELETE operations.
+     *
+     * Default: 1000 Valid Range: 100 - any positive integer
+     *
+     * Examples:
+     * - 100: Conservative, for databases with limited resources
+     * - 1000: Default, good balance for most deployments
+     * - 5000: Aggressive, for high-performance databases
+     */
+    @field:Min(100) var batchSize: Int = 1000
+  }
+
+  /**
+   * Cookie configuration properties for authentication responses.
+   *
+   * Controls how authentication cookies are set in HTTP responses. By default, cookies are enabled
+   * with secure settings (HttpOnly, Secure, SameSite=Strict) to prevent XSS and CSRF attacks.
+   */
+  open class CookieProperties {
+    /**
+     * Enable setting authentication cookies in responses.
+     *
+     * When true, authentication headers will also be set as secure cookies. When false, only HTTP
+     * headers are set.
+     *
+     * Default: true
+     */
+    var enabled: Boolean = true
+
+    /**
+     * Set the Secure flag on cookies.
+     *
+     * When true, cookies are only sent over HTTPS connections. Should always be true in production.
+     *
+     * Default: true
+     */
+    var secure: Boolean = true
+
+    /**
+     * Set the HttpOnly flag on cookies.
+     *
+     * When true, cookies are not accessible via JavaScript, preventing XSS cookie theft.
+     *
+     * Default: true
+     */
+    var httpOnly: Boolean = true
+
+    /**
+     * SameSite attribute for cookies.
+     *
+     * Controls when cookies are sent with cross-site requests:
+     * - "Strict": Only sent with same-site requests (most secure)
+     * - "Lax": Sent with same-site and top-level navigation (reasonable default)
+     * - "None": Sent with all requests (requires Secure=true)
+     *
+     * Default: "Strict"
+     */
+    var sameSite: String = "Strict"
+
+    /**
+     * Cookie path attribute.
+     *
+     * Default: "/" (entire site)
+     */
+    var path: String = "/"
+  }
+
+  /**
+   * Token comparison cache configuration properties.
+   *
+   * The token service uses a Caffeine cache to avoid repeated BCrypt comparisons for the same
+   * token. This cache stores the result of token hash comparisons for a configurable duration.
+   */
+  open class CacheProperties {
+    /**
+     * Maximum number of token comparison results to cache.
+     *
+     * Higher values use more memory but reduce BCrypt computation for high-traffic applications.
+     *
+     * Default: 10000
+     */
+    @field:Min(100) var maxSize: Long = 10000
+
+    /**
+     * Time in minutes before cached token comparison results expire.
+     *
+     * Lower values improve security (invalidate cached results sooner) but increase BCrypt load.
+     * Higher values reduce CPU usage but may allow stale cache entries.
+     *
+     * Default: 60 (1 hour)
+     */
+    @field:Min(1) var expiryMinutes: Long = 60
   }
 }

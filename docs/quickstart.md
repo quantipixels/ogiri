@@ -128,7 +128,7 @@ Declares which routes bypass authentication:
     ```kotlin
     @Component
     class MyRouteRegistry : OgiriRouteRegistry {
-      override fun registrations() = listOf(
+      override fun routes() = listOf(
         OgiriRoute.post("/api/auth/login"),
         OgiriRoute.post("/api/auth/register"),
         OgiriRoute.get("/api/health"),
@@ -142,7 +142,7 @@ Declares which routes bypass authentication:
     @Component
     public class MyRouteRegistry implements OgiriRouteRegistry {
       @Override
-      public List<OgiriRoute> registrations() {
+      public List<OgiriRoute> routes() {
         return List.of(
           OgiriRoute.post("/api/auth/login"),
           OgiriRoute.post("/api/auth/register"),
@@ -218,7 +218,8 @@ Then create your repository adapter. See [Database Integration](database.md) for
 Ògiri auto-configures the security filter chain. Authenticated requests will have their tokens validated and rotated automatically.
 
 **Response headers after login:**
-```
+
+```text
 access-token: <token-hash>
 client: web
 uid: 123
@@ -226,7 +227,8 @@ expiry: 2025-12-25T00:00:00Z
 ```
 
 **Client sends on subsequent requests:**
-```
+
+```text
 access-token: <token-hash>
 client: web
 uid: 123

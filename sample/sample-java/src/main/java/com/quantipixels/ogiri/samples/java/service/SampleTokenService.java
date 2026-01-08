@@ -63,7 +63,7 @@ public class SampleTokenService extends OgiriTokenService<SampleToken> {
    */
   @Override
   protected SampleToken tokenFactory(
-      Long userId,
+      long userId,
       String client,
       String hashedToken,
       OgiriTokenType tokenType,

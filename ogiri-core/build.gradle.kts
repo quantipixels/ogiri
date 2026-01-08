@@ -6,6 +6,7 @@ plugins {
   // JPA plugin removed - library is now database-agnostic
   // allopen plugin removed - not needed without JPA
   id("io.spring.dependency-management") version libs.versions.dependencyManagement.get()
+  id("org.owasp.dependencycheck") version "12.1.9"
   jacoco
   `maven-publish`
   signing
@@ -127,8 +128,12 @@ publishing {
 }
 
 signing {
-  val hasGpgKey = findProperty("signing.keyId") != null || System.getenv("GPG_KEY_ID") != null
-  if (hasGpgKey) {
+  val signingKey = (findProperty("signing.key") ?: System.getenv("GPG_PRIVATE_KEY"))?.toString()
+  val signingPassword =
+      (findProperty("signing.password") ?: System.getenv("GPG_PASSPHRASE"))?.toString()
+
+  if (signingKey != null && signingPassword != null) {
+    useInMemoryPgpKeys(signingKey, signingPassword)
     val pub = publishing.publications.findByName("mavenJava")
     if (pub != null) {
       sign(pub)
