@@ -13,7 +13,7 @@
 package com.quantipixels.ogiri.samples.kotlin
 
 import com.quantipixels.ogiri.samples.kotlin.entity.SampleToken
-import com.quantipixels.ogiri.samples.kotlin.repository.SampleTokenJpaRepository
+import com.quantipixels.ogiri.samples.kotlin.repository.SampleTokenRepository
 import com.quantipixels.ogiri.samples.kotlin.service.SampleTokenService
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -34,7 +34,7 @@ import org.springframework.transaction.annotation.Transactional
 class TokenRotationTest {
 
   @Autowired private lateinit var tokenService: SampleTokenService
-  @Autowired private lateinit var tokenRepository: SampleTokenJpaRepository
+  @Autowired private lateinit var tokenRepository: SampleTokenRepository
 
   private val testUserId = 1L
   private val testUsername = "user1" // Username for user ID 1

@@ -15,7 +15,7 @@ package com.quantipixels.ogiri.samples.java;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.quantipixels.ogiri.samples.java.entity.SampleToken;
-import com.quantipixels.ogiri.samples.java.repository.SampleTokenJpaRepository;
+import com.quantipixels.ogiri.samples.java.repository.SampleTokenRepository;
 import com.quantipixels.ogiri.samples.java.service.SampleTokenService;
 import com.quantipixels.ogiri.security.core.AuthHeader;
 import java.time.Instant;
@@ -33,7 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 class TokenRotationTest {
 
   @Autowired private SampleTokenService tokenService;
-  @Autowired private SampleTokenJpaRepository tokenRepository;
+  @Autowired private SampleTokenRepository tokenRepository;
 
   private static final Long TEST_USER_ID = 1L;
   private static final String TEST_USERNAME = "user1"; // Username for user ID 1
@@ -148,12 +148,12 @@ class TokenRotationTest {
     tokenService.createNewAuthToken(TEST_USER_ID, "client-2");
     tokenService.createNewAuthToken(TEST_USER_ID, "client-3");
 
-    assertEquals(3, tokenRepository.findAllByUserId(TEST_USER_ID).size());
+    assertEquals(3, tokenRepository.findByUserIdOrderByUpdatedAtDesc(TEST_USER_ID).size());
 
     // Delete all for user
     tokenService.deleteAllForUser(TEST_USER_ID);
 
-    assertEquals(0, tokenRepository.findAllByUserId(TEST_USER_ID).size());
+    assertEquals(0, tokenRepository.findByUserIdOrderByUpdatedAtDesc(TEST_USER_ID).size());
   }
 
   @Test

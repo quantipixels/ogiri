@@ -41,13 +41,16 @@ class OgiriMissingBeanFailureAnalyzer : AbstractFailureAnalyzer<NoSuchBeanDefini
                 |  Add dependency:
                 |    implementation("com.quantipixels.ogiri:ogiri-jpa:VERSION")
                 |
-                |  Then create your token entity and repository adapter:
+                |  Then create your token entity and repository:
                 |    @Entity
                 |    class MyToken : OgiriBaseTokenEntity()
                 |
                 |    @Repository
-                |    class MyTokenRepoAdapter(jpa: MyTokenJpaRepository) :
-                |        AbstractJpaTokenRepositoryAdapter<MyToken, MyTokenJpaRepository>(jpa) { ... }
+                |    interface MyTokenRepository :
+                |        JpaRepository<MyToken, Long>,
+                |        OgiriTokenRepository<MyToken>
+                |
+                |  Spring Data automatically generates all query implementations.
                 |
                 |Option 2 - Implement manually:
                 |  @Repository

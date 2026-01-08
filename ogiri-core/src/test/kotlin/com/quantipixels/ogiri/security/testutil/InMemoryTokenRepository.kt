@@ -14,6 +14,7 @@ package com.quantipixels.ogiri.security.testutil
 
 import com.quantipixels.ogiri.security.tokens.OgiriTokenRepository
 import java.time.Instant
+import java.util.Optional
 import java.util.concurrent.atomic.AtomicLong
 
 /**
@@ -74,7 +75,8 @@ class InMemoryTokenRepository : OgiriTokenRepository<TestToken> {
    * @param token The token to save or update.
    * @return The saved token with an assigned id for inserts and an updated `updatedAt` timestamp.
    */
-  override fun save(token: TestToken): TestToken {
+  @Suppress("UNCHECKED_CAST")
+  override fun <S : TestToken> save(token: S): S {
     synchronized(tokens) {
       return if (token.id == 0L) {
         // Insert: generate new ID and preserve transient properties
@@ -83,7 +85,7 @@ class InMemoryTokenRepository : OgiriTokenRepository<TestToken> {
         newToken.tokenPrefix = token.tokenPrefix // Preserve inherited mutable property
         newToken.updatedAt = clock // Use repository's clock for deterministic testing
         tokens.add(newToken)
-        newToken
+        newToken as S
       } else {
         // Update: remove old, add new
         tokens.removeIf { it.id == token.id }
@@ -98,11 +100,11 @@ class InMemoryTokenRepository : OgiriTokenRepository<TestToken> {
    * Finds the token with the given ID.
    *
    * @param id The token ID to look up.
-   * @return The matching TestToken if found, `null` otherwise.
+   * @return Optional containing the token if found, empty otherwise.
    */
-  override fun findById(id: Long): TestToken? {
+  override fun findById(id: Long): Optional<TestToken> {
     synchronized(tokens) {
-      return tokens.find { it.id == id }
+      return Optional.ofNullable(tokens.find { it.id == id })
     }
   }
 
@@ -116,43 +118,64 @@ class InMemoryTokenRepository : OgiriTokenRepository<TestToken> {
   }
 
   /**
-   * Retrieve all tokens belonging to the specified user.
+   * Retrieve all tokens belonging to the specified user, ordered by updatedAt descending.
    *
    * @return A list of TestToken objects associated with the provided user ID.
    */
-  override fun findAllByUserId(userId: Long): List<TestToken> {
+  override fun findByUserIdOrderByUpdatedAtDesc(userId: Long): List<TestToken> {
     synchronized(tokens) {
-      return tokens.filter { it.userId == userId }
+      return tokens.filter { it.userId == userId }.sortedByDescending { it.updatedAt }
     }
   }
 
   /**
-   * Finds all tokens for the specified user that have the given token subtype.
+   * Finds all tokens for the specified user that have the given token subtype, ordered by updatedAt
+   * descending.
    *
    * @param userId The id of the user whose tokens to search.
    * @param tokenSubtype The token subtype to match.
    * @return A list of TestToken instances matching the given `userId` and `tokenSubtype`.
    */
-  override fun findAllByUserIdAndTokenSubtype(
+  override fun findByUserIdAndTokenSubtypeOrderByUpdatedAtDesc(
       userId: Long,
       tokenSubtype: String,
   ): List<TestToken> {
     synchronized(tokens) {
-      return tokens.filter { it.userId == userId && it.tokenSubtype == tokenSubtype }
+      return tokens
+          .filter { it.userId == userId && it.tokenSubtype == tokenSubtype }
+          .sortedByDescending { it.updatedAt }
     }
   }
 
   /**
    * Retrieves the token for the specified user and client.
    *
-   * @return The token matching the given `userId` and `clientId`, or `null` if none exists.
+   * @return Optional containing the token if found, empty otherwise.
    */
   override fun findByUserIdAndClient(
       userId: Long,
-      clientId: String,
-  ): TestToken? {
+      client: String,
+  ): Optional<TestToken> {
     synchronized(tokens) {
-      return tokens.find { it.userId == userId && it.client == clientId }
+      return Optional.ofNullable(tokens.find { it.userId == userId && it.client == client })
+    }
+  }
+
+  /**
+   * Find tokens for a user matching any of the given clients.
+   *
+   * Used for batch loading sub-tokens to avoid N+1 queries.
+   *
+   * @param userId The user's primary key ID.
+   * @param clients Collection of client identifiers to match.
+   * @return List of tokens matching any of the clients.
+   */
+  override fun findByUserIdAndClientIn(
+      userId: Long,
+      clients: Collection<String>,
+  ): List<TestToken> {
+    synchronized(tokens) {
+      return tokens.filter { it.userId == userId && it.client in clients }
     }
   }
 
@@ -170,30 +193,42 @@ class InMemoryTokenRepository : OgiriTokenRepository<TestToken> {
   }
 
   /**
+   * Find all tokens of a specific type.
+   *
+   * @param tokenType The token type to filter by
+   * @return List of tokens matching the type
+   */
+  override fun findByTokenType(tokenType: String): List<TestToken> {
+    synchronized(tokens) {
+      return tokens.filter { it.tokenType.equals(tokenType, ignoreCase = true) }
+    }
+  }
+
+  /**
    * Deletes all tokens that belong to the specified user and client.
    *
    * @param userId The user's ID whose tokens should be deleted.
-   * @param clientId The client identifier to match when deleting tokens.
+   * @param client The client identifier to match when deleting tokens.
    */
   override fun deleteByUserIdAndClient(
       userId: Long,
-      clientId: String,
+      client: String,
   ) {
-    synchronized(tokens) { tokens.removeIf { it.userId == userId && it.client == clientId } }
+    synchronized(tokens) { tokens.removeIf { it.userId == userId && it.client == client } }
   }
 
   /**
    * Remove all tokens that belong to the given user and whose client is in the provided collection.
    *
    * @param userId The user's ID whose tokens should be removed.
-   * @param clientIds The collection of client identifiers; any token whose client is contained in
+   * @param clients The collection of client identifiers; any token whose client is contained in
    *   this collection will be deleted.
    */
   override fun deleteByUserIdAndClientIn(
       userId: Long,
-      clientIds: Collection<String>,
+      clients: Collection<String>,
   ) {
-    synchronized(tokens) { tokens.removeIf { it.userId == userId && it.client in clientIds } }
+    synchronized(tokens) { tokens.removeIf { it.userId == userId && it.client in clients } }
   }
 
   /** Delete all tokens for a user. */
@@ -202,34 +237,33 @@ class InMemoryTokenRepository : OgiriTokenRepository<TestToken> {
   }
 
   /**
-   * Find all valid (non-expired) APP tokens matching the given prefix.
+   * Delete the given token.
+   *
+   * @param token The token to delete.
+   */
+  override fun delete(token: TestToken) {
+    synchronized(tokens) { tokens.removeIf { it.id == token.id } }
+  }
+
+  /**
+   * Find all valid (non-expired) tokens matching the given prefix and type.
    *
    * @param prefix The 8-character token prefix to search for
+   * @param tokenType The token type to filter by
    * @param now Current instant for expiry comparison
-   * @return List of matching non-expired APP tokens
+   * @return List of matching non-expired tokens
    */
-  override fun findValidTokensByPrefix(
+  override fun findByTokenPrefixAndTokenTypeAndExpiryAtAfter(
       prefix: String,
+      tokenType: String,
       now: Instant,
   ): List<TestToken> {
     synchronized(tokens) {
       return tokens.filter {
         it.tokenPrefix == prefix &&
-            it.tokenType.equals("app", ignoreCase = true) &&
+            it.tokenType.equals(tokenType, ignoreCase = true) &&
             !it.expiryAt.isBefore(now)
       }
-    }
-  }
-
-  /**
-   * Find all tokens of a specific type.
-   *
-   * @param tokenType The token type to filter by
-   * @return List of tokens matching the type
-   */
-  override fun findAllByTokenType(tokenType: String): List<TestToken> {
-    synchronized(tokens) {
-      return tokens.filter { it.tokenType.equals(tokenType, ignoreCase = true) }
     }
   }
 

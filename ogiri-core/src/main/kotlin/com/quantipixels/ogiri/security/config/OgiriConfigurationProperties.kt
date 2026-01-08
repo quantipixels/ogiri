@@ -217,17 +217,17 @@ open class OgiriConfigurationProperties {
      * will be rotated on the next request. This provides a safeguard against indefinitely
      * long-lived tokens and ensures periodic credential refresh.
      *
-     * Default: 0 (disabled, no staleness-based rotation) Valid Range: 0 (disabled) or any positive
-     * integer (seconds)
+     * Default: 3600 (1 hour, secure by default) Valid Range: 0 (disabled) or any positive integer
+     * (seconds)
      *
      * Examples:
      * - Disabled: 0 (rely only on batch window logic)
-     * - Hourly: 3600 (force rotation every hour)
+     * - Hourly: 3600 (force rotation every hour) - Default
      * - Daily: 86400 (force rotation every day)
      *
      * See [OgiriTokenAuthenticationFilter.rotateTokensIfNeeded] for implementation.
      */
-    var rotateStaleSeconds: Long = 0
+    var rotateStaleSeconds: Long = 3600
 
     /**
      * Maximum allowed size for bearer tokens in bytes.

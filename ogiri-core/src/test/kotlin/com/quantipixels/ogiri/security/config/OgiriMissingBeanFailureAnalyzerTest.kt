@@ -36,7 +36,7 @@ class OgiriMissingBeanFailureAnalyzerTest {
     assertEquals("No OgiriTokenRepository bean found.", analysis!!.description)
     assertTrue(analysis.action.contains("ogiri-jpa"))
     assertTrue(analysis.action.contains("OgiriBaseTokenEntity"))
-    assertTrue(analysis.action.contains("AbstractJpaTokenRepositoryAdapter"))
+    assertTrue(analysis.action.contains("JpaRepository"))
   }
 
   @Test

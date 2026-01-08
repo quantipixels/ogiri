@@ -24,13 +24,13 @@ Reusable Spring Boot security components for token-based authentication with plu
 **With JPA Support (Recommended):**
 
 ```kotlin
-implementation("com.quantipixels.ogiri:ogiri-jpa:1.3.0")
+implementation("com.quantipixels.ogiri:ogiri-jpa:1.4.0")
 ```
 
 **Core Only (Custom Persistence):**
 
 ```kotlin
-implementation("com.quantipixels.ogiri:ogiri-core:1.3.0")
+implementation("com.quantipixels.ogiri:ogiri-core:1.4.0")
 ```
 
 **Maven (JPA):**
@@ -39,7 +39,7 @@ implementation("com.quantipixels.ogiri:ogiri-core:1.3.0")
 <dependency>
   <groupId>com.quantipixels.ogiri</groupId>
   <artifactId>ogiri-jpa</artifactId>
-  <version>1.3.0</version>
+  <version>1.4.0</version>
 </dependency>
 ```
 

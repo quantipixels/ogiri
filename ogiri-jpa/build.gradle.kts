@@ -46,7 +46,16 @@ tasks.withType<Test> { useJUnitPlatform() }
 publishing {
   publications {
     create<MavenPublication>("mavenJava") {
-      from(components["java"])
+      artifactId = "ogiri-jpa"
+      artifact(tasks.jar)
+      artifact(tasks.named("sourcesJar"))
+      artifact(tasks.named("javadocJar"))
+
+      versionMapping {
+        usage("java-api") { fromResolutionOf("runtimeClasspath") }
+        usage("java-runtime") { fromResolutionResult() }
+      }
+
       pom {
         name.set("ogiri-jpa")
         description.set("JPA adapter module for Ogiri token security library.")
@@ -68,6 +77,24 @@ publishing {
           url.set("https://github.com/quantipixels/ogiri")
           connection.set("scm:git:https://github.com/quantipixels/ogiri.git")
           developerConnection.set("scm:git:ssh://git@github.com/quantipixels/ogiri.git")
+        }
+        withXml {
+          val dependenciesNode = asNode().appendNode("dependencies")
+
+          // Manually add ogiri-core dependency
+          dependenciesNode.appendNode("dependency").apply {
+            appendNode("groupId", project.group)
+            appendNode("artifactId", "ogiri-core")
+            appendNode("version", project.version)
+            appendNode("scope", "compile")
+          }
+
+          // Add Spring Data JPA dependency
+          dependenciesNode.appendNode("dependency").apply {
+            appendNode("groupId", "org.springframework.boot")
+            appendNode("artifactId", "spring-boot-starter-data-jpa")
+            appendNode("scope", "compile")
+          }
         }
       }
     }

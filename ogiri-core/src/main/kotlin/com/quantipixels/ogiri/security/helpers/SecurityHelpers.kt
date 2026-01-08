@@ -17,6 +17,7 @@ import java.net.Inet4Address
 import java.net.Inet6Address
 import java.net.InetAddress
 import java.net.URI
+import org.slf4j.LoggerFactory
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.util.AntPathMatcher
 import org.springframework.web.context.request.RequestContextHolder
@@ -25,6 +26,7 @@ import org.springframework.web.context.request.ServletRequestAttributes
 val pathMatcher = AntPathMatcher()
 
 object SecurityHelpers {
+  private val logger = LoggerFactory.getLogger(SecurityHelpers::class.java)
   val WHITE_LIST_PREFIXES: List<String> =
       listOf(
           "/swagger-ui/**",
@@ -119,7 +121,8 @@ object SecurityHelpers {
     val normalized =
         try {
           URI(uri).normalize().path ?: uri
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+          logger.warn("Failed to parse URI for bypass check: $uri", e)
           uri
         }
     return WHITE_LIST_PREFIXES.any { pathMatcher.match(it, normalized) } ||

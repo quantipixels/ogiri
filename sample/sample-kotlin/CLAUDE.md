@@ -42,7 +42,7 @@ src/main/kotlin/com/quantipixels/ogiri/samples/kotlin/
 │   ├── SampleToken.kt               # JPA token entity
 │   └── DirectToken.kt               # Direct token implementation
 └── repository/
-    └── SampleTokenRepository.kt     # Token repository (JPA)
+    └── SampleTokenRepository.kt     # Combined JPA + OgiriTokenRepository interface
 ```
 
 ## Testing Authentication

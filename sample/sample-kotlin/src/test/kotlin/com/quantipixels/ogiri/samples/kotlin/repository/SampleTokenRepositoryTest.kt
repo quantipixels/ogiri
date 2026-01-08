@@ -14,12 +14,11 @@ package com.quantipixels.ogiri.samples.kotlin.repository
 
 import com.quantipixels.ogiri.samples.kotlin.Application
 import com.quantipixels.ogiri.samples.kotlin.entity.SampleToken
-import com.quantipixels.ogiri.security.tokens.OgiriTokenRepository
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -32,8 +31,7 @@ import org.springframework.transaction.annotation.Transactional
 @ActiveProfiles("test")
 @Transactional
 class SampleTokenRepositoryTest {
-  @Autowired private lateinit var tokenRepository: OgiriTokenRepository<SampleToken>
-  @Autowired private lateinit var jpaRepository: SampleTokenJpaRepository
+  @Autowired private lateinit var tokenRepository: SampleTokenRepository
 
   private val testUserId = 1L
   private val testClient = "test-client"
@@ -41,7 +39,7 @@ class SampleTokenRepositoryTest {
 
   @BeforeEach
   fun setUp() {
-    jpaRepository.deleteAll()
+    tokenRepository.deleteAll()
   }
 
   @Test
@@ -51,16 +49,16 @@ class SampleTokenRepositoryTest {
 
     val retrieved = tokenRepository.findByUserIdAndClient(testUserId, testClient)
 
-    assertNotNull(retrieved)
-    assertEquals(testUserId, retrieved!!.userId)
-    assertEquals(testClient, retrieved.client)
-    assertEquals(testToken, retrieved.token)
+    assertTrue(retrieved.isPresent)
+    assertEquals(testUserId, retrieved.get().userId)
+    assertEquals(testClient, retrieved.get().client)
+    assertEquals(testToken, retrieved.get().token)
   }
 
   @Test
-  fun `should return null for non-existent token`() {
+  fun `should return empty Optional for non-existent token`() {
     val retrieved = tokenRepository.findByUserIdAndClient(999L, "non-existent")
-    assertNull(retrieved)
+    assertFalse(retrieved.isPresent)
   }
 
   @Test
@@ -69,11 +67,11 @@ class SampleTokenRepositoryTest {
     val token2 = createToken(testUserId, "client-2", "token-2")
 
     tokenRepository.save(token1)
-    jpaRepository.flush()
+    tokenRepository.flush()
     Thread.sleep(100) // Ensure different timestamps
     tokenRepository.save(token2)
 
-    val tokens = tokenRepository.findAllByUserId(testUserId)
+    val tokens = tokenRepository.findByUserIdOrderByUpdatedAtDesc(testUserId)
 
     assertEquals(2, tokens.size)
     val clients = tokens.map { it.client }
@@ -111,7 +109,7 @@ class SampleTokenRepositoryTest {
     tokenRepository.deleteByUserIdAndClient(testUserId, testClient)
 
     val retrieved = tokenRepository.findByUserIdAndClient(testUserId, testClient)
-    assertNull(retrieved)
+    assertFalse(retrieved.isPresent)
   }
 
   @Test
@@ -126,7 +124,7 @@ class SampleTokenRepositoryTest {
 
     tokenRepository.deleteByUserIdAndClientIn(testUserId, listOf("client-1", "client-2"))
 
-    val remaining = tokenRepository.findAllByUserId(testUserId)
+    val remaining = tokenRepository.findByUserIdOrderByUpdatedAtDesc(testUserId)
     assertEquals(1, remaining.size)
     assertEquals("client-3", remaining[0].client)
   }
@@ -141,7 +139,7 @@ class SampleTokenRepositoryTest {
 
     tokenRepository.deleteByUserId(testUserId)
 
-    val remaining = tokenRepository.findAllByUserId(testUserId)
+    val remaining = tokenRepository.findByUserIdOrderByUpdatedAtDesc(testUserId)
     assertTrue(remaining.isEmpty())
   }
 
@@ -155,7 +153,7 @@ class SampleTokenRepositoryTest {
 
     tokenRepository.delete(saved1)
 
-    val remaining = tokenRepository.findAllByUserId(testUserId)
+    val remaining = tokenRepository.findByUserIdOrderByUpdatedAtDesc(testUserId)
     assertEquals(1, remaining.size)
     assertEquals("client-2", remaining[0].client)
   }
@@ -170,9 +168,9 @@ class SampleTokenRepositoryTest {
     tokenRepository.save(token)
 
     val updated = tokenRepository.findByUserIdAndClient(testUserId, testClient)
-    assertNotNull(updated)
-    assertEquals("new-hashed-token", updated!!.token)
-    assertNotNull(updated.lastUsedAt)
+    assertTrue(updated.isPresent)
+    assertEquals("new-hashed-token", updated.get().token)
+    assertNotNull(updated.get().lastUsedAt)
   }
 
   private fun createToken(

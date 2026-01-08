@@ -214,7 +214,9 @@ class TokenPrefixTest {
       assertEquals(OgiriTokenType.APP.label, storedToken.tokenType, "Token type should be app")
 
       // Query by prefix
-      val candidates = repository.findValidTokensByPrefix(prefix)
+      val candidates =
+          repository.findByTokenPrefixAndTokenTypeAndExpiryAtAfter(
+              prefix, OgiriTokenType.APP.label, Instant.now())
 
       assertEquals(1, candidates.size)
       assertEquals(token.id, candidates[0].id)
@@ -233,13 +235,15 @@ class TokenPrefixTest {
       expiredToken.tokenPrefix = "testpref"
       repository.save(expiredToken)
 
-      val candidates = repository.findValidTokensByPrefix("testpref")
+      val candidates =
+          repository.findByTokenPrefixAndTokenTypeAndExpiryAtAfter(
+              "testpref", OgiriTokenType.APP.label, Instant.now())
 
       assertTrue(candidates.isEmpty())
     }
 
     @Test
-    fun `findValidTokensByPrefix excludes non-APP tokens`() {
+    fun `findByTokenPrefixAndTokenTypeAndExpiryAtAfter excludes non-APP tokens`() {
       // Create a SUB token with known prefix
       val subToken =
           TestToken(
@@ -252,7 +256,9 @@ class TokenPrefixTest {
       subToken.tokenPrefix = "testpref"
       repository.save(subToken)
 
-      val candidates = repository.findValidTokensByPrefix("testpref")
+      val candidates =
+          repository.findByTokenPrefixAndTokenTypeAndExpiryAtAfter(
+              "testpref", OgiriTokenType.APP.label, Instant.now())
 
       assertTrue(candidates.isEmpty())
     }

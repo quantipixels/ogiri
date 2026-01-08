@@ -21,7 +21,7 @@ interface IdentifierPolicy {
 }
 
 class DefaultIdentifierPolicy(
-    private val length: Int = 16,
+    private val length: Int = 32,
 ) : IdentifierPolicy {
   private val random = SecureRandom()
   private val alphabet =
