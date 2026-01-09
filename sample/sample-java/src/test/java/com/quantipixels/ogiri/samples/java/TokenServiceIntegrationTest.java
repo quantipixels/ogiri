@@ -15,7 +15,7 @@ package com.quantipixels.ogiri.samples.java;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.quantipixels.ogiri.samples.java.entity.SampleToken;
-import com.quantipixels.ogiri.samples.java.repository.SampleTokenJpaRepository;
+import com.quantipixels.ogiri.samples.java.repository.SampleTokenRepository;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -31,7 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 class TokenServiceIntegrationTest {
 
-  @Autowired private SampleTokenJpaRepository tokenRepository;
+  @Autowired private SampleTokenRepository tokenRepository;
 
   private static final Long TEST_USER_ID = 1L;
   private static final String TEST_CLIENT = "test-app";
@@ -100,7 +100,7 @@ class TokenServiceIntegrationTest {
       tokenRepository.save(token);
     }
 
-    List<SampleToken> userTokens = tokenRepository.findAllByUserId(TEST_USER_ID);
+    List<SampleToken> userTokens = tokenRepository.findByUserIdOrderByUpdatedAtDesc(TEST_USER_ID);
     assertEquals(3, userTokens.size());
     assertTrue(userTokens.stream().map(SampleToken::getClient).anyMatch(clients::contains));
   }
@@ -158,7 +158,7 @@ class TokenServiceIntegrationTest {
 
     tokenRepository.deleteAll(expiredTokens);
 
-    List<SampleToken> remaining = tokenRepository.findAllByUserId(TEST_USER_ID);
+    List<SampleToken> remaining = tokenRepository.findByUserIdOrderByUpdatedAtDesc(TEST_USER_ID);
     assertEquals(1, remaining.size());
     assertEquals("valid-client", remaining.get(0).getClient());
   }

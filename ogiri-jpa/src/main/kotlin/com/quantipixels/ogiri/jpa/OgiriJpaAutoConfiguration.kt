@@ -25,16 +25,20 @@ import org.springframework.data.jpa.repository.JpaRepository
  * - Spring Data JPA is on the classpath (JpaRepository class present)
  * - After OgiriSecurityAutoConfiguration has been processed
  *
- * Currently, this configuration serves as a marker for JPA support detection. Users are expected to
- * create their own:
+ * Users should create:
  * - Token entity extending [OgiriBaseTokenEntity]
- * - JPA repository interface
- * - Repository adapter extending [AbstractJpaTokenRepositoryAdapter]
+ * - Repository interface extending both JpaRepository and OgiriTokenRepository
  *
- * Future enhancements may include:
- * - Auto-detection of OgiriBaseTokenEntity subclasses
- * - Automatic repository adapter generation
- * - JPA-specific configuration properties
+ * Example:
+ * ```kotlin
+ * @Repository
+ * interface MyTokenRepository :
+ *     JpaRepository<MyToken, Long>,
+ *     OgiriTokenRepository<MyToken>
+ * ```
+ *
+ * Spring Data automatically generates all query implementations when method names follow Spring
+ * Data naming conventions.
  */
 @Configuration
 @ConditionalOnClass(JpaRepository::class)

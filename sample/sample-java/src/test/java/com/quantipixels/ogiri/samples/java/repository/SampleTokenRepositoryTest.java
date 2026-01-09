@@ -16,10 +16,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.quantipixels.ogiri.samples.java.Application;
 import com.quantipixels.ogiri.samples.java.entity.SampleToken;
-import com.quantipixels.ogiri.security.tokens.OgiriTokenRepository;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,8 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 class SampleTokenRepositoryTest {
 
-  @Autowired private OgiriTokenRepository<SampleToken> tokenRepository;
-  @Autowired private SampleTokenJpaRepository jpaRepository;
+  @Autowired private SampleTokenRepository tokenRepository;
 
   private static final Long TEST_USER_ID = 1L;
   private static final String TEST_CLIENT = "test-client";
@@ -41,7 +40,7 @@ class SampleTokenRepositoryTest {
 
   @BeforeEach
   void setUp() {
-    jpaRepository.deleteAll();
+    tokenRepository.deleteAll();
   }
 
   @Test
@@ -49,18 +48,19 @@ class SampleTokenRepositoryTest {
     SampleToken token = createToken(TEST_USER_ID, TEST_CLIENT, TEST_TOKEN);
     tokenRepository.save(token);
 
-    SampleToken retrieved = tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT);
+    Optional<SampleToken> retrieved =
+        tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT);
 
-    assertNotNull(retrieved);
-    assertEquals(TEST_USER_ID, retrieved.getUserId());
-    assertEquals(TEST_CLIENT, retrieved.getClient());
-    assertEquals(TEST_TOKEN, retrieved.getToken());
+    assertTrue(retrieved.isPresent());
+    assertEquals(TEST_USER_ID, retrieved.get().getUserId());
+    assertEquals(TEST_CLIENT, retrieved.get().getClient());
+    assertEquals(TEST_TOKEN, retrieved.get().getToken());
   }
 
   @Test
-  void shouldReturnNullForNonExistentToken() {
-    SampleToken retrieved = tokenRepository.findByUserIdAndClient(999L, "non-existent");
-    assertNull(retrieved);
+  void shouldReturnEmptyOptionalForNonExistentToken() {
+    Optional<SampleToken> retrieved = tokenRepository.findByUserIdAndClient(999L, "non-existent");
+    assertFalse(retrieved.isPresent());
   }
 
   @Test
@@ -69,11 +69,11 @@ class SampleTokenRepositoryTest {
     SampleToken token2 = createToken(TEST_USER_ID, "client-2", "token-2");
 
     tokenRepository.save(token1);
-    jpaRepository.flush();
+    tokenRepository.flush();
     Thread.sleep(100); // Ensure different timestamps
     tokenRepository.save(token2);
 
-    List<SampleToken> tokens = tokenRepository.findAllByUserId(TEST_USER_ID);
+    List<SampleToken> tokens = tokenRepository.findByUserIdOrderByUpdatedAtDesc(TEST_USER_ID);
 
     assertEquals(2, tokens.size());
     List<String> clients = tokens.stream().map(SampleToken::getClient).toList();
@@ -107,8 +107,9 @@ class SampleTokenRepositoryTest {
 
     tokenRepository.deleteByUserIdAndClient(TEST_USER_ID, TEST_CLIENT);
 
-    SampleToken retrieved = tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT);
-    assertNull(retrieved);
+    Optional<SampleToken> retrieved =
+        tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT);
+    assertFalse(retrieved.isPresent());
   }
 
   @Test
@@ -123,7 +124,7 @@ class SampleTokenRepositoryTest {
 
     tokenRepository.deleteByUserIdAndClientIn(TEST_USER_ID, List.of("client-1", "client-2"));
 
-    List<SampleToken> remaining = tokenRepository.findAllByUserId(TEST_USER_ID);
+    List<SampleToken> remaining = tokenRepository.findByUserIdOrderByUpdatedAtDesc(TEST_USER_ID);
     assertEquals(1, remaining.size());
     assertEquals("client-3", remaining.get(0).getClient());
   }
@@ -138,7 +139,7 @@ class SampleTokenRepositoryTest {
 
     tokenRepository.deleteByUserId(TEST_USER_ID);
 
-    List<SampleToken> remaining = tokenRepository.findAllByUserId(TEST_USER_ID);
+    List<SampleToken> remaining = tokenRepository.findByUserIdOrderByUpdatedAtDesc(TEST_USER_ID);
     assertTrue(remaining.isEmpty());
   }
 
@@ -152,7 +153,7 @@ class SampleTokenRepositoryTest {
 
     tokenRepository.delete(saved1);
 
-    List<SampleToken> remaining = tokenRepository.findAllByUserId(TEST_USER_ID);
+    List<SampleToken> remaining = tokenRepository.findByUserIdOrderByUpdatedAtDesc(TEST_USER_ID);
     assertEquals(1, remaining.size());
     assertEquals("client-2", remaining.get(0).getClient());
   }
@@ -166,10 +167,11 @@ class SampleTokenRepositoryTest {
     token.setLastUsedAt(Instant.now());
     tokenRepository.save(token);
 
-    SampleToken updated = tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT);
-    assertNotNull(updated);
-    assertEquals("new-hashed-token", updated.getToken());
-    assertNotNull(updated.getLastUsedAt());
+    Optional<SampleToken> updated =
+        tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT);
+    assertTrue(updated.isPresent());
+    assertEquals("new-hashed-token", updated.get().getToken());
+    assertNotNull(updated.get().getLastUsedAt());
   }
 
   private SampleToken createToken(Long userId, String client, String token) {

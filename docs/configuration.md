@@ -25,7 +25,7 @@ All ogiri properties are prefixed with `ogiri`.
 | Property                          | Default | Description                                   |
 | --------------------------------- | ------- | --------------------------------------------- |
 | `ogiri.auth.rotate-on-write-only` | `false` | Only rotate on POST/PUT/DELETE                |
-| `ogiri.auth.rotate-stale-seconds` | `0`     | Force rotation after N seconds (0 = disabled) |
+| `ogiri.auth.rotate-stale-seconds` | `3600`  | Force rotation after N seconds (0 = disabled) |
 
 ### Token Cleanup
 
@@ -128,11 +128,11 @@ ogiri:
 
 The library logs warnings at startup for potentially insecure configurations:
 
-| Configuration                       | Warning                                  |
-| ----------------------------------- | ---------------------------------------- |
-| `ogiri.auth.rotate-stale-seconds=0` | Consider setting to 3600+ for production |
-| `ogiri.cookies.secure=false`        | Enable for HTTPS deployments             |
-| `ogiri.cookies.http-only=false`     | Enable to prevent XSS cookie theft       |
+| Configuration                       | Warning                                                |
+| ----------------------------------- | ------------------------------------------------------ |
+| `ogiri.auth.rotate-stale-seconds=0` | Token rotation disabled; consider using default (3600) |
+| `ogiri.cookies.secure=false`        | Enable for HTTPS deployments                           |
+| `ogiri.cookies.http-only=false`     | Enable to prevent XSS cookie theft                     |
 
 These warnings are informational and do not prevent the application from starting. They help identify security misconfigurations in production environments.
 

@@ -13,7 +13,7 @@
 package com.quantipixels.ogiri.samples.kotlin
 
 import com.quantipixels.ogiri.samples.kotlin.entity.SampleToken
-import com.quantipixels.ogiri.samples.kotlin.repository.SampleTokenJpaRepository
+import com.quantipixels.ogiri.samples.kotlin.repository.SampleTokenRepository
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -30,7 +30,7 @@ import org.springframework.transaction.annotation.Transactional
 @ActiveProfiles("test")
 @Transactional
 class TokenServiceIntegrationTest {
-  @Autowired private lateinit var tokenRepository: SampleTokenJpaRepository
+  @Autowired private lateinit var tokenRepository: SampleTokenRepository
 
   private val testUserId = 1L
   private val testClient = "test-app"

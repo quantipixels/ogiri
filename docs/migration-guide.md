@@ -1,5 +1,152 @@
 # Migration Guide
 
+## Migrating to 1.4.0
+
+Version 1.4.0 includes security improvements, performance optimizations, and repository simplification. **This release contains breaking changes** that require action.
+
+### Breaking Changes
+
+#### 1. Default Token Rotation Enabled
+
+**Breaking:** Default `rotateStaleSeconds` changed from `0` (disabled) to `3600` (1 hour).
+
+**Impact:** Tokens now rotate after 1 hour of inactivity by default.
+
+**Action Required:**
+
+- **If you want the old behavior (no rotation):**
+
+  ```yaml
+  ogiri:
+    auth:
+      rotate-stale-seconds: 0
+  ```
+
+- **If you want rotation (recommended):**
+  No action needed—default is now secure.
+
+#### 2. Default Token Length Increased
+
+**Breaking:** Default token length increased from 16 to 32 characters.
+
+**Impact:** Newly created tokens are longer (32 chars), providing 24 characters of hidden entropy after the 8-char prefix.
+
+**Action Required:**
+
+- **Database column size:** Ensure your `token` column supports at least 60 characters (BCrypt hash of 32-char token).
+- **If you need the old behavior:**
+  ```kotlin
+  @Bean
+  fun identifierPolicy(): IdentifierPolicy = DefaultIdentifierPolicy(length = 16)
+  ```
+
+#### 3. Repository Method Removed
+
+**Breaking:** `deleteExpiredBatch` method removed from `OgiriTokenRepository` interface.
+
+**Impact:** Custom repository implementations no longer need to implement this method.
+
+**Action Required:**
+
+- **If you implemented `deleteExpiredBatch`:** Remove the implementation—cleanup is now handled internally by `OgiriTokenService.cleanupExpiredTokensBatched()`.
+
+**Before:**
+
+```kotlin
+@Repository
+interface MyTokenRepository : JpaRepository<MyToken, Long>, OgiriTokenRepository<MyToken> {
+    override fun deleteExpiredBatch(cutoff: Instant, batchSize: Int): Int {
+        // Custom implementation
+    }
+}
+```
+
+**After:**
+
+```kotlin
+@Repository
+interface MyTokenRepository : JpaRepository<MyToken, Long>, OgiriTokenRepository<MyToken> {
+    // deleteExpiredBatch is gone—no implementation needed
+}
+```
+
+#### 4. Compiler Flag Removed
+
+**Breaking:** `-Xjvm-default=all` compiler flag removed from library.
+
+**Impact:** Consuming projects no longer need to add this flag.
+
+**Action Required:**
+
+- **If you added `-Xjvm-default=all` to your project:** You can remove it (optional cleanup).
+
+#### 5. New Required Repository Method
+
+**Breaking:** New method `findByUserIdAndClientIn` added to `OgiriTokenRepository`.
+
+**Impact:** Custom repository implementations must implement this method.
+
+**Action Required:**
+
+- **For JPA repositories:** Spring Data auto-generates this method—no action needed.
+- **For custom repositories:** Implement the method:
+
+```kotlin
+override fun findByUserIdAndClientIn(
+    userId: Long,
+    clients: Collection<String>
+): List<MyToken> {
+    // Return all tokens for the user where client is in the clients collection
+}
+```
+
+### New Features
+
+#### Batch Token Fetching
+
+The new `findByUserIdAndClientIn` method eliminates N+1 queries when building auth headers with sub-tokens.
+
+**Performance improvement:** Single database query instead of N queries (one per sub-token type).
+
+**Example:**
+
+```kotlin
+// Before: N+1 queries (1 for app token + 1 per sub-token registration)
+// After: 2 queries (1 for app token + 1 batch query for all sub-tokens)
+val authHeader = tokenService.buildAuthHeader(user, client)
+```
+
+#### Security Hardening
+
+- **Timing attack protection:** 100ms minimum delay masks cache hit vs miss timing differences
+- **Hashed cache keys:** SHA-256 hashes prevent token extraction from memory dumps
+- **User enumeration fix:** Constant-time dummy password check prevents timing-based username enumeration
+
+### Migration Steps
+
+1. **Review configuration:**
+
+   - Check if you want `rotate-stale-seconds: 0` (old behavior) or accept the new default of `3600`
+   - Verify token column length supports 60+ characters
+
+2. **Update repository:**
+
+   - Remove `deleteExpiredBatch` implementation if present
+   - Verify `findByUserIdAndClientIn` is available (auto-generated for JPA)
+
+3. **Test:**
+
+   ```bash
+   ./gradlew test
+   ```
+
+4. **Update dependencies:**
+   ```kotlin
+   implementation("com.quantipixels.ogiri:ogiri-core:1.4.0")
+   // or
+   implementation("com.quantipixels.ogiri:ogiri-jpa:1.4.0")
+   ```
+
 ## Migrating to 1.3.0
 
 Version 1.3.0 introduces the new `ogiri-jpa` module for simplified JPA integration. This is a fully backward-compatible release—existing code continues to work without changes.
@@ -427,11 +574,10 @@ interface OgiriToken {
 
 `OgiriTokenRepository` has new methods with default implementations:
 
-| Method                                  | Purpose                                        |
-| --------------------------------------- | ---------------------------------------------- |
-| `findValidTokensByPrefix(prefix, now)`  | O(1) token lookup by prefix                    |
-| `countByUserId(userId)`                 | Efficient token count for cleanup optimization |
-| `deleteExpiredBatch(cutoff, batchSize)` | Batched cleanup for large datasets             |
+| Method                                 | Purpose                                        |
+| -------------------------------------- | ---------------------------------------------- |
+| `findValidTokensByPrefix(prefix, now)` | O(1) token lookup by prefix                    |
+| `countByUserId(userId)`                | Efficient token count for cleanup optimization |
 
 These have default implementations using existing methods, so no changes are required unless you want to override them with optimized database queries.
 

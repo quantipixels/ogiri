@@ -30,6 +30,7 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.Base64
 import java.util.concurrent.TimeUnit
+import org.slf4j.LoggerFactory
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.crypto.password.PasswordEncoder
@@ -123,6 +124,9 @@ open class OgiriTokenService<T : OgiriToken>(
   /**
    * Check if a plain token matches a hashed token, using cache to avoid repeated BCrypt operations.
    *
+   * Implements timing attack protection by ensuring a minimum delay to mask cache hit vs miss
+   * timing. Cache keys are hashed to prevent plaintext token extraction from memory dumps.
+   *
    * @param tokenHash The BCrypt-hashed token from the database
    * @param token The plaintext token to validate
    * @return true if tokens match, false otherwise
@@ -131,15 +135,30 @@ open class OgiriTokenService<T : OgiriToken>(
       tokenHash: String,
       token: String,
   ): Boolean {
-    // Use length-prefixed format to prevent collision (more robust than NULL delimiter)
-    val key = "${tokenHash.length}:$tokenHash:${token.length}:$token"
-    val cached = tokenEqualityCache.getIfPresent(key)
-    if (cached != null) {
-      return cached
+    val key = "${tokenHash.length}:${sha256(tokenHash)}:${token.length}:${sha256(token)}"
+    val startTime = System.nanoTime()
+
+    val result = tokenEqualityCache.get(key) { passwordEncoder.matches(token, tokenHash) }
+
+    // Ensure minimum 100ms to mask cache hit vs miss timing
+    val elapsed = System.nanoTime() - startTime
+    val minDelayNanos = 100_000_000L // 100ms
+    if (elapsed < minDelayNanos) {
+      Thread.sleep((minDelayNanos - elapsed) / 1_000_000)
     }
-    val result = passwordEncoder.matches(token, tokenHash)
-    tokenEqualityCache.put(key, result)
+
     return result
+  }
+
+  /**
+   * Compute SHA-256 hash for cache key generation.
+   *
+   * @param input The string to hash
+   * @return Hex-encoded SHA-256 hash
+   */
+  private fun sha256(input: String): String {
+    val digest = java.security.MessageDigest.getInstance("SHA-256")
+    return digest.digest(input.toByteArray()).fold("") { str, byte -> str + "%02x".format(byte) }
   }
 
   /**
@@ -203,13 +222,13 @@ open class OgiriTokenService<T : OgiriToken>(
   }
 
   @Transactional(readOnly = true)
-  fun getAllByUserId(userId: Long): List<T> = repository.findAllByUserId(userId)
+  fun getAllByUserId(userId: Long): List<T> = repository.findByUserIdOrderByUpdatedAtDesc(userId)
 
   @Transactional(readOnly = true)
   fun getByUserIdAndClient(
       userId: Long,
       client: String,
-  ): T? = repository.findByUserIdAndClient(userId, client)
+  ): T? = repository.findByUserIdAndClient(userId, client).orElse(null)
 
   @Transactional
   fun deleteToken(
@@ -253,7 +272,9 @@ open class OgiriTokenService<T : OgiriToken>(
     var totalDeleted = 0
     var deleted: Int
     do {
-      deleted = repository.deleteExpiredBatch(now, batchSize)
+      val expired = repository.findByExpiryAtBefore(now).take(batchSize)
+      expired.forEach { repository.delete(it) }
+      deleted = expired.size
       totalDeleted += deleted
     } while (deleted == batchSize)
     return totalDeleted
@@ -395,10 +416,21 @@ open class OgiriTokenService<T : OgiriToken>(
    */
   protected open fun findTokenCandidates(tokenValue: String): List<T> {
     val prefix = extractTokenPrefix(tokenValue)
-    val candidates = repository.findValidTokensByPrefix(prefix)
+    val candidates =
+        repository.findByTokenPrefixAndTokenTypeAndExpiryAtAfter(
+            prefix,
+            OgiriTokenType.APP.label,
+            Instant.now(),
+        )
     // Fall back to all tokens if no candidates found (backwards compatibility for tokens without
     // prefix)
-    return candidates.ifEmpty { repository.findAllByTokenType(OgiriTokenType.APP.label) }
+    if (candidates.isEmpty()) {
+      logger.warn(
+          "Token prefix lookup found no candidates, falling back to full scan. " +
+              "This may indicate tokens created before prefix indexing was enabled.")
+      return repository.findByTokenType(OgiriTokenType.APP.label)
+    }
+    return candidates
   }
 
   @Transactional
@@ -519,7 +551,7 @@ open class OgiriTokenService<T : OgiriToken>(
    */
   @Transactional
   fun cleanOldTokens(user: OgiriUser) {
-    val tokens = repository.findAllByUserId(user.getOgiriUserId())
+    val tokens = repository.findByUserIdOrderByUpdatedAtDesc(user.getOgiriUserId())
     if (tokens.isEmpty()) return
 
     val registrations = cachedRegistrations
@@ -629,11 +661,19 @@ open class OgiriTokenService<T : OgiriToken>(
       issuedSubTokens: Map<String, T>? = null,
   ): AuthHeader {
     val appToken = getByUserIdAndClient(user.getOgiriUserId(), client)
+
+    // Batch fetch all sub-tokens to avoid N+1 queries
+    val subClients = cachedRegistrations.map { it.clientIdFor(client) }
+    val storedTokens =
+        repository.findByUserIdAndClientIn(user.getOgiriUserId(), subClients).associateBy {
+          it.client
+        }
+
     val subHeaders = mutableMapOf<String, SubTokenHeader>()
     cachedRegistrations.forEach { reg ->
       val subClient = reg.clientIdFor(client)
       val provided = issuedSubTokens?.get(reg.name)
-      val stored = getByUserIdAndClient(user.getOgiriUserId(), subClient)
+      val stored = storedTokens[subClient]
       val chosen = provided ?: stored
       val plain = provided?.plainToken ?: chosen?.plainToken
       val expiry = chosen?.expiryAt?.toString()
@@ -687,11 +727,15 @@ open class OgiriTokenService<T : OgiriToken>(
       email: String,
       password: String,
   ) {
-    val user =
-        userDirectory.findByEmail(email)
-            ?: throw SecurityServiceException("error.auth.invalid_credentials")
-    val matches = passwordEncoder.matches(password, user.password)
-    if (!matches) throw SecurityServiceException("error.auth.invalid_credentials")
+    val user = userDirectory.findByEmail(email)
+    if (user == null) {
+      // Constant-time dummy comparison to prevent timing enumeration
+      passwordEncoder.matches(password, DUMMY_HASH)
+      throw SecurityServiceException("error.auth.invalid_credentials")
+    }
+    if (!passwordEncoder.matches(password, user.password)) {
+      throw SecurityServiceException("error.auth.invalid_credentials")
+    }
 
     val authentication =
         UsernamePasswordAuthenticationToken(user, "[PROTECTED_PASSWORD]", user.authorities)
@@ -701,6 +745,13 @@ open class OgiriTokenService<T : OgiriToken>(
     val authHeaders = createNewAuthToken(user.getOgiriUserId(), null)
     response.appendAuthHeaders(authHeaders, properties.cookies)
     userDirectory.recordSuccessfulLogin(user.getOgiriUserId())
+  }
+
+  companion object {
+    private val logger = LoggerFactory.getLogger(OgiriTokenService::class.java)
+
+    // Pre-computed BCrypt hash for timing normalization
+    private const val DUMMY_HASH = "\$2a\$10\$dummyhashvalueforconstanttimecheck"
   }
 
   @Transactional
@@ -810,9 +861,9 @@ open class OgiriTokenService<T : OgiriToken>(
     }
 
     val all =
-        repository.findAllByUserIdAndTokenSubtype(user.getOgiriUserId(), subTokenName).filter {
-          OgiriTokenType.of(it.tokenType) == OgiriTokenType.SUB
-        }
+        repository
+            .findByUserIdAndTokenSubtypeOrderByUpdatedAtDesc(user.getOgiriUserId(), subTokenName)
+            .filter { OgiriTokenType.of(it.tokenType) == OgiriTokenType.SUB }
     return all.any { tokenMatches(it, tokenField) && registration.validate(tokenField) }
   }
 
@@ -833,9 +884,9 @@ open class OgiriTokenService<T : OgiriToken>(
   ): OgiriToken? {
     val registration = cachedRegistrations.find { it.name == subtype } ?: return null
 
-    return repository.findAllByUserIdAndTokenSubtype(userId, subtype).firstOrNull { token ->
-      OgiriTokenType.of(token.tokenType) == OgiriTokenType.SUB
-    }
+    return repository
+        .findByUserIdAndTokenSubtypeOrderByUpdatedAtDesc(userId, subtype)
+        .firstOrNull { token -> OgiriTokenType.of(token.tokenType) == OgiriTokenType.SUB }
   }
 
   /**
@@ -854,7 +905,7 @@ open class OgiriTokenService<T : OgiriToken>(
       subtypeName: String,
   ): Boolean {
     val tokens =
-        repository.findAllByUserIdAndTokenSubtype(userId, subtypeName).filter {
+        repository.findByUserIdAndTokenSubtypeOrderByUpdatedAtDesc(userId, subtypeName).filter {
           OgiriTokenType.of(it.tokenType) == OgiriTokenType.SUB
         }
 

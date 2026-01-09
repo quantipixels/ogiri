@@ -15,7 +15,7 @@ package com.quantipixels.ogiri.samples.java;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.quantipixels.ogiri.samples.java.entity.SampleToken;
-import com.quantipixels.ogiri.samples.java.repository.SampleTokenJpaRepository;
+import com.quantipixels.ogiri.samples.java.repository.SampleTokenRepository;
 import com.quantipixels.ogiri.samples.java.service.SampleTokenService;
 import java.util.List;
 import java.util.Set;
@@ -33,7 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 class MultiClientSessionTest {
 
   @Autowired private SampleTokenService tokenService;
-  @Autowired private SampleTokenJpaRepository tokenRepository;
+  @Autowired private SampleTokenRepository tokenRepository;
 
   private static final Long TEST_USER_ID = 1L;
 
@@ -49,7 +49,7 @@ class MultiClientSessionTest {
     tokenService.createNewAuthToken(TEST_USER_ID, "web");
     tokenService.createNewAuthToken(TEST_USER_ID, "desktop");
 
-    List<SampleToken> tokens = tokenRepository.findAllByUserId(TEST_USER_ID);
+    List<SampleToken> tokens = tokenRepository.findByUserIdOrderByUpdatedAtDesc(TEST_USER_ID);
 
     assertEquals(3, tokens.size());
 
@@ -69,7 +69,7 @@ class MultiClientSessionTest {
     // Logout from mobile only
     tokenService.deleteToken(TEST_USER_ID, "mobile");
 
-    List<SampleToken> remaining = tokenRepository.findAllByUserId(TEST_USER_ID);
+    List<SampleToken> remaining = tokenRepository.findByUserIdOrderByUpdatedAtDesc(TEST_USER_ID);
     assertEquals(2, remaining.size());
 
     Set<String> clients =
@@ -86,12 +86,12 @@ class MultiClientSessionTest {
     tokenService.createNewAuthToken(TEST_USER_ID, "web");
     tokenService.createNewAuthToken(TEST_USER_ID, "desktop");
 
-    assertEquals(3, tokenRepository.findAllByUserId(TEST_USER_ID).size());
+    assertEquals(3, tokenRepository.findByUserIdOrderByUpdatedAtDesc(TEST_USER_ID).size());
 
     // Logout from all clients
     tokenService.deleteAllForUser(TEST_USER_ID);
 
-    assertEquals(0, tokenRepository.findAllByUserId(TEST_USER_ID).size());
+    assertEquals(0, tokenRepository.findByUserIdOrderByUpdatedAtDesc(TEST_USER_ID).size());
   }
 
   @Test
@@ -105,7 +105,7 @@ class MultiClientSessionTest {
     // Bulk logout from mobile and web
     tokenService.deleteToken(TEST_USER_ID, List.of("mobile", "web"));
 
-    List<SampleToken> remaining = tokenRepository.findAllByUserId(TEST_USER_ID);
+    List<SampleToken> remaining = tokenRepository.findByUserIdOrderByUpdatedAtDesc(TEST_USER_ID);
     assertEquals(2, remaining.size());
 
     Set<String> clients =
@@ -123,14 +123,14 @@ class MultiClientSessionTest {
     tokenService.createNewAuthToken(user1, "web");
     tokenService.createNewAuthToken(user2, "mobile");
 
-    assertEquals(2, tokenRepository.findAllByUserId(user1).size());
-    assertEquals(1, tokenRepository.findAllByUserId(user2).size());
+    assertEquals(2, tokenRepository.findByUserIdOrderByUpdatedAtDesc(user1).size());
+    assertEquals(1, tokenRepository.findByUserIdOrderByUpdatedAtDesc(user2).size());
 
     // Deleting user1's tokens doesn't affect user2
     tokenService.deleteAllForUser(user1);
 
-    assertEquals(0, tokenRepository.findAllByUserId(user1).size());
-    assertEquals(1, tokenRepository.findAllByUserId(user2).size());
+    assertEquals(0, tokenRepository.findByUserIdOrderByUpdatedAtDesc(user1).size());
+    assertEquals(1, tokenRepository.findByUserIdOrderByUpdatedAtDesc(user2).size());
   }
 
   @Test
@@ -147,7 +147,7 @@ class MultiClientSessionTest {
 
     // Should still have only one token for this client
     List<SampleToken> tokens =
-        tokenRepository.findAllByUserId(TEST_USER_ID).stream()
+        tokenRepository.findByUserIdOrderByUpdatedAtDesc(TEST_USER_ID).stream()
             .filter(t -> "mobile".equals(t.getClient()))
             .toList();
 

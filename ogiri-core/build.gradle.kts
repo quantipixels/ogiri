@@ -45,6 +45,9 @@ dependencies {
   // - Custom JDBC implementation with JdbcTemplate
   // - Other persistence mechanism of choice
   implementation("org.springframework.boot:spring-boot-autoconfigure")
+  // Optional Spring Data dependency for @NoRepositoryBean annotation
+  // Users who use Spring Data will have this at runtime
+  compileOnly("org.springframework.data:spring-data-commons")
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
   implementation("com.github.ben-manes.caffeine:caffeine:3.2.3")
 
@@ -87,6 +90,10 @@ publishing {
   publications {
     create<MavenPublication>("mavenJava") {
       from(components["java"])
+      versionMapping {
+        usage("java-api") { fromResolutionOf("runtimeClasspath") }
+        usage("java-runtime") { fromResolutionResult() }
+      }
       pom {
         name.set("ogiri")
         description.set(

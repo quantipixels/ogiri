@@ -66,6 +66,13 @@ ogiri-core/src/main/kotlin/com/quantipixels/ogiri/security/
 - All files must have Apache 2.0 license header (see `spotless.license.kt`)
 - Run `./gradlew spotlessApply` before committing
 
+### Comment Style
+
+- No banner-style comments with `====` or `----` separators
+- No floating section comments with blank lines before the code they describe
+- Comments must be directly attached to what they document
+- Standard KDoc/Javadoc for public APIs
+
 ### Testing
 
 - JUnit 5 with Spring Boot Test
@@ -85,7 +92,7 @@ ogiri:
     batch-grace-seconds: 5 # Batch request window
     token-lifespan-days: 14 # Token TTL
     rotate-on-write-only: false # Only rotate on POST/PUT/DELETE
-    rotate-stale-seconds: 0 # Force rotation threshold (0=disabled, recommend 3600 for prod)
+    rotate-stale-seconds: 3600 # Force rotation threshold (default: 3600, 0=disabled)
     register-token-service: true # Auto-register TokenService
     max-bearer-token-size: 8192 # Max bearer token size in bytes (DoS protection)
   cleanup:
@@ -105,7 +112,7 @@ ogiri:
 
 **Startup Warnings:** The library logs warnings for insecure configurations:
 
-- `rotate-stale-seconds: 0` - Disables time-based rotation
+- `rotate-stale-seconds: 0` - Disables time-based rotation (not recommended)
 - `secure: false` - Allows cookies over HTTP
 - `http-only: false` - Exposes cookies to JavaScript
 
