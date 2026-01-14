@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.1] - 2026-01-14
+
+### Security Improvements
+
+- **Authentication cookies cleared on 401 responses**: When cookie authentication is enabled (`ogiri.cookies.enabled=true`), the authentication entry point now clears all authentication cookies (access-token, client, uid, expiry) on 401 Unauthorized responses. This prevents clients from being stuck in a 401 loop with stale HttpOnly cookies and aligns with OWASP session management best practices.
+
+### Changed
+
+- `OgiriAuthenticationEntryPoint` now requires `OgiriConfigurationProperties` dependency to access cookie configuration
+
+### Added
+
+- Cookie clearing logic in `OgiriAuthenticationEntryPoint.clearAuthCookies()` method
+- Comprehensive test suite for 401 cookie clearing behavior (`OgiriAuthenticationEntryPointTest`)
+- Debug logging when authentication cookies are cleared
+
 ## [1.4.0] - 2026-01-08
 
 ### Breaking Changes

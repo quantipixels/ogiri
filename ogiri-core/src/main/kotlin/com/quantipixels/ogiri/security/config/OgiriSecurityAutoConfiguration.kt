@@ -189,13 +189,19 @@ class OgiriSecurityAutoConfiguration {
    * Creates an OgiriAuthenticationEntryPoint that produces localized authentication failure
    * responses.
    *
+   * When cookies are enabled, the entry point clears authentication cookies on 401 responses to
+   * prevent clients from being stuck in a 401 loop with stale credentials.
+   *
    * @param messageSource source of localized messages used by the entry point
-   * @return an OgiriAuthenticationEntryPoint configured with the given MessageSource
+   * @param properties Ogiri configuration properties containing cookie settings
+   * @return an OgiriAuthenticationEntryPoint configured with the given MessageSource and properties
    */
   @Bean
   @ConditionalOnMissingBean(OgiriAuthenticationEntryPoint::class)
-  fun ogiriAuthenticationEntryPoint(messageSource: MessageSource): OgiriAuthenticationEntryPoint =
-      OgiriAuthenticationEntryPoint(messageSource)
+  fun ogiriAuthenticationEntryPoint(
+      messageSource: MessageSource,
+      properties: OgiriConfigurationProperties,
+  ): OgiriAuthenticationEntryPoint = OgiriAuthenticationEntryPoint(messageSource, properties)
 
   /**
    * Creates an OgiriTokenAuthenticationFilter configured with the resolved token service and
