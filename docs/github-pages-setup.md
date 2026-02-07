@@ -6,7 +6,7 @@ This guide explains how the ogiri documentation is deployed to GitHub Pages with
 
 Documentation is automatically deployed to GitHub Pages on every push to `main` or `ori` branches. Multiple versions are supported, allowing users to view docs for different ogiri releases.
 
-**Live Site:** https://mosobande.github.io/ogiri
+**Live Site:** https://quantipixels.github.io/ogiri
 
 ## Automatic Deployment
 
@@ -74,13 +74,13 @@ This creates two deployments:
 **Latest (root):**
 
 ```text
-https://mosobande.github.io/ogiri/
+https://quantipixels.github.io/ogiri/
 ```
 
 **Specific version:**
 
 ```text
-https://mosobande.github.io/ogiri/1.1.0/
+https://quantipixels.github.io/ogiri/1.1.0/
 ```
 
 **Version switcher:** Users can select versions from dropdown (Material theme)
@@ -135,8 +135,8 @@ Key sections for documentation deployment:
 
 ```yaml
 site_name: Ògiri Security
-site_url: https://mosobande.github.io/ogiri
-repo_url: https://github.com/mosobande/ogiri
+site_url: https://quantipixels.github.io/ogiri
+repo_url: https://github.com/quantipixels/ogiri
 
 extra:
   version:
@@ -266,7 +266,7 @@ pip install mkdocs-material mkdocs-mike
 
 ### Monitor site health
 
-- Visit: https://mosobande.github.io/ogiri
+- Visit: https://quantipixels.github.io/ogiri
 - Check latest version loads
 - Verify dropdown shows all versions
 - Test navigation between pages

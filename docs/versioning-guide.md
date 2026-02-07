@@ -11,7 +11,7 @@ This guide explains how ogiri uses **mike** to manage versioned documentation on
 - Version source: `.ogiri-version` file (currently: 1.1.0)
 - Provider: `mike`
 - Default version: `latest` (alias to current version)
-- GitHub Pages: https://mosobande.github.io/ogiri
+- GitHub Pages: https://quantipixels.github.io/ogiri
 
 ## How Versioning Works
 
@@ -30,7 +30,7 @@ This guide explains how ogiri uses **mike** to manage versioned documentation on
          ↓
 6. Update "latest" alias to point to new version
          ↓
-7. Available at https://mosobande.github.io/ogiri
+7. Available at https://quantipixels.github.io/ogiri
 ```
 
 ### Version Directory Structure
@@ -123,7 +123,7 @@ Three jobs configured:
 
 3. **Automatic deployment:**
    - Workflow triggers automatically
-   - Docs built and deployed to https://mosobande.github.io/ogiri/1.2.0
+   - Docs built and deployed to https://quantipixels.github.io/ogiri/1.2.0
    - "latest" alias updated to point to 1.2.0
 
 ### Manual Deployment

@@ -69,4 +69,4 @@ jobs:
       - name: Verify deployment
         run: |
           echo "✓ Documentation deployed successfully"
-          echo "Available at: https://mosobande.github.io/ogiri"
+          echo "Available at: https://quantipixels.github.io/ogiri"

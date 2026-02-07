@@ -116,24 +116,26 @@ else
 fi
 
 echo -e "${YELLOW}Pushing tag to GitHub...${NC}"
+# A1: Use 'origin' remote (standard convention) instead of 'github'
+REMOTE="${GIT_REMOTE:-origin}"
 if [ "$FORCE_REUSE" = true ]; then
-  git -C "$PROJECT_ROOT" push -f origin "$TAG"
-  echo -e "${GREEN}✓ Tag force-pushed${NC}"
+  git -C "$PROJECT_ROOT" push -f "$REMOTE" "$TAG"
+  echo -e "${GREEN}✓ Tag force-pushed to $REMOTE${NC}"
 else
-  git -C "$PROJECT_ROOT" push origin "$TAG"
-  echo -e "${GREEN}✓ Tag pushed${NC}"
+  git -C "$PROJECT_ROOT" push "$REMOTE" "$TAG"
+  echo -e "${GREEN}✓ Tag pushed to $REMOTE${NC}"
 fi
 
 echo ""
 echo -e "${GREEN}Release initiated successfully!${NC}"
 echo ""
 echo "Release details:"
-echo "  GitHub: https://github.com/mosobande/ogiri/releases/tag/$TAG"
-echo "  Workflow: https://github.com/mosobande/ogiri/actions/workflows/release.yml"
+echo "  GitHub: https://github.com/quantipixels/ogiri/releases/tag/$TAG"
+echo "  Workflow: https://github.com/quantipixels/ogiri/actions/workflows/release.yml"
 echo ""
 echo "The automated workflows will:"
 echo "  - release.yml: Create GitHub release"
 echo "  - docs.yml: Build and deploy versioned documentation"
 echo "  - Maven workflows: Deploy independently (not blocked by each other)"
 echo ""
-echo "Check workflow status at: https://github.com/mosobande/ogiri/actions"
+echo "Check workflow status at: https://github.com/quantipixels/ogiri/actions"

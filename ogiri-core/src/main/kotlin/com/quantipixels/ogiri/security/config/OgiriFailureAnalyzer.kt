@@ -60,7 +60,7 @@ class OgiriMissingBeanFailureAnalyzer : AbstractFailureAnalyzer<NoSuchBeanDefini
                 |      // ... implement all required methods
                 |  }
                 |
-                |Documentation: https://mosobande.github.io/ogiri/database/
+                |Documentation: https://quantipixels.github.io/ogiri/database/
               """
                   .trimMargin(),
               cause,
@@ -101,7 +101,7 @@ class OgiriMissingBeanFailureAnalyzer : AbstractFailureAnalyzer<NoSuchBeanDefini
                 |      // ... UserDetails methods
                 |  }
                 |
-                |Documentation: https://mosobande.github.io/ogiri/quickstart/
+                |Documentation: https://quantipixels.github.io/ogiri/quickstart/
               """
                   .trimMargin(),
               cause,
@@ -126,7 +126,7 @@ class OgiriMissingBeanFailureAnalyzer : AbstractFailureAnalyzer<NoSuchBeanDefini
                 |
                 |Routes defined here bypass authentication.
                 |
-                |Documentation: https://mosobande.github.io/ogiri/configuration/
+                |Documentation: https://quantipixels.github.io/ogiri/configuration/
               """
                   .trimMargin(),
               cause,

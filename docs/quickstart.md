@@ -243,4 +243,4 @@ expiry: 2025-12-25T00:00:00Z
 | [Database Integration](database.md)                                        | JPA, MongoDB, Redis, custom implementations      |
 | [Sub-tokens](sub-tokens.md)                                                | Device tokens, chat tokens, API tokens           |
 | [Authentication Flow](authentication.md)                                   | Request lifecycle, rotation policies, headers    |
-| [Sample Applications](https://github.com/mosobande/ogiri/tree/main/sample) | Complete Java and Kotlin examples                |
+| [Sample Applications](https://github.com/quantipixels/ogiri/tree/main/sample) | Complete Java and Kotlin examples                |

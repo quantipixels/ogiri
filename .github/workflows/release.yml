@@ -68,7 +68,7 @@ jobs:
             implementation 'com.quantipixels.ogiri:ogiri-core:${{ steps.version.outputs.VERSION }}'
             ```
 
-            For details, see [Changelog](https://mosobande.github.io/ogiri/changelog/) and [Documentation](https://mosobande.github.io/ogiri/).
+            For details, see [Changelog](https://quantipixels.github.io/ogiri/changelog/) and [Documentation](https://quantipixels.github.io/ogiri/).
           draft: false
           prerelease: false
         env:

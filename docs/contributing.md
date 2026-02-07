@@ -6,7 +6,7 @@ Thank you for your interest in contributing!
 
 ```bash
 # Clone and build
-git clone https://github.com/mosobande/ogiri.git
+git clone https://github.com/quantipixels/ogiri.git
 cd ogiri
 ./gradlew build
 
@@ -21,7 +21,7 @@ cd ogiri
 
 ### Reporting Bugs
 
-Before reporting, check [existing issues](https://github.com/mosobande/ogiri/issues).
+Before reporting, check [existing issues](https://github.com/quantipixels/ogiri/issues).
 
 Include:
 

@@ -38,4 +38,4 @@ echo -e "${BLUE}Deploying version $VERSION to GitHub Pages...${NC}"
 mike deploy --push --update-aliases "$VERSION" latest
 
 echo -e "${GREEN}✓ Documentation deployed successfully!${NC}"
-echo -e "${GREEN}✓ Access at: https://mosobande.github.io/ogiri${NC}"
+echo -e "${GREEN}✓ Access at: https://quantipixels.github.io/ogiri${NC}"

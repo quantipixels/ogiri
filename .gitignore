@@ -44,7 +44,18 @@ out/
 ### Kotlin ###
 .kotlin
 
+### AI ###
+.claude/
+.tldr/
+.tldrignore
+.ai/
+.archive/
+
 logs/
 .DS_Store
 site/
 .claude/settings.local.json
+.analysis/
+node_modules/
+dist/
+**/coverage/

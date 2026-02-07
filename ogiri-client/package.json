@@ -1,0 +1,48 @@
+{
+  "name": "ogiri-security-client",
+  "version": "0.1.0",
+  "description": "TypeScript client for Ogiri opaque token authentication",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "ogiri",
+    "authentication",
+    "opaque-token",
+    "token-rotation",
+    "security"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/quantipixels/ogiri.git",
+    "directory": "ogiri-client"
+  },
+  "devDependencies": {
+    "@types/node": "^25.2.1",
+    "@vitest/coverage-v8": "^1.6.1",
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.2.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

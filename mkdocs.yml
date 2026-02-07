@@ -1,8 +1,8 @@
 site_name: Ògiri Security
 site_description: Token-based authentication for Spring Boot with pluggable sub-tokens.
-site_url: https://mosobande.github.io/ogiri
-repo_url: https://github.com/mosobande/ogiri
-repo_name: mosobande/ogiri
+site_url: https://quantipixels.github.io/ogiri
+repo_url: https://github.com/quantipixels/ogiri
+repo_name: quantipixels/ogiri
 docs_dir: docs
 
 theme:
@@ -35,7 +35,7 @@ extra:
     default: latest
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/mosobande/ogiri
+      link: https://github.com/quantipixels/ogiri
 
 plugins:
   - search:

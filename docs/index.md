@@ -98,7 +98,7 @@ That's it. Ògiri auto-configures the security filter chain.
 ### Reference
 
 - [Authentication Flow](authentication.md) - Request lifecycle and headers
-- [Sample Applications](https://github.com/mosobande/ogiri/tree/main/sample) - Java and Kotlin examples
+- [Sample Applications](https://github.com/quantipixels/ogiri/tree/main/sample) - Java and Kotlin examples
 
 ### Contributing
 
