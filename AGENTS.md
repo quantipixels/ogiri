@@ -4,8 +4,11 @@ Kotlin Spring Boot 3.5+ security library for token-based authentication.
 
 ## Quick Start
 
+**Java Version:** This project requires **Java 17** for development. Java 25 is not supported due to tooling incompatibilities (Kotlin compiler, Spotless/google-java-format).
+
 **Kotlin/Java (Gradle):**
 ```bash
+java -version                # Should show Java 17
 ./gradlew build              # Build & test all
 ./gradlew spotlessApply      # Format code
 ./gradlew :ogiri-core:test   # Core tests only
