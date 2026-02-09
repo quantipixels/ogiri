@@ -3,6 +3,7 @@
 ## Formatting (Spotless + .editorconfig)
 
 ### Auto-formatting
+
 ```bash
 ./gradlew spotlessApply     # Format all code
 ./gradlew spotlessCheck     # Check formatting
@@ -10,12 +11,12 @@
 
 ### Formatter Configuration
 
-| Language | Formatter | Version |
-|----------|-----------|---------|
-| **Kotlin/KTS** | ktfmt | 0.43 |
-| **Java** | google-java-format | 1.22.0 |
-| **Markdown/YAML/TOML** | Prettier | (trim + trailing newline) |
-| **SQL** | DBeaver profile | - |
+| Language               | Formatter          | Version                   |
+| ---------------------- | ------------------ | ------------------------- |
+| **Kotlin/KTS**         | ktfmt              | 0.43                      |
+| **Java**               | google-java-format | 1.22.0                    |
+| **Markdown/YAML/TOML** | Prettier           | (trim + trailing newline) |
+| **SQL**                | DBeaver profile    | -                         |
 
 ⚠️ **Do not modify formatter versions**
 
@@ -38,6 +39,7 @@
 - **Avoid fully qualified names** in code when import is possible
 
 ### Import Order
+
 1. Kotlin/Java stdlib
 2. Third-party libraries
 3. Project packages
@@ -46,23 +48,28 @@
 ## Kotlin Style
 
 ### General
+
 - **Indentation**: 2 spaces (no tabs)
 - **Names**: `camelCase` for functions/properties, `PascalCase` for classes/interfaces/objects
 
 ### Null Safety
+
 - **Prefer** nullable types over `!!`
 - **Only use `!!`** in test code
 
 ### Immutability
+
 - Use `data classes` where appropriate
 - Favor `val` over `var`
 
 ### Functions
+
 - Use **expression bodies** for simple returns
 - Favor **`when`** over cascaded `if` where clear
 - Extract helpers in same file when scoped
 
 ### Type Safety
+
 - Prefer **`sealed`/`enum`** for constrained types
 - Avoid magic strings
 

@@ -108,8 +108,8 @@ See the [full Quickstart Guide](https://quantipixels.github.io/ogiri/quickstart/
 
 ## Documentation
 
-| Topic                                                                                  | Description                                |
-| -------------------------------------------------------------------------------------- | ------------------------------------------ |
+| Topic                                                                                     | Description                                |
+| ----------------------------------------------------------------------------------------- | ------------------------------------------ |
 | [Quickstart](https://quantipixels.github.io/ogiri/quickstart/)                            | 5-minute integration guide                 |
 | [Interface Design](https://quantipixels.github.io/ogiri/core-concepts/interface-design/)  | Architecture and design philosophy         |
 | [Configuration](https://quantipixels.github.io/ogiri/guides/configuration/)               | Token rotation, cleanup, batch windows     |

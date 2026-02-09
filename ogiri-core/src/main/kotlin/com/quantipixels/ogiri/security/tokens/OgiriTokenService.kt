@@ -12,16 +12,20 @@
  */
 package com.quantipixels.ogiri.security.tokens
 
+import com.fasterxml.jackson.core.JsonProcessingException
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.quantipixels.ogiri.security.config.OgiriConfigurationProperties
 import com.quantipixels.ogiri.security.core.AuthHeader
 import com.quantipixels.ogiri.security.core.IdentifierPolicy
 import com.quantipixels.ogiri.security.core.JsonCodec
+import com.quantipixels.ogiri.security.core.OgiriService
 import com.quantipixels.ogiri.security.core.SecurityServiceException
 import com.quantipixels.ogiri.security.core.SubTokenHeader
 import com.quantipixels.ogiri.security.core.appendAuthHeaders
 import com.quantipixels.ogiri.security.core.extractAuthHeader
+import com.quantipixels.ogiri.security.spi.OgiriAuditHook
+import com.quantipixels.ogiri.security.spi.OgiriRateLimitHook
 import com.quantipixels.ogiri.security.spi.OgiriUser
 import com.quantipixels.ogiri.security.spi.OgiriUserDirectory
 import jakarta.servlet.http.HttpServletRequest
@@ -31,20 +35,14 @@ import java.time.temporal.ChronoUnit
 import java.util.Base64
 import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.ObjectProvider
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource
-import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-
-/**
- * Length of token prefix stored for efficient database lookups.
- *
- * With 8 characters from a base62 alphabet, there are 62^8 (~218 trillion) possible prefixes,
- * providing excellent collision resistance while minimizing information leakage.
- */
-const val TOKEN_PREFIX_LENGTH = 8
+import org.springframework.web.context.request.RequestContextHolder
+import org.springframework.web.context.request.ServletRequestAttributes
 
 /**
  * Threshold ratio for triggering token cleanup.
@@ -67,7 +65,7 @@ data class OgiriGeneratedTokens<T : OgiriToken>(
  * tokenFactory() to customize token creation if needed, or supply tokens directly through the
  * public API methods.
  */
-@Service
+@OgiriService
 open class OgiriTokenService<T : OgiriToken>(
     private val repository: OgiriTokenRepository<T>,
     private val passwordEncoder: PasswordEncoder,
@@ -75,7 +73,13 @@ open class OgiriTokenService<T : OgiriToken>(
     private val identifierPolicy: IdentifierPolicy,
     private val subTokenRegistry: OgiriSubTokenRegistry,
     protected val properties: OgiriConfigurationProperties,
+    auditHookProvider: ObjectProvider<OgiriAuditHook>,
+    rateLimitHookProvider: ObjectProvider<OgiriRateLimitHook>,
 ) {
+  private val auditHook: OgiriAuditHook =
+      auditHookProvider.getIfAvailable { object : OgiriAuditHook {} }
+  private val rateLimitHook: OgiriRateLimitHook =
+      rateLimitHookProvider.getIfAvailable { object : OgiriRateLimitHook {} }
   private val maxClients: Long = properties.auth.maxClients
   private val batchGraceSeconds: Long = properties.auth.batchGraceSeconds
   private val tokenLifespanDays: Long = properties.auth.tokenLifespanDays
@@ -347,8 +351,9 @@ open class OgiriTokenService<T : OgiriToken>(
     val tokenClient = client ?: identifierPolicy.generate()
     val generatedToken = identifierPolicy.generate()
     val hashedToken = passwordEncoder.encode(generatedToken)
-    val tokenPrefixValue = extractTokenPrefix(generatedToken)
     var token = client?.let { getByUserIdAndClient(user.getOgiriUserId(), it) }
+    val isRotation = token != null && token.id != 0L && tokenType == OgiriTokenType.APP
+
     if (token == null) {
       token =
           tokenFactory(
@@ -360,77 +365,28 @@ open class OgiriTokenService<T : OgiriToken>(
               expiry = expiry,
               plainTokenValue = generatedToken,
           )
-      token.tokenUpdatedAt = Instant.now()
-      token.plainToken = generatedToken
-      token.tokenPrefix = tokenPrefixValue
     }
-    token.apply {
-      expiryAt = expiry
-      if (tokenType == OgiriTokenType.APP) {
-        if (id != 0L) {
-          previousToken = lastToken
-          lastToken = this.token
-        }
-        this.token = hashedToken
-        tokenUpdatedAt = Instant.now()
-        plainToken = generatedToken
-        tokenPrefix = tokenPrefixValue
-      } else {
-        this.token = hashedToken
-        tokenUpdatedAt = Instant.now()
-        plainToken = generatedToken
-        tokenPrefix = tokenPrefixValue
-      }
+
+    // Rotation bookkeeping: preserve previous token for batch grace period
+    if (isRotation) {
+      token.previousToken = token.lastToken
+      token.lastToken = token.token
     }
+
+    // Update token fields (common to both new and existing tokens)
+    token.expiryAt = expiry
+    token.token = hashedToken
+    token.tokenUpdatedAt = Instant.now()
+    token.plainToken = generatedToken
+
     val savedToken = repository.save(token)
-    // Invalidate batch timestamp cache since token was updated
     batchTimestampCache.invalidate(batchCacheKey(user.getOgiriUserId(), savedToken.client))
-    return savedToken
-  }
 
-  /**
-   * Extract the prefix from a plaintext token for efficient database lookups.
-   *
-   * The prefix is the first 8 characters of the token. This is stored in plaintext to enable
-   * indexed lookups, avoiding O(n) BCrypt comparisons.
-   *
-   * @param tokenValue The plaintext token value
-   * @return The 8-character prefix, or the full token if shorter than 8 characters
-   */
-  protected open fun extractTokenPrefix(tokenValue: String): String =
-      tokenValue.take(TOKEN_PREFIX_LENGTH)
-
-  /**
-   * Find token candidates for validation.
-   *
-   * This hook method allows subclasses to customize token lookup strategy. The default
-   * implementation uses prefix-based lookup when available, falling back to loading all tokens.
-   *
-   * Subclasses can override this method to implement:
-   * - Redis-cached lookups
-   * - Custom sharding strategies
-   * - Alternative indexing schemes
-   *
-   * @param tokenValue The plaintext token to find candidates for
-   * @return List of tokens that might match the given token value
-   */
-  protected open fun findTokenCandidates(tokenValue: String): List<T> {
-    val prefix = extractTokenPrefix(tokenValue)
-    val candidates =
-        repository.findByTokenPrefixAndTokenTypeAndExpiryAtAfter(
-            prefix,
-            OgiriTokenType.APP.label,
-            Instant.now(),
-        )
-    // Fall back to all tokens if no candidates found (backwards compatibility for tokens without
-    // prefix)
-    if (candidates.isEmpty()) {
-      logger.warn(
-          "Token prefix lookup found no candidates, falling back to full scan. " +
-              "This may indicate tokens created before prefix indexing was enabled.")
-      return repository.findByTokenType(OgiriTokenType.APP.label)
+    if (isRotation) {
+      auditHook.onTokenRotated(user.getOgiriUserId(), savedToken.client)
     }
-    return candidates
+
+    return savedToken
   }
 
   @Transactional
@@ -483,6 +439,10 @@ open class OgiriTokenService<T : OgiriToken>(
                   tokenSubtype = reg.name,
               )
       results[reg.name] = token
+
+      if (existing == null) {
+        auditHook.onSubTokenCreated(user.getOgiriUserId(), parentClient, reg.name)
+      }
     }
     return results
   }
@@ -515,7 +475,10 @@ open class OgiriTokenService<T : OgiriToken>(
   fun createNewAuthToken(
       userId: Long,
       client: String?,
+      request: HttpServletRequest? =
+          (RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes)?.request,
   ): AuthHeader {
+    request?.let { rateLimitHook.beforeTokenCreation(it, userId) }
     val user = userDirectory.findById(userId) ?: throw SecurityServiceException("user.not_found")
     val generatedTokens = createToken(user, client)
     return updateAuthHeader(
@@ -554,27 +517,30 @@ open class OgiriTokenService<T : OgiriToken>(
     val tokens = repository.findByUserIdOrderByUpdatedAtDesc(user.getOgiriUserId())
     if (tokens.isEmpty()) return
 
-    val registrations = cachedRegistrations
     val (appTokens, subTokens) =
         tokens.partition { OgiriTokenType.of(it.tokenType) == OgiriTokenType.APP }
 
-    // Remove orphaned sub-tokens (sub-tokens without corresponding app token)
-    val appClients = appTokens.clientIds()
-    val expectedSubClients = expectedSubClientsFor(appClients, registrations)
-    subTokens.filterOutClientIds(expectedSubClients).forEach { repository.delete(it) }
+    cleanOrphanedSubTokens(subTokens, appTokens)
+    enforceMaxClientsLimit(user, appTokens)
+  }
 
-    // Enforce max clients limit on app tokens
-    if (appTokens.size > maxClients) {
-      val toRemoveCount = (appTokens.size - maxClients).toInt()
-      val sorted =
-          appTokens.sortedWith(
-              compareBy<OgiriToken> { it.lastUsedAt ?: it.updatedAt }.thenBy { it.updatedAt },
-          )
-      val remove = sorted.take(toRemoveCount)
-      remove.forEach { repository.delete(it) }
-      val removeSubClients = expectedSubClientsFor(remove.clientIds(), registrations)
-      deleteToken(user.getOgiriUserId(), removeSubClients)
-    }
+  private fun cleanOrphanedSubTokens(subTokens: List<T>, appTokens: List<T>) {
+    val expectedSubClients = expectedSubClientsFor(appTokens.clientIds(), cachedRegistrations)
+    subTokens.filterOutClientIds(expectedSubClients).forEach { repository.delete(it) }
+  }
+
+  private fun enforceMaxClientsLimit(user: OgiriUser, appTokens: List<T>) {
+    if (appTokens.size <= maxClients) return
+
+    val toRemoveCount = (appTokens.size - maxClients).toInt()
+    val sorted =
+        appTokens.sortedWith(
+            compareBy<OgiriToken> { it.lastUsedAt ?: it.updatedAt }.thenBy { it.updatedAt },
+        )
+    val remove = sorted.take(toRemoveCount)
+    remove.forEach { repository.delete(it) }
+    val removeSubClients = expectedSubClientsFor(remove.clientIds(), cachedRegistrations)
+    deleteToken(user.getOgiriUserId(), removeSubClients)
   }
 
   /**
@@ -727,13 +693,19 @@ open class OgiriTokenService<T : OgiriToken>(
       email: String,
       password: String,
   ) {
+    rateLimitHook.beforeLogin(request, email)
+
     val user = userDirectory.findByEmail(email)
+    val clientIp = request.remoteAddr
+
     if (user == null) {
       // Constant-time dummy comparison to prevent timing enumeration
       passwordEncoder.matches(password, DUMMY_HASH)
+      auditHook.onLoginFailure(email, "user_not_found", clientIp)
       throw SecurityServiceException("error.auth.invalid_credentials")
     }
     if (!passwordEncoder.matches(password, user.password)) {
+      auditHook.onLoginFailure(email, "invalid_password", clientIp)
       throw SecurityServiceException("error.auth.invalid_credentials")
     }
 
@@ -742,9 +714,10 @@ open class OgiriTokenService<T : OgiriToken>(
     authentication.details = WebAuthenticationDetailsSource().buildDetails(request)
     SecurityContextHolder.getContext().authentication = authentication
 
-    val authHeaders = createNewAuthToken(user.getOgiriUserId(), null)
+    val authHeaders = createNewAuthToken(user.getOgiriUserId(), null, request)
     response.appendAuthHeaders(authHeaders, properties.cookies)
     userDirectory.recordSuccessfulLogin(user.getOgiriUserId())
+    auditHook.onLoginSuccess(user.getOgiriUserId(), authHeaders.client!!, clientIp)
   }
 
   companion object {
@@ -773,6 +746,7 @@ open class OgiriTokenService<T : OgiriToken>(
       deleteToken(user.getOgiriUserId(), subClients)
       val authHeaders = buildAuthHeader(user, authHeader.accessToken!!, clientId, null)
       response.appendAuthHeaders(authHeaders, properties.cookies)
+      auditHook.onTokenRevoked(user.getOgiriUserId(), clientId)
     }
   }
 
@@ -822,8 +796,17 @@ open class OgiriTokenService<T : OgiriToken>(
             expiry = values["expiry"] as? String,
         )
       }
-    } catch (_: Exception) {
-      null
+    } catch (e: Exception) {
+      when (e) {
+        is IllegalArgumentException,
+        is JsonProcessingException,
+        is ClassCastException -> {
+          logger.trace(
+              "Sub-bearer decode failed (input length={}): {}", encodedPart.length, e.message)
+          null
+        }
+        else -> throw e
+      }
     }
   }
 

@@ -18,12 +18,14 @@ fun `should rotate token outside batch window`() { ... }
 ## Running Tests
 
 ### All Tests
+
 ```bash
 ./gradlew test                    # All modules
 ./gradlew :ogiri-core:test        # Core only
 ```
 
 ### Single Test Class
+
 ```bash
 # By fully qualified name (preferred)
 ./gradlew :ogiri-core:test --tests "com.quantipixels.ogiri.security.core.AuthHeaderTest"
@@ -33,6 +35,7 @@ fun `should rotate token outside batch window`() { ... }
 ```
 
 ### Single Test Method
+
 ```bash
 # With backticked name
 ./gradlew :ogiri-core:test --tests "com.quantipixels.ogiri.security.tokens.TokenServiceSubTokenTest.`default sub token is issued and returned in headers`"
@@ -42,9 +45,11 @@ fun `should rotate token outside batch window`() { ... }
 ```
 
 ### Re-run Failed Tests
+
 ```bash
 ./gradlew :ogiri-core:test --tests $(cat ogiri-core/build/test-results/test/TESTS-failed.txt)
 ```
+
 (if `TESTS-failed.txt` exists)
 
 ## Test Strategy

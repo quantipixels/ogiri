@@ -16,7 +16,6 @@ import com.quantipixels.ogiri.samples.java.entity.SampleToken;
 import com.quantipixels.ogiri.security.tokens.OgiriTokenRepository;
 import java.time.Instant;
 import java.util.Collection;
-import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -80,13 +79,6 @@ public interface SampleTokenRepository
   @Modifying
   @Query("DELETE FROM SampleToken t WHERE t.expiryAt < ?1")
   int deleteByExpiryAtBefore(Instant cutoff);
-
-  // Optional performance override for prefix lookups (uses index)
-  @Transactional(readOnly = true)
-  @Query(
-      "SELECT t FROM SampleToken t WHERE t.tokenPrefix = ?1 AND t.tokenType = ?2 AND t.expiryAt > ?3")
-  List<SampleToken> findByTokenPrefixAndTokenTypeAndExpiryAtAfter(
-      String prefix, String tokenType, Instant now);
 
   // Optional performance override for count (uses COUNT instead of loading all)
   @Override

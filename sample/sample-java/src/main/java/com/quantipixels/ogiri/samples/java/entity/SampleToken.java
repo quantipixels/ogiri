@@ -28,7 +28,7 @@ import jakarta.persistence.UniqueConstraint;
  *   <li>id (auto-generated)
  *   <li>userId, client, token, tokenType
  *   <li>expiryAt, tokenUpdatedAt, createdAt, updatedAt
- *   <li>previousToken, lastToken, tokenPrefix, tokenSubtype
+ *   <li>previousToken, lastToken, tokenSubtype
  *   <li>lastUsedAt
  *   <li>plainToken (transient, not persisted)
  * </ul>
@@ -41,7 +41,6 @@ import jakarta.persistence.UniqueConstraint;
     indexes = {
       @Index(name = "idx_user_tokens_user_id", columnList = "user_id"),
       @Index(name = "idx_user_tokens_expiry", columnList = "expiry_at"),
-      @Index(name = "idx_user_tokens_prefix", columnList = "token_prefix"),
     },
     uniqueConstraints = {
       @UniqueConstraint(

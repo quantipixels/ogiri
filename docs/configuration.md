@@ -14,7 +14,7 @@ All ogiri properties are prefixed with `ogiri`.
 
 | Property                            | Default | Description                                     |
 | ----------------------------------- | ------- | ----------------------------------------------- |
-| `ogiri.auth.max-clients`            | `24`    | Max active tokens per user                      |
+| `ogiri.auth.max-clients`            | `10`    | Max active tokens per user                      |
 | `ogiri.auth.batch-grace-seconds`    | `5`     | Grace period before rotation                    |
 | `ogiri.auth.token-lifespan-days`    | `14`    | Token lifetime in days                          |
 | `ogiri.auth.max-bearer-token-size`  | `8192`  | Max bearer token size in bytes (DoS protection) |
@@ -45,6 +45,13 @@ All ogiri properties are prefixed with `ogiri`.
 | `ogiri.cookies.same-site` | `Strict` | SameSite attribute (Strict/Lax/None) |
 | `ogiri.cookies.path`      | `"/"`    | Cookie path                          |
 
+### Token Cache
+
+| Property                     | Default | Description                  |
+| ---------------------------- | ------- | ---------------------------- |
+| `ogiri.cache.max-size`       | `10000` | Max cached token comparisons |
+| `ogiri.cache.expiry-minutes` | `60`    | Cache entry TTL in minutes   |
+
 ## Configuration Examples
 
 ### Basic Setup
@@ -54,7 +61,7 @@ ogiri:
   security:
     register-filter: true
   auth:
-    max-clients: 24
+    max-clients: 10
     batch-grace-seconds: 5
     token-lifespan-days: 14
     max-bearer-token-size: 8192
@@ -63,6 +70,9 @@ ogiri:
     enabled: true
     interval-ms: 21600000 # 6 hours
     batch-size: 1000
+  cache:
+    max-size: 10000
+    expiry-minutes: 60
   cookies:
     enabled: true
     secure: true
@@ -128,11 +138,11 @@ ogiri:
 
 The library logs warnings at startup for potentially insecure configurations:
 
-| Configuration                       | Warning                                                |
-| ----------------------------------- | ------------------------------------------------------ |
-| `ogiri.auth.rotate-stale-seconds=0` | Token rotation disabled; consider using default (3600) |
-| `ogiri.cookies.secure=false`        | Enable for HTTPS deployments                           |
-| `ogiri.cookies.http-only=false`     | Enable to prevent XSS cookie theft                     |
+| Configuration                          | Warning                                                |
+| -------------------------------------- | ------------------------------------------------------ |
+| `ogiri.auth.rotate-stale-seconds=3600` | Token rotation disabled; consider using default (3600) |
+| `ogiri.cookies.secure=false`           | Enable for HTTPS deployments                           |
+| `ogiri.cookies.http-only=false`        | Enable to prevent XSS cookie theft                     |
 
 These warnings are informational and do not prevent the application from starting. They help identify security misconfigurations in production environments.
 
@@ -156,6 +166,8 @@ class CustomConfig(private val properties: OgiriConfigurationProperties) {
     ogiriUserDirectory: OgiriUserDirectory,
     identifierPolicy: IdentifierPolicy,
     subTokenRegistry: OgiriSubTokenRegistry,
+    auditHookProvider: ObjectProvider<OgiriAuditHook>,
+    rateLimitHookProvider: ObjectProvider<OgiriRateLimitHook>,
   ): OgiriTokenService<MyToken> =
     MyCustomTokenService(
       tokenRepository,
@@ -163,7 +175,9 @@ class CustomConfig(private val properties: OgiriConfigurationProperties) {
       ogiriUserDirectory,
       identifierPolicy,
       subTokenRegistry,
-      properties.auth,
+      properties,
+      auditHookProvider,
+      rateLimitHookProvider,
     )
 }
 ```
@@ -198,12 +212,12 @@ class SecurityConfig {
 
 ```properties
 ogiri.security.register-filter=true
-ogiri.auth.max-clients=24
+ogiri.auth.max-clients=10
 ogiri.auth.batch-grace-seconds=5
 ogiri.auth.token-lifespan-days=14
 ogiri.auth.max-bearer-token-size=8192
 ogiri.auth.rotate-on-write-only=false
-ogiri.auth.rotate-stale-seconds=0
+ogiri.auth.rotate-stale-seconds=3600
 ogiri.auth.register-token-service=true
 ogiri.cleanup.enabled=true
 ogiri.cleanup.interval-ms=21600000

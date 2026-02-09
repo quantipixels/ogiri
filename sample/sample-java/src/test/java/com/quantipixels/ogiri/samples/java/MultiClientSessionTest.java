@@ -45,9 +45,9 @@ class MultiClientSessionTest {
   @Test
   void shouldSupportMultipleClientsPerUser() {
     // Create tokens for multiple clients
-    tokenService.createNewAuthToken(TEST_USER_ID, "mobile");
-    tokenService.createNewAuthToken(TEST_USER_ID, "web");
-    tokenService.createNewAuthToken(TEST_USER_ID, "desktop");
+    tokenService.createNewAuthToken(TEST_USER_ID, "mobile", null);
+    tokenService.createNewAuthToken(TEST_USER_ID, "web", null);
+    tokenService.createNewAuthToken(TEST_USER_ID, "desktop", null);
 
     List<SampleToken> tokens = tokenRepository.findByUserIdOrderByUpdatedAtDesc(TEST_USER_ID);
 
@@ -62,9 +62,9 @@ class MultiClientSessionTest {
   @Test
   void shouldAllowLogoutFromSingleClient() {
     // Create tokens for multiple clients
-    tokenService.createNewAuthToken(TEST_USER_ID, "mobile");
-    tokenService.createNewAuthToken(TEST_USER_ID, "web");
-    tokenService.createNewAuthToken(TEST_USER_ID, "desktop");
+    tokenService.createNewAuthToken(TEST_USER_ID, "mobile", null);
+    tokenService.createNewAuthToken(TEST_USER_ID, "web", null);
+    tokenService.createNewAuthToken(TEST_USER_ID, "desktop", null);
 
     // Logout from mobile only
     tokenService.deleteToken(TEST_USER_ID, "mobile");
@@ -82,9 +82,9 @@ class MultiClientSessionTest {
   @Test
   void shouldAllowLogoutFromAllClients() {
     // Create tokens for multiple clients
-    tokenService.createNewAuthToken(TEST_USER_ID, "mobile");
-    tokenService.createNewAuthToken(TEST_USER_ID, "web");
-    tokenService.createNewAuthToken(TEST_USER_ID, "desktop");
+    tokenService.createNewAuthToken(TEST_USER_ID, "mobile", null);
+    tokenService.createNewAuthToken(TEST_USER_ID, "web", null);
+    tokenService.createNewAuthToken(TEST_USER_ID, "desktop", null);
 
     assertEquals(3, tokenRepository.findByUserIdOrderByUpdatedAtDesc(TEST_USER_ID).size());
 
@@ -97,10 +97,10 @@ class MultiClientSessionTest {
   @Test
   void shouldAllowBulkClientLogout() {
     // Create tokens for multiple clients
-    tokenService.createNewAuthToken(TEST_USER_ID, "mobile");
-    tokenService.createNewAuthToken(TEST_USER_ID, "web");
-    tokenService.createNewAuthToken(TEST_USER_ID, "desktop");
-    tokenService.createNewAuthToken(TEST_USER_ID, "tablet");
+    tokenService.createNewAuthToken(TEST_USER_ID, "mobile", null);
+    tokenService.createNewAuthToken(TEST_USER_ID, "web", null);
+    tokenService.createNewAuthToken(TEST_USER_ID, "desktop", null);
+    tokenService.createNewAuthToken(TEST_USER_ID, "tablet", null);
 
     // Bulk logout from mobile and web
     tokenService.deleteToken(TEST_USER_ID, List.of("mobile", "web"));
@@ -119,9 +119,9 @@ class MultiClientSessionTest {
     Long user1 = 1L;
     Long user2 = 2L;
 
-    tokenService.createNewAuthToken(user1, "mobile");
-    tokenService.createNewAuthToken(user1, "web");
-    tokenService.createNewAuthToken(user2, "mobile");
+    tokenService.createNewAuthToken(user1, "mobile", null);
+    tokenService.createNewAuthToken(user1, "web", null);
+    tokenService.createNewAuthToken(user2, "mobile", null);
 
     assertEquals(2, tokenRepository.findByUserIdOrderByUpdatedAtDesc(user1).size());
     assertEquals(1, tokenRepository.findByUserIdOrderByUpdatedAtDesc(user2).size());
@@ -136,14 +136,14 @@ class MultiClientSessionTest {
   @Test
   void shouldUpdateExistingClientToken() {
     // Create initial token
-    tokenService.createNewAuthToken(TEST_USER_ID, "mobile");
+    tokenService.createNewAuthToken(TEST_USER_ID, "mobile", null);
 
     SampleToken firstToken =
         tokenRepository.findByUserIdAndClient(TEST_USER_ID, "mobile").orElse(null);
     Long firstId = firstToken.getId();
 
     // Create token for same client again (should update)
-    tokenService.createNewAuthToken(TEST_USER_ID, "mobile");
+    tokenService.createNewAuthToken(TEST_USER_ID, "mobile", null);
 
     // Should still have only one token for this client
     List<SampleToken> tokens =
@@ -156,7 +156,7 @@ class MultiClientSessionTest {
 
   @Test
   void shouldGetTokenByUserIdAndClient() {
-    tokenService.createNewAuthToken(TEST_USER_ID, "specific-client");
+    tokenService.createNewAuthToken(TEST_USER_ID, "specific-client", null);
 
     SampleToken token = tokenService.getByUserIdAndClient(TEST_USER_ID, "specific-client");
 

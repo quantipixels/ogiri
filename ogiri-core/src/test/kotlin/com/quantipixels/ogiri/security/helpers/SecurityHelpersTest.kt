@@ -112,170 +112,36 @@ class SecurityHelpersTest {
   inner class GetClientIPTests {
 
     @Test
-    fun `extracts IP from X-Forwarded-For header`() {
-      val request = MockHttpServletRequest().apply { addHeader("X-Forwarded-For", "192.168.1.100") }
+    fun `returns remoteAddr directly`() {
+      val request = MockHttpServletRequest("GET", "/test").apply { remoteAddr = "192.168.1.100" }
       assertEquals("192.168.1.100", SecurityHelpers.getClientIP(request))
     }
 
     @Test
-    fun `extracts first IP from comma-separated X-Forwarded-For`() {
-      val request =
-          MockHttpServletRequest().apply {
-            addHeader("X-Forwarded-For", "192.168.1.100, 10.0.0.1, 172.16.0.1")
-          }
-      assertEquals("192.168.1.100", SecurityHelpers.getClientIP(request))
-    }
-
-    @Test
-    fun `trims whitespace from X-Forwarded-For IP`() {
-      val request =
-          MockHttpServletRequest().apply { addHeader("X-Forwarded-For", "  192.168.1.100  ") }
-      assertEquals("192.168.1.100", SecurityHelpers.getClientIP(request))
-    }
-
-    @Test
-    fun `skips X-Forwarded-For with unknown value`() {
-      val request =
-          MockHttpServletRequest().apply {
-            addHeader("X-Forwarded-For", "unknown")
-            addHeader("X-Real-IP", "10.0.0.1")
-          }
-      assertEquals("10.0.0.1", SecurityHelpers.getClientIP(request))
-    }
-
-    @Test
-    fun `skips X-Forwarded-For with UNKNOWN value case insensitive`() {
-      val request =
-          MockHttpServletRequest().apply {
-            addHeader("X-Forwarded-For", "UNKNOWN")
-            addHeader("X-Real-IP", "10.0.0.1")
-          }
-      assertEquals("10.0.0.1", SecurityHelpers.getClientIP(request))
-    }
-
-    @Test
-    fun `rejects invalid IP in X-Forwarded-For and falls back`() {
-      val request =
-          MockHttpServletRequest().apply {
-            addHeader("X-Forwarded-For", "not-an-ip")
-            addHeader("X-Real-IP", "10.0.0.1")
-          }
-      assertEquals("10.0.0.1", SecurityHelpers.getClientIP(request))
-    }
-
-    @Test
-    fun `falls back to X-Real-IP when X-Forwarded-For missing`() {
-      val request = MockHttpServletRequest().apply { addHeader("X-Real-IP", "172.16.0.1") }
-      assertEquals("172.16.0.1", SecurityHelpers.getClientIP(request))
-    }
-
-    @Test
-    fun `skips X-Real-IP with unknown value`() {
-      val request =
-          MockHttpServletRequest("GET", "/test").apply {
-            addHeader("X-Real-IP", "unknown")
-            remoteAddr = "127.0.0.1"
-          }
-      assertEquals("127.0.0.1", SecurityHelpers.getClientIP(request))
-    }
-
-    @Test
-    fun `rejects invalid IP in X-Real-IP and falls back to remoteAddr`() {
-      val request =
-          MockHttpServletRequest("GET", "/test").apply {
-            addHeader("X-Real-IP", "invalid-ip")
-            remoteAddr = "127.0.0.1"
-          }
-      assertEquals("127.0.0.1", SecurityHelpers.getClientIP(request))
-    }
-
-    @Test
-    fun `falls back to remoteAddr when no headers present`() {
-      val request = MockHttpServletRequest("GET", "/test").apply { remoteAddr = "192.168.0.1" }
-      assertEquals("192.168.0.1", SecurityHelpers.getClientIP(request))
-    }
-
-    @Test
-    fun `header priority is X-Forwarded-For then X-Real-IP then remoteAddr`() {
+    fun `ignores X-Forwarded-For header`() {
       val request =
           MockHttpServletRequest("GET", "/test").apply {
             addHeader("X-Forwarded-For", "1.1.1.1")
-            addHeader("X-Real-IP", "2.2.2.2")
-            remoteAddr = "3.3.3.3"
+            remoteAddr = "127.0.0.1"
           }
-      assertEquals("1.1.1.1", SecurityHelpers.getClientIP(request))
-    }
-  }
-
-  @Nested
-  inner class IsWhitelistedTests {
-
-    @Test
-    fun `null URI returns false`() {
-      assertFalse(SecurityHelpers.isWhitelisted(null))
+      assertEquals("127.0.0.1", SecurityHelpers.getClientIP(request))
     }
 
     @Test
-    fun `empty string returns false`() {
-      assertFalse(SecurityHelpers.isWhitelisted(""))
+    fun `ignores X-Real-IP header`() {
+      val request =
+          MockHttpServletRequest("GET", "/test").apply {
+            addHeader("X-Real-IP", "2.2.2.2")
+            remoteAddr = "127.0.0.1"
+          }
+      assertEquals("127.0.0.1", SecurityHelpers.getClientIP(request))
     }
 
     @Test
-    fun `swagger-ui paths are whitelisted`() {
-      assertTrue(SecurityHelpers.isWhitelisted("/swagger-ui/index.html"))
-      assertTrue(SecurityHelpers.isWhitelisted("/swagger-ui/swagger-ui.css"))
-      assertTrue(SecurityHelpers.isWhitelisted("/swagger-ui.html"))
-    }
-
-    @Test
-    fun `webjars paths are whitelisted`() {
-      assertTrue(SecurityHelpers.isWhitelisted("/webjars/jquery/3.0/jquery.min.js"))
-      assertTrue(SecurityHelpers.isWhitelisted("/webjars/bootstrap/5.0/css/bootstrap.css"))
-    }
-
-    @Test
-    fun `openapi paths are whitelisted`() {
-      assertTrue(SecurityHelpers.isWhitelisted("/openapi/v3/api-docs"))
-      assertTrue(SecurityHelpers.isWhitelisted("/openapi/swagger-config"))
-    }
-
-    @Test
-    fun `actuator health and info are whitelisted`() {
-      assertTrue(SecurityHelpers.isWhitelisted("/actuator/health"))
-      assertTrue(SecurityHelpers.isWhitelisted("/actuator/info"))
-    }
-
-    @Test
-    fun `other actuator endpoints are NOT whitelisted`() {
-      assertFalse(SecurityHelpers.isWhitelisted("/actuator/metrics"))
-      assertFalse(SecurityHelpers.isWhitelisted("/actuator/env"))
-      assertFalse(SecurityHelpers.isWhitelisted("/actuator/beans"))
-    }
-
-    @Test
-    fun `favicon is whitelisted`() {
-      assertTrue(SecurityHelpers.isWhitelisted("/favicon.ico"))
-    }
-
-    @Test
-    fun `path traversal attempts are normalized and rejected`() {
-      // /swagger-ui/../protected normalizes to /protected which is NOT whitelisted
-      assertFalse(SecurityHelpers.isWhitelisted("/swagger-ui/../protected"))
-      assertFalse(SecurityHelpers.isWhitelisted("/swagger-ui/../../etc/passwd"))
-      assertFalse(SecurityHelpers.isWhitelisted("/actuator/health/../env"))
-    }
-
-    @Test
-    fun `path traversal within whitelisted area still matches`() {
-      // /swagger-ui/foo/../index.html normalizes to /swagger-ui/index.html which IS whitelisted
-      assertTrue(SecurityHelpers.isWhitelisted("/swagger-ui/foo/../index.html"))
-    }
-
-    @Test
-    fun `non-whitelisted paths return false`() {
-      assertFalse(SecurityHelpers.isWhitelisted("/api/users"))
-      assertFalse(SecurityHelpers.isWhitelisted("/admin"))
-      assertFalse(SecurityHelpers.isWhitelisted("/protected/resource"))
+    fun `returns default MockHttpServletRequest remoteAddr when not set`() {
+      val request = MockHttpServletRequest("GET", "/test")
+      // MockHttpServletRequest defaults to "127.0.0.1"
+      assertEquals("127.0.0.1", SecurityHelpers.getClientIP(request))
     }
   }
 

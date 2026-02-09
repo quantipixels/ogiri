@@ -46,7 +46,7 @@ class TokenRotationTest {
 
   @Test
   void shouldCreateNewAuthToken() {
-    AuthHeader authHeader = tokenService.createNewAuthToken(TEST_USER_ID, TEST_CLIENT);
+    AuthHeader authHeader = tokenService.createNewAuthToken(TEST_USER_ID, TEST_CLIENT, null);
 
     assertNotNull(authHeader);
     assertNotNull(authHeader.getAccessToken());
@@ -65,7 +65,7 @@ class TokenRotationTest {
   @Test
   void shouldRotateTokenOnSubsequentCreation() {
     // Create first token
-    AuthHeader firstAuth = tokenService.createNewAuthToken(TEST_USER_ID, TEST_CLIENT);
+    AuthHeader firstAuth = tokenService.createNewAuthToken(TEST_USER_ID, TEST_CLIENT, null);
     String firstToken = firstAuth.getAccessToken();
 
     // Simulate time passing beyond grace period
@@ -76,7 +76,7 @@ class TokenRotationTest {
     tokenRepository.flush();
 
     // Create second token (rotation)
-    AuthHeader secondAuth = tokenService.createNewAuthToken(TEST_USER_ID, TEST_CLIENT);
+    AuthHeader secondAuth = tokenService.createNewAuthToken(TEST_USER_ID, TEST_CLIENT, null);
     String secondToken = secondAuth.getAccessToken();
 
     // Tokens should be different
@@ -86,7 +86,7 @@ class TokenRotationTest {
   @Test
   void shouldPreserveLastTokenForGracePeriod() {
     // Create initial token
-    tokenService.createNewAuthToken(TEST_USER_ID, TEST_CLIENT);
+    tokenService.createNewAuthToken(TEST_USER_ID, TEST_CLIENT, null);
 
     SampleToken token =
         tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT).orElse(null);
@@ -108,7 +108,7 @@ class TokenRotationTest {
   @Test
   void shouldSupportThreeTierGracePeriod() {
     // Create token with all three tiers
-    AuthHeader auth = tokenService.createNewAuthToken(TEST_USER_ID, TEST_CLIENT);
+    AuthHeader auth = tokenService.createNewAuthToken(TEST_USER_ID, TEST_CLIENT, null);
 
     SampleToken token =
         tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT).orElse(null);
@@ -129,7 +129,7 @@ class TokenRotationTest {
 
   @Test
   void shouldDeleteTokenSuccessfully() {
-    tokenService.createNewAuthToken(TEST_USER_ID, TEST_CLIENT);
+    tokenService.createNewAuthToken(TEST_USER_ID, TEST_CLIENT, null);
 
     // Verify token exists
     assertNotNull(tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT).orElse(null));
@@ -144,9 +144,9 @@ class TokenRotationTest {
   @Test
   void shouldDeleteAllTokensForUser() {
     // Create multiple tokens for same user
-    tokenService.createNewAuthToken(TEST_USER_ID, "client-1");
-    tokenService.createNewAuthToken(TEST_USER_ID, "client-2");
-    tokenService.createNewAuthToken(TEST_USER_ID, "client-3");
+    tokenService.createNewAuthToken(TEST_USER_ID, "client-1", null);
+    tokenService.createNewAuthToken(TEST_USER_ID, "client-2", null);
+    tokenService.createNewAuthToken(TEST_USER_ID, "client-3", null);
 
     assertEquals(3, tokenRepository.findByUserIdOrderByUpdatedAtDesc(TEST_USER_ID).size());
 
@@ -158,8 +158,8 @@ class TokenRotationTest {
 
   @Test
   void shouldGetAllTokensByUserId() {
-    tokenService.createNewAuthToken(TEST_USER_ID, "client-a");
-    tokenService.createNewAuthToken(TEST_USER_ID, "client-b");
+    tokenService.createNewAuthToken(TEST_USER_ID, "client-a", null);
+    tokenService.createNewAuthToken(TEST_USER_ID, "client-b", null);
 
     var tokens = tokenService.getAllByUserId(TEST_USER_ID);
 
@@ -177,7 +177,7 @@ class TokenRotationTest {
     tokenRepository.save(expiredToken);
 
     // Create valid token
-    tokenService.createNewAuthToken(TEST_USER_ID, "valid-client");
+    tokenService.createNewAuthToken(TEST_USER_ID, "valid-client", null);
 
     // Run cleanup
     int deleted = tokenService.cleanupExpiredTokens(Instant.now());

@@ -163,7 +163,6 @@ The sample extends `OgiriTokenService` to work with JPA entities:
 
 ```kotlin
 @Service
-@Primary
 class SampleTokenService(
     sampleTokenRepository: SampleTokenRepository,
     passwordEncoder: PasswordEncoder,

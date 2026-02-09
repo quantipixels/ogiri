@@ -3,14 +3,14 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
   kotlin("jvm")
   kotlin("plugin.spring")
-  // JPA plugin removed - library is now database-agnostic
-  // allopen plugin removed - not needed without JPA
   id("io.spring.dependency-management") version libs.versions.dependencyManagement.get()
   id("org.owasp.dependencycheck") version "12.1.9"
   jacoco
   `maven-publish`
   signing
 }
+
+allOpen { annotation("com.quantipixels.ogiri.security.core.OgiriService") }
 
 group = "com.quantipixels.ogiri"
 

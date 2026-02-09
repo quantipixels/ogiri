@@ -16,26 +16,15 @@ import jakarta.servlet.http.HttpServletRequest
 import java.net.Inet4Address
 import java.net.Inet6Address
 import java.net.InetAddress
-import java.net.URI
+import java.net.UnknownHostException
 import org.slf4j.LoggerFactory
 import org.springframework.security.core.context.SecurityContextHolder
-import org.springframework.util.AntPathMatcher
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
 
-val pathMatcher = AntPathMatcher()
-
 object SecurityHelpers {
   private val logger = LoggerFactory.getLogger(SecurityHelpers::class.java)
-  val WHITE_LIST_PREFIXES: List<String> =
-      listOf(
-          "/swagger-ui/**",
-          "/swagger-ui.html",
-          "/webjars/**",
-          "/openapi/**",
-          "/actuator/health",
-          "/actuator/info",
-      )
+  private val IP_PATTERN = Regex("^[\\d.:a-fA-F%]+$")
 
   /**
    * Validates whether the given string is a valid IP address (IPv4 or IPv6).
@@ -59,6 +48,9 @@ object SecurityHelpers {
     // Strip IPv6 zone ID (e.g., "fe80::1%eth0" -> "fe80::1")
     val ipWithoutZone = ip.substringBefore('%')
 
+    // Pre-check to prevent DNS resolution on non-IP inputs
+    if (!IP_PATTERN.matches(ipWithoutZone)) return false
+
     return try {
       // InetAddress.getByName validates and parses the IP address
       val addr = InetAddress.getByName(ipWithoutZone)
@@ -80,54 +72,36 @@ object SecurityHelpers {
         is Inet6Address -> true
         else -> false
       }
-    } catch (_: Exception) {
-      false
+    } catch (e: Exception) {
+      when (e) {
+        is UnknownHostException,
+        is SecurityException,
+        is IllegalArgumentException -> {
+          logger.trace("IP validation failed (length={}): {}", ip.length, e.message)
+          false
+        }
+        else -> throw e
+      }
     }
   }
 
   /**
    * Extracts the client's IP address from the given servlet request.
    *
-   * Prefers the first value from the `X-Forwarded-For` header when present, valid, and not
-   * "unknown", falls back to `X-Real-IP` when present, valid, and not "unknown", and otherwise
-   * returns `request.remoteAddr`. IP addresses are validated before being returned to prevent IP
-   * spoofing attacks.
+   * Returns request.remoteAddr which Spring Boot populates from the actual client IP when
+   * server.forward-headers-strategy=NATIVE is configured. Manual header parsing is error-prone and
+   * CVE-prone.
    *
    * @param request The incoming HTTP servlet request.
-   * @return The client's IP address, or `null` if no valid address can be determined.
+   * @return The client's IP address from request.remoteAddr.
    */
-  fun getClientIP(request: HttpServletRequest): String? {
-    val xForwardedFor = request.getHeader("X-Forwarded-For")
-    if (!xForwardedFor.isNullOrBlank() && !xForwardedFor.equals("unknown", ignoreCase = true)) {
-      val ip = xForwardedFor.split(',')[0].trim()
-      if (isValidIp(ip)) return ip
-    }
-    val xRealIp = request.getHeader("X-Real-IP")
-    if (!xRealIp.isNullOrBlank() && !xRealIp.equals("unknown", ignoreCase = true)) {
-      if (isValidIp(xRealIp)) return xRealIp
-    }
-    return request.remoteAddr
-  }
+  fun getClientIP(request: HttpServletRequest): String? = request.remoteAddr
 
   val clientIP: String?
     get() {
       val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
       return attributes?.let { getClientIP(it.request) }
     }
-
-  fun isWhitelisted(uri: String?): Boolean {
-    if (uri == null) return false
-    // Normalize path to prevent traversal bypass (e.g., /swagger-ui/../protected)
-    val normalized =
-        try {
-          URI(uri).normalize().path ?: uri
-        } catch (e: Exception) {
-          logger.warn("Failed to parse URI for bypass check: $uri", e)
-          uri
-        }
-    return WHITE_LIST_PREFIXES.any { pathMatcher.match(it, normalized) } ||
-        normalized == "/favicon.ico"
-  }
 
   fun isPreflight(method: String?): Boolean = "OPTIONS".equals(method, ignoreCase = true)
 

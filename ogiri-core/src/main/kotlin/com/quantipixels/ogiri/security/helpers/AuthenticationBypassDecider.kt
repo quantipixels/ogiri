@@ -16,27 +16,29 @@ import com.quantipixels.ogiri.security.routes.OgiriRouteCatalog
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.http.HttpMethod
 import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.security.web.util.matcher.RequestMatcher
 
 /**
- * Centralizes logic to skip authentication when appropriate (already authenticated, whitelisted
- * paths, CORS preflight, or public routes).
+ * Centralizes logic to skip authentication when appropriate (already authenticated, bypassed paths,
+ * CORS preflight, or public routes).
  */
 class AuthenticationBypassDecider(
     private val routeCatalog: OgiriRouteCatalog,
+    private val bypassMatcher: RequestMatcher = RequestMatcher { false },
 ) {
   /**
    * Determines whether authentication may be skipped for the given HTTP request.
    *
    * @param request The incoming HTTP servlet request to evaluate.
-   * @return `true` if the request is already authenticated, matches a whitelist entry, is a CORS
+   * @return `true` if the request is already authenticated, matches a bypass matcher, is a CORS
    *   preflight request, or targets a public route; `false` otherwise.
    */
   fun canSkip(request: HttpServletRequest): Boolean {
     val isAuthenticated = SecurityContextHolder.getContext().authentication != null
-    val isWhitelisted = SecurityHelpers.isWhitelisted(request.requestURI)
+    val isBypassed = bypassMatcher.matches(request)
     val isPreflight = SecurityHelpers.isPreflight(request.method)
     val method = runCatching { HttpMethod.valueOf(request.method) }.getOrNull()
     val isPublicRoute = method?.let { routeCatalog.isPublicRoute(request.requestURI, it) } ?: false
-    return isAuthenticated || isWhitelisted || isPreflight || isPublicRoute
+    return isAuthenticated || isBypassed || isPreflight || isPublicRoute
   }
 }

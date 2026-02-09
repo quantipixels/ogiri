@@ -49,10 +49,10 @@ Database-agnostic persistence contract.
 ```kotlin
 interface OgiriTokenRepository<T : OgiriToken> {
     fun save(token: T): T
-    fun findById(id: Long): T?
+    fun findById(id: Long): Optional<T>
     fun deleteById(id: Long)
-    fun findAllByUserId(userId: Long): List<T>
-    fun findByUserIdAndClient(userId: Long, clientId: String): T?
+    fun findByUserIdOrderByUpdatedAtDesc(userId: Long): List<T>
+    fun findByUserIdAndClient(userId: Long, client: String): Optional<T>
     // ... and more
 }
 ```
@@ -77,6 +77,8 @@ open class OgiriTokenService<T : OgiriToken>(
     private val identifierPolicy: IdentifierPolicy,
     private val subTokenRegistry: OgiriSubTokenRegistry,
     protected val properties: OgiriConfigurationProperties,
+    auditHookProvider: ObjectProvider<OgiriAuditHook>,
+    rateLimitHookProvider: ObjectProvider<OgiriRateLimitHook>,
 )
 ```
 
@@ -156,10 +158,10 @@ data class MyToken(
 ```kotlin
 @Repository
 interface MyTokenRepository : JpaRepository<MyToken, Long>, OgiriTokenRepository<MyToken> {
-    override fun findAllByUserId(userId: Long): List<MyToken> =
-        findAllByUserIdOrderByUpdatedAtDesc(userId)
+    override fun findByUserIdOrderByUpdatedAtDesc(userId: Long): List<MyToken> =
+        findByUserIdOrderByUpdatedAtDescOrderByUpdatedAtDesc(userId)
 
-    fun findAllByUserIdOrderByUpdatedAtDesc(userId: Long): List<MyToken>
+    fun findByUserIdOrderByUpdatedAtDescOrderByUpdatedAtDesc(userId: Long): List<MyToken>
 
     @Query("SELECT t FROM MyToken t WHERE t.userId = :userId AND t.client = :client")
     override fun findByUserIdAndClient(
@@ -205,19 +207,18 @@ class MyTokenService(
     identifierPolicy: IdentifierPolicy,
     subTokenRegistry: OgiriSubTokenRegistry,
     properties: OgiriConfigurationProperties,
+    auditHookProvider: ObjectProvider<OgiriAuditHook>,
+    rateLimitHookProvider: ObjectProvider<OgiriRateLimitHook>,
 ) : OgiriTokenService<MyToken>(
-    repository,
-    passwordEncoder,
-    userDirectory,
-    identifierPolicy,
-    subTokenRegistry,
-    properties,
+    repository, passwordEncoder, userDirectory,
+    identifierPolicy, subTokenRegistry, properties,
+    auditHookProvider, rateLimitHookProvider,
 ) {
     override fun tokenFactory(
         userId: Long,
         client: String,
         hashedToken: String,
-        tokenType: TokenType,
+        tokenType: OgiriTokenType,
         expiry: Instant,
         tokenSubtype: String?,
         plainTokenValue: String,
@@ -341,15 +342,18 @@ class UserTokenService(
     identifierPolicy: IdentifierPolicy,
     subTokenRegistry: OgiriSubTokenRegistry,
     properties: OgiriConfigurationProperties,
+    auditHookProvider: ObjectProvider<OgiriAuditHook>,
+    rateLimitHookProvider: ObjectProvider<OgiriRateLimitHook>,
 ) : OgiriTokenService<UserToken>(
     repository, passwordEncoder, userDirectory,
-    identifierPolicy, subTokenRegistry, properties
+    identifierPolicy, subTokenRegistry, properties,
+    auditHookProvider, rateLimitHookProvider,
 ) {
     override fun tokenFactory(
         userId: Long,
         client: String,
         hashedToken: String,
-        tokenType: TokenType,
+        tokenType: OgiriTokenType,
         expiry: Instant,
         tokenSubtype: String?,
         plainTokenValue: String,

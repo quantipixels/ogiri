@@ -15,13 +15,15 @@ package com.quantipixels.ogiri.samples.java.service;
 import com.quantipixels.ogiri.samples.java.entity.SampleToken;
 import com.quantipixels.ogiri.security.config.OgiriConfigurationProperties;
 import com.quantipixels.ogiri.security.core.IdentifierPolicy;
+import com.quantipixels.ogiri.security.spi.OgiriAuditHook;
+import com.quantipixels.ogiri.security.spi.OgiriRateLimitHook;
 import com.quantipixels.ogiri.security.spi.OgiriUserDirectory;
 import com.quantipixels.ogiri.security.tokens.OgiriSubTokenRegistry;
 import com.quantipixels.ogiri.security.tokens.OgiriTokenRepository;
 import com.quantipixels.ogiri.security.tokens.OgiriTokenService;
 import com.quantipixels.ogiri.security.tokens.OgiriTokenType;
 import java.time.Instant;
-import org.springframework.context.annotation.Primary;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -35,7 +37,6 @@ import org.springframework.stereotype.Service;
  * simply creates a new instance and sets the required properties.
  */
 @Service
-@Primary
 public class SampleTokenService extends OgiriTokenService<SampleToken> {
 
   /** Constructor - injects all dependencies needed by TokenService. */
@@ -45,14 +46,18 @@ public class SampleTokenService extends OgiriTokenService<SampleToken> {
       OgiriUserDirectory userDirectory,
       IdentifierPolicy identifierPolicy,
       OgiriSubTokenRegistry subTokenRegistry,
-      OgiriConfigurationProperties properties) {
+      OgiriConfigurationProperties properties,
+      ObjectProvider<OgiriAuditHook> auditHookProvider,
+      ObjectProvider<OgiriRateLimitHook> rateLimitHookProvider) {
     super(
         tokenRepository,
         passwordEncoder,
         userDirectory,
         identifierPolicy,
         subTokenRegistry,
-        properties);
+        properties,
+        auditHookProvider,
+        rateLimitHookProvider);
   }
 
   /**

@@ -70,7 +70,7 @@ dependencyResolutionManagement {
   versionCatalogs {
     create("libs") {
       // Plugin versions
-      version("kotlin", "2.1.0")
+      version("kotlin", "2.1.20")
       version("spotless", "8.0.0")
       version("springBoot", "3.5.7")
       version("dependencyManagement", "1.1.7")

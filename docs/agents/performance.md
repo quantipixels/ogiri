@@ -19,6 +19,13 @@
 - **Max size**: 10,000 entries (configurable via `ogiri.cache.max-size`)
 - Dramatically reduces CPU overhead for repeated validations
 
+## Timing Attack Protection
+
+- `tokensMatch()` enforces a **100ms floor** on token comparison to mask cache hit vs miss timing
+- Each auth request holds a servlet thread for at least 100ms during token validation
+- **Thread pool sizing**: with a 200-thread pool, max theoretical auth throughput is ~2,000 req/s
+- Size `server.tomcat.threads.max` accordingly for auth-heavy workloads
+
 ## Conditional Cleanup
 
 - Token cleanup **only runs** when count exceeds 80% of `max-clients`
@@ -42,11 +49,11 @@ Key performance-related properties:
 ```yaml
 ogiri:
   cache:
-    max-size: 10000           # Token equality cache size
-    expiry-minutes: 60        # Cache TTL
+    max-size: 10000 # Token equality cache size
+    expiry-minutes: 60 # Cache TTL
   cleanup:
-    batch-size: 1000          # Deletion batch size
-    interval-ms: 21600000     # 6 hours
+    batch-size: 1000 # Deletion batch size
+    interval-ms: 21600000 # 6 hours
   auth:
-    max-clients: 10           # Triggers cleanup threshold
+    max-clients: 10 # Triggers cleanup threshold
 ```

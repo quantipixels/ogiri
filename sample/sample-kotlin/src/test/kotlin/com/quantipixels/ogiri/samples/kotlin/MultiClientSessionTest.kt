@@ -44,9 +44,9 @@ class MultiClientSessionTest {
   @Test
   fun `should support multiple clients per user`() {
     // Create tokens for multiple clients
-    tokenService.createNewAuthToken(testUserId, "mobile")
-    tokenService.createNewAuthToken(testUserId, "web")
-    tokenService.createNewAuthToken(testUserId, "desktop")
+    tokenService.createNewAuthToken(testUserId, "mobile", null)
+    tokenService.createNewAuthToken(testUserId, "web", null)
+    tokenService.createNewAuthToken(testUserId, "desktop", null)
 
     val tokens = tokenRepository.findByUserIdOrderByUpdatedAtDesc(testUserId)
 
@@ -61,9 +61,9 @@ class MultiClientSessionTest {
   @Test
   fun `should allow logout from single client`() {
     // Create tokens for multiple clients
-    tokenService.createNewAuthToken(testUserId, "mobile")
-    tokenService.createNewAuthToken(testUserId, "web")
-    tokenService.createNewAuthToken(testUserId, "desktop")
+    tokenService.createNewAuthToken(testUserId, "mobile", null)
+    tokenService.createNewAuthToken(testUserId, "web", null)
+    tokenService.createNewAuthToken(testUserId, "desktop", null)
 
     // Logout from mobile only
     tokenService.deleteToken(testUserId, "mobile")
@@ -80,9 +80,9 @@ class MultiClientSessionTest {
   @Test
   fun `should allow logout from all clients`() {
     // Create tokens for multiple clients
-    tokenService.createNewAuthToken(testUserId, "mobile")
-    tokenService.createNewAuthToken(testUserId, "web")
-    tokenService.createNewAuthToken(testUserId, "desktop")
+    tokenService.createNewAuthToken(testUserId, "mobile", null)
+    tokenService.createNewAuthToken(testUserId, "web", null)
+    tokenService.createNewAuthToken(testUserId, "desktop", null)
 
     assertEquals(3, tokenRepository.findByUserIdOrderByUpdatedAtDesc(testUserId).size)
 
@@ -95,10 +95,10 @@ class MultiClientSessionTest {
   @Test
   fun `should allow bulk client logout`() {
     // Create tokens for multiple clients
-    tokenService.createNewAuthToken(testUserId, "mobile")
-    tokenService.createNewAuthToken(testUserId, "web")
-    tokenService.createNewAuthToken(testUserId, "desktop")
-    tokenService.createNewAuthToken(testUserId, "tablet")
+    tokenService.createNewAuthToken(testUserId, "mobile", null)
+    tokenService.createNewAuthToken(testUserId, "web", null)
+    tokenService.createNewAuthToken(testUserId, "desktop", null)
+    tokenService.createNewAuthToken(testUserId, "tablet", null)
 
     // Bulk logout from mobile and web
     tokenService.deleteToken(testUserId, listOf("mobile", "web"))
@@ -116,9 +116,9 @@ class MultiClientSessionTest {
     val user1 = 1L
     val user2 = 2L
 
-    tokenService.createNewAuthToken(user1, "mobile")
-    tokenService.createNewAuthToken(user1, "web")
-    tokenService.createNewAuthToken(user2, "mobile")
+    tokenService.createNewAuthToken(user1, "mobile", null)
+    tokenService.createNewAuthToken(user1, "web", null)
+    tokenService.createNewAuthToken(user2, "mobile", null)
 
     assertEquals(2, tokenRepository.findByUserIdOrderByUpdatedAtDesc(user1).size)
     assertEquals(1, tokenRepository.findByUserIdOrderByUpdatedAtDesc(user2).size)
@@ -133,13 +133,13 @@ class MultiClientSessionTest {
   @Test
   fun `should update existing client token`() {
     // Create initial token
-    tokenService.createNewAuthToken(testUserId, "mobile")
+    tokenService.createNewAuthToken(testUserId, "mobile", null)
 
     val firstToken = tokenRepository.findByUserIdAndClient(testUserId, "mobile").orElse(null)
     val firstId = firstToken!!.id
 
     // Create token for same client again (should update)
-    tokenService.createNewAuthToken(testUserId, "mobile")
+    tokenService.createNewAuthToken(testUserId, "mobile", null)
 
     // Should still have only one token for this client
     val tokens =
@@ -152,7 +152,7 @@ class MultiClientSessionTest {
 
   @Test
   fun `should get token by user id and client`() {
-    tokenService.createNewAuthToken(testUserId, "specific-client")
+    tokenService.createNewAuthToken(testUserId, "specific-client", null)
 
     val token = tokenService.getByUserIdAndClient(testUserId, "specific-client")
 

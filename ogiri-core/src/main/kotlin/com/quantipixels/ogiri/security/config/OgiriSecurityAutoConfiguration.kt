@@ -17,6 +17,8 @@ import com.quantipixels.ogiri.security.core.IdentifierPolicy
 import com.quantipixels.ogiri.security.helpers.AuthenticationBypassDecider
 import com.quantipixels.ogiri.security.routes.OgiriRouteCatalog
 import com.quantipixels.ogiri.security.routes.OgiriRouteRegistry
+import com.quantipixels.ogiri.security.spi.OgiriAuditHook
+import com.quantipixels.ogiri.security.spi.OgiriRateLimitHook
 import com.quantipixels.ogiri.security.spi.OgiriUserDirectory
 import com.quantipixels.ogiri.security.tokens.DefaultOgiriSubTokenRegistry
 import com.quantipixels.ogiri.security.tokens.DefaultOgiriTokenServiceResolver
@@ -46,6 +48,10 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.AuthenticationEntryPoint
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher
+import org.springframework.security.web.util.matcher.OrRequestMatcher
+import org.springframework.security.web.util.matcher.RequestMatcher
 
 /**
  * Auto-configures ogiri beans (token service, filters, registries).
@@ -104,15 +110,23 @@ class OgiriSecurityAutoConfiguration {
 
   /**
    * Creates an AuthenticationBypassDecider that determines which routes should bypass
-   * authentication using the provided route catalog.
+   * authentication using the provided route catalog and bypass paths from configuration.
    *
    * @param routeCatalog The catalog of registered routes used to evaluate bypass rules.
-   * @return An AuthenticationBypassDecider configured with the given route catalog.
+   * @param properties Ogiri configuration properties containing bypass paths.
+   * @return An AuthenticationBypassDecider configured with the route catalog and bypass matcher.
    */
   @Bean
   @ConditionalOnMissingBean(AuthenticationBypassDecider::class)
-  fun authenticationBypassDecider(routeCatalog: OgiriRouteCatalog): AuthenticationBypassDecider =
-      AuthenticationBypassDecider(routeCatalog)
+  fun authenticationBypassDecider(
+      routeCatalog: OgiriRouteCatalog,
+      properties: OgiriConfigurationProperties,
+  ): AuthenticationBypassDecider {
+    val matchers = properties.security.bypassPaths.map { AntPathRequestMatcher(it) }
+    val bypassMatcher: RequestMatcher =
+        if (matchers.isEmpty()) RequestMatcher { false } else OrRequestMatcher(matchers.toList())
+    return AuthenticationBypassDecider(routeCatalog, bypassMatcher)
+  }
 
   /**
    * Creates a DefaultOgiriSubTokenRegistry initialized with the available sub-token registrations.
@@ -156,6 +170,8 @@ class OgiriSecurityAutoConfiguration {
       identifierPolicy: IdentifierPolicy,
       subTokenRegistry: OgiriSubTokenRegistry,
       properties: OgiriConfigurationProperties,
+      auditHookProvider: ObjectProvider<OgiriAuditHook>,
+      rateLimitHookProvider: ObjectProvider<OgiriRateLimitHook>,
   ): OgiriTokenService<T> =
       OgiriTokenService(
           repository,
@@ -164,6 +180,8 @@ class OgiriSecurityAutoConfiguration {
           identifierPolicy,
           subTokenRegistry,
           properties,
+          auditHookProvider,
+          rateLimitHookProvider,
       )
 
   /**
@@ -278,9 +296,17 @@ class OgiriSecurityAutoConfiguration {
       http: HttpSecurity,
       ogiriTokenAuthenticationFilter: OgiriTokenAuthenticationFilter,
       authenticationEntryPoint: AuthenticationEntryPoint,
+      properties: OgiriConfigurationProperties,
   ): SecurityFilterChain =
+      // In auto mode, only enable CSRF when cross-site cookies are in play.
       http
-          .csrf { it.disable() }
+          .csrf { csrf ->
+            if (shouldEnableCsrf(properties)) {
+              csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+            } else {
+              csrf.disable()
+            }
+          }
           .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
           .exceptionHandling { it.authenticationEntryPoint(authenticationEntryPoint) }
           .addFilterBefore(
@@ -289,4 +315,22 @@ class OgiriSecurityAutoConfiguration {
           // By default, this chain only configures token-based authentication and stateless
           // sessions.
           .build()
+
+  private fun shouldEnableCsrf(properties: OgiriConfigurationProperties): Boolean {
+    val configured = properties.security.csrf.enabled.trim().lowercase()
+    val autoEnabled =
+        properties.cookies.enabled && properties.cookies.sameSite.equals("None", ignoreCase = true)
+
+    return when (configured) {
+      "true" -> true
+      "false" -> false
+      "auto" -> autoEnabled
+      else -> {
+        logger.warn(
+            "Invalid ogiri.security.csrf.enabled='{}' (expected auto|true|false). Falling back to auto.",
+            properties.security.csrf.enabled)
+        autoEnabled
+      }
+    }
+  }
 }

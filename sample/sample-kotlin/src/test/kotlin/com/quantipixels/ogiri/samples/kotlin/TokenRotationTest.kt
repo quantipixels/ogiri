@@ -47,7 +47,7 @@ class TokenRotationTest {
 
   @Test
   fun `should create new auth token`() {
-    val authHeader = tokenService.createNewAuthToken(testUserId, testClient)
+    val authHeader = tokenService.createNewAuthToken(testUserId, testClient, null)
 
     assertNotNull(authHeader)
     assertNotNull(authHeader.accessToken)
@@ -65,7 +65,7 @@ class TokenRotationTest {
   @Test
   fun `should rotate token on subsequent creation`() {
     // Create first token
-    val firstAuth = tokenService.createNewAuthToken(testUserId, testClient)
+    val firstAuth = tokenService.createNewAuthToken(testUserId, testClient, null)
     val firstToken = firstAuth.accessToken
 
     // Simulate time passing beyond grace period
@@ -75,7 +75,7 @@ class TokenRotationTest {
     tokenRepository.flush()
 
     // Create second token (rotation)
-    val secondAuth = tokenService.createNewAuthToken(testUserId, testClient)
+    val secondAuth = tokenService.createNewAuthToken(testUserId, testClient, null)
     val secondToken = secondAuth.accessToken
 
     // Tokens should be different
@@ -85,7 +85,7 @@ class TokenRotationTest {
   @Test
   fun `should preserve last token for grace period`() {
     // Create initial token
-    tokenService.createNewAuthToken(testUserId, testClient)
+    tokenService.createNewAuthToken(testUserId, testClient, null)
 
     val token = tokenRepository.findByUserIdAndClient(testUserId, testClient).orElse(null)
     val originalHash = token!!.token
@@ -105,7 +105,7 @@ class TokenRotationTest {
   @Test
   fun `should support three tier grace period`() {
     // Create token with all three tiers
-    tokenService.createNewAuthToken(testUserId, testClient)
+    tokenService.createNewAuthToken(testUserId, testClient, null)
 
     val token = tokenRepository.findByUserIdAndClient(testUserId, testClient).orElse(null)
 
@@ -123,7 +123,7 @@ class TokenRotationTest {
 
   @Test
   fun `should delete token successfully`() {
-    tokenService.createNewAuthToken(testUserId, testClient)
+    tokenService.createNewAuthToken(testUserId, testClient, null)
 
     // Verify token exists
     assertNotNull(tokenRepository.findByUserIdAndClient(testUserId, testClient).orElse(null))
@@ -138,9 +138,9 @@ class TokenRotationTest {
   @Test
   fun `should delete all tokens for user`() {
     // Create multiple tokens for same user
-    tokenService.createNewAuthToken(testUserId, "client-1")
-    tokenService.createNewAuthToken(testUserId, "client-2")
-    tokenService.createNewAuthToken(testUserId, "client-3")
+    tokenService.createNewAuthToken(testUserId, "client-1", null)
+    tokenService.createNewAuthToken(testUserId, "client-2", null)
+    tokenService.createNewAuthToken(testUserId, "client-3", null)
 
     assertEquals(3, tokenRepository.findByUserIdOrderByUpdatedAtDesc(testUserId).size)
 
@@ -152,8 +152,8 @@ class TokenRotationTest {
 
   @Test
   fun `should get all tokens by user id`() {
-    tokenService.createNewAuthToken(testUserId, "client-a")
-    tokenService.createNewAuthToken(testUserId, "client-b")
+    tokenService.createNewAuthToken(testUserId, "client-a", null)
+    tokenService.createNewAuthToken(testUserId, "client-b", null)
 
     val tokens = tokenService.getAllByUserId(testUserId)
 
@@ -173,7 +173,7 @@ class TokenRotationTest {
     tokenRepository.save(expiredToken)
 
     // Create valid token
-    tokenService.createNewAuthToken(testUserId, "valid-client")
+    tokenService.createNewAuthToken(testUserId, "valid-client", null)
 
     // Run cleanup
     val deleted = tokenService.cleanupExpiredTokens(Instant.now())

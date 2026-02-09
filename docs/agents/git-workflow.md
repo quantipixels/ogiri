@@ -3,6 +3,7 @@
 ## Commit Style
 
 Use **Conventional Commits**:
+
 - `feat:` - New feature
 - `fix:` - Bug fix
 - `refactor:` - Code restructuring
@@ -13,6 +14,7 @@ Use **Conventional Commits**:
 ## Pre-commit
 
 Run before pushing (when feasible):
+
 ```bash
 ./gradlew build spotlessCheck
 ```

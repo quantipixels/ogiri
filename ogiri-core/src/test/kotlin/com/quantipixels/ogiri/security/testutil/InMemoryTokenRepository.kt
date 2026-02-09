@@ -82,7 +82,6 @@ class InMemoryTokenRepository : OgiriTokenRepository<TestToken> {
         // Insert: generate new ID and preserve transient properties
         val newToken = token.copy(id = idSequence.getAndIncrement())
         newToken.plainToken = token.plainToken // Preserve transient property
-        newToken.tokenPrefix = token.tokenPrefix // Preserve inherited mutable property
         newToken.updatedAt = clock // Use repository's clock for deterministic testing
         tokens.add(newToken)
         newToken as S
@@ -246,28 +245,6 @@ class InMemoryTokenRepository : OgiriTokenRepository<TestToken> {
   }
 
   /**
-   * Find all valid (non-expired) tokens matching the given prefix and type.
-   *
-   * @param prefix The 8-character token prefix to search for
-   * @param tokenType The token type to filter by
-   * @param now Current instant for expiry comparison
-   * @return List of matching non-expired tokens
-   */
-  override fun findByTokenPrefixAndTokenTypeAndExpiryAtAfter(
-      prefix: String,
-      tokenType: String,
-      now: Instant,
-  ): List<TestToken> {
-    synchronized(tokens) {
-      return tokens.filter {
-        it.tokenPrefix == prefix &&
-            it.tokenType.equals(tokenType, ignoreCase = true) &&
-            !it.expiryAt.isBefore(now)
-      }
-    }
-  }
-
-  /**
    * Count the number of tokens for a user.
    *
    * @param userId The user ID to count tokens for
@@ -276,6 +253,20 @@ class InMemoryTokenRepository : OgiriTokenRepository<TestToken> {
   override fun countByUserId(userId: Long): Long {
     synchronized(tokens) {
       return tokens.count { it.userId == userId }.toLong()
+    }
+  }
+
+  /**
+   * Delete all tokens that expired before the cutoff.
+   *
+   * @param cutoff Tokens with expiryAt before this are deleted.
+   * @return Number of tokens deleted.
+   */
+  override fun deleteByExpiryAtBefore(cutoff: Instant): Int {
+    synchronized(tokens) {
+      val expired = tokens.filter { it.expiryAt.isBefore(cutoff) }
+      tokens.removeIf { it.expiryAt.isBefore(cutoff) }
+      return expired.size
     }
   }
 }

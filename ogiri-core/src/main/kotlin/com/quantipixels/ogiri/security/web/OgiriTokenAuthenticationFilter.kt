@@ -228,7 +228,7 @@ open class OgiriTokenAuthenticationFilter(
           tokenService.extendBatchBuffer(user, token, client)
           null
         } else {
-          rotateTokensIfNeeded(user, client, request.method)
+          rotateTokensIfNeeded(user, client, request)
         }
 
     return AuthResult(user, authHeader)
@@ -246,16 +246,16 @@ open class OgiriTokenAuthenticationFilter(
   private fun rotateTokensIfNeeded(
       user: OgiriUser,
       client: String,
-      method: String,
+      request: HttpServletRequest,
   ): AuthHeader? {
-    if (rotateOnWriteOnly && isSafeMethod(method)) return null
+    if (rotateOnWriteOnly && isSafeMethod(request.method)) return null
     val shouldRotate =
         if (rotateStaleSeconds > 0) {
           tokenService.shouldRotate(user, client, rotateStaleSeconds)
         } else {
           true
         }
-    return if (shouldRotate) tokenService.createNewAuthToken(user.getOgiriUserId(), client)
+    return if (shouldRotate) tokenService.createNewAuthToken(user.getOgiriUserId(), client, request)
     else null
   }
 

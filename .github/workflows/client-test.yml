@@ -4,12 +4,12 @@ on:
   push:
     branches: [ori, main]
     paths:
-      - 'ogiri-client/**'
-      - '.github/workflows/client-test.yml'
+      - "ogiri-client/**"
+      - ".github/workflows/client-test.yml"
   pull_request:
     branches: [ori, main]
     paths:
-      - 'ogiri-client/**'
+      - "ogiri-client/**"
 
 jobs:
   test:
@@ -35,7 +35,7 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'pnpm'
+          cache: "pnpm"
           cache-dependency-path: ogiri-client/pnpm-lock.yaml
 
       - name: Install dependencies

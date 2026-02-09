@@ -7,7 +7,7 @@ All properties prefixed with `ogiri.*`
 ```yaml
 ogiri:
   security:
-    register-filter: true     # Auto-register SecurityFilterChain
+    register-filter: true # Auto-register SecurityFilterChain
 ```
 
 ## Authentication
@@ -15,17 +15,18 @@ ogiri:
 ```yaml
 ogiri:
   auth:
-    max-clients: 10                    # Max tokens per user
-    batch-grace-seconds: 5             # Batch request window
-    token-lifespan-days: 14            # Token TTL
-    rotate-on-write-only: false        # Only rotate on POST/PUT/DELETE
-    rotate-stale-seconds: 3600         # Force rotation threshold (0=disabled)
-    max-bearer-token-size: 8192        # DoS protection
+    max-clients: 10 # Max tokens per user
+    batch-grace-seconds: 5 # Batch request window
+    token-lifespan-days: 14 # Token TTL
+    rotate-on-write-only: false # Only rotate on POST/PUT/DELETE
+    rotate-stale-seconds: 3600 # Force rotation threshold (0=disabled)
+    max-bearer-token-size: 8192 # DoS protection
 ```
 
 ### Startup Warnings
 
 Logged for:
+
 - `rotate-stale-seconds: 0` (rotation disabled)
 - `secure: false` (insecure cookies)
 - `http-only: false` (XSS vulnerable)
@@ -35,9 +36,9 @@ Logged for:
 ```yaml
 ogiri:
   cleanup:
-    enabled: true              # Enable scheduled cleanup
-    interval-ms: 21600000      # 6 hours
-    batch-size: 1000           # Deletion batch size
+    enabled: true # Enable scheduled cleanup
+    interval-ms: 21600000 # 6 hours
+    batch-size: 1000 # Deletion batch size
 ```
 
 ## Cookies
@@ -45,11 +46,11 @@ ogiri:
 ```yaml
 ogiri:
   cookies:
-    enabled: true              # Use cookies for auth headers
-    secure: true               # Require HTTPS
-    http-only: true            # Prevent JavaScript access
-    same-site: Strict          # CSRF protection (Strict|Lax|None)
-    path: /                    # Cookie path
+    enabled: true # Use cookies for auth headers
+    secure: true # Require HTTPS
+    http-only: true # Prevent JavaScript access
+    same-site: Strict # CSRF protection (Strict|Lax|None)
+    path: / # Cookie path
 ```
 
 **On 401**: If `cookies.enabled=true`, auth cookies cleared (maxAge=0) to prevent stale-cookie loops.
@@ -59,13 +60,14 @@ ogiri:
 ```yaml
 ogiri:
   cache:
-    max-size: 10000            # Token equality cache size
-    expiry-minutes: 60         # Cache TTL
+    max-size: 10000 # Token equality cache size
+    expiry-minutes: 60 # Cache TTL
 ```
 
 ## Property Synchronization
 
 ⚠️ Do not rename headers or property names without updating:
+
 - Documentation in `docs/configuration.md`
 - Tests
 - `OgiriConfigurationProperties` defaults

@@ -20,10 +20,13 @@ import com.quantipixels.ogiri.security.helpers.AuthenticationBypassDecider
 import com.quantipixels.ogiri.security.routes.OgiriRoute
 import com.quantipixels.ogiri.security.routes.OgiriRouteCatalog
 import com.quantipixels.ogiri.security.routes.OgiriRouteRegistry
+import com.quantipixels.ogiri.security.spi.OgiriAuditHook
+import com.quantipixels.ogiri.security.spi.OgiriRateLimitHook
 import com.quantipixels.ogiri.security.spi.OgiriUserDirectory
 import com.quantipixels.ogiri.security.testutil.InMemoryTokenRepository
 import com.quantipixels.ogiri.security.testutil.TestFixtures
 import com.quantipixels.ogiri.security.testutil.TestToken
+import com.quantipixels.ogiri.security.testutil.emptyObjectProvider
 import com.quantipixels.ogiri.security.tokens.DefaultOgiriSubTokenRegistry
 import com.quantipixels.ogiri.security.tokens.OgiriTokenRepository
 import com.quantipixels.ogiri.security.tokens.OgiriTokenService
@@ -92,6 +95,8 @@ class OgiriTokenAuthenticationFilterTest {
           identifierPolicy,
           subTokenRegistry,
           properties,
+          emptyObjectProvider<OgiriAuditHook>(),
+          emptyObjectProvider<OgiriRateLimitHook>(),
       ) {
     override fun tokenFactory(
         userId: Long,

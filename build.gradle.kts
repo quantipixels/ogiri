@@ -29,7 +29,7 @@ allprojects {
       target("src/**/*.java")
       targetExclude("**/build/**")
       licenseHeaderFile(rootProject.file("spotless.license.kt"))
-      googleJavaFormat("1.22.0")
+      googleJavaFormat("1.28.0")
       trimTrailingWhitespace()
       endWithNewline()
     }

@@ -44,11 +44,11 @@ import org.hibernate.annotations.CreationTimestamp
  * class MyToken : OgiriBaseTokenEntity()
  * ```
  *
- * All 15+ fields with proper JPA annotations are inherited:
+ * All 14+ fields with proper JPA annotations are inherited:
  * - id (auto-generated)
  * - userId, client, token, tokenType
  * - expiryAt, tokenUpdatedAt, createdAt, updatedAt
- * - previousToken, lastToken, tokenPrefix, tokenSubtype
+ * - previousToken, lastToken, tokenSubtype
  * - lastUsedAt
  * - plainToken (transient, not persisted)
  *
@@ -108,9 +108,6 @@ abstract class OgiriBaseTokenEntity : OgiriBaseToken() {
    * cleanup of stale tokens.
    */
   @Column(name = "last_used_at") override var lastUsedAt: Instant? = null
-
-  /** Token prefix for O(1) lookup optimization. First 8 characters of plaintext token. */
-  @Column(name = "token_prefix", length = 16) override var tokenPrefix: String? = null
 
   /**
    * Plain (unhashed) token value. NEVER persisted to database. Only exists in-memory temporarily

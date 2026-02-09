@@ -32,14 +32,14 @@ Base: `ogiri-core/src/main/kotlin/com/quantipixels/ogiri/security/`
 
 ## Key Components
 
-| Component | File | Purpose |
-|-----------|------|---------|
-| **Token Service** | `tokens/OgiriTokenService.kt` | CRUD, validation, rotation, cleanup |
-| **Auth Filter** | `web/OgiriTokenAuthenticationFilter.kt` | Request auth, rotation |
-| **Auth Header** | `core/AuthHeader.kt` | HTTP header/cookie parsing, response writing |
-| **Sub-tokens** | `tokens/OgiriSubTokenRegistration.kt` | Pluggable token types |
-| **Route Registry** | `routes/OgiriRouteRegistry.kt` | Public/protected routes |
-| **Config** | `config/OgiriConfigurationProperties.kt` | All config properties |
+| Component          | File                                     | Purpose                                      |
+| ------------------ | ---------------------------------------- | -------------------------------------------- |
+| **Token Service**  | `tokens/OgiriTokenService.kt`            | CRUD, validation, rotation, cleanup          |
+| **Auth Filter**    | `web/OgiriTokenAuthenticationFilter.kt`  | Request auth, rotation                       |
+| **Auth Header**    | `core/AuthHeader.kt`                     | HTTP header/cookie parsing, response writing |
+| **Sub-tokens**     | `tokens/OgiriSubTokenRegistration.kt`    | Pluggable token types                        |
+| **Route Registry** | `routes/OgiriRouteRegistry.kt`           | Public/protected routes                      |
+| **Config**         | `config/OgiriConfigurationProperties.kt` | All config properties                        |
 
 ## Extension Points
 

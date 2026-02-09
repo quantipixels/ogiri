@@ -26,29 +26,29 @@ pnpm add ./ogiri-client
 ### Basic Usage
 
 ```typescript
-import { OgiriClient } from 'ogiri-security-client';
+import { OgiriClient } from "ogiri-security-client";
 
 const client = new OgiriClient({
-  baseURL: 'https://api.example.com',
-  authMethod: 'headers', // 'headers' | 'cookies' | 'both'
+  baseURL: "https://api.example.com",
+  authMethod: "headers", // 'headers' | 'cookies' | 'both'
 });
 
 // Login
-const loginResponse = await client.post('/api/auth/login', {
-  body: { username: 'user', password: 'pass' },
+const loginResponse = await client.post("/api/auth/login", {
+  body: { username: "user", password: "pass" },
 });
 
 // Authenticated requests (tokens injected automatically)
-const data = await client.get('/api/protected/resource');
+const data = await client.get("/api/protected/resource");
 
 // Logout
-await client.post('/api/auth/logout');
+await client.post("/api/auth/logout");
 ```
 
 ### Custom Storage
 
 ```typescript
-import { OgiriClient, TokenStorage } from 'ogiri-security-client';
+import { OgiriClient, TokenStorage } from "ogiri-security-client";
 
 class CustomStorage implements TokenStorage {
   async save(tokens: OgiriTokens): Promise<void> {
@@ -65,7 +65,7 @@ class CustomStorage implements TokenStorage {
 }
 
 const client = new OgiriClient({
-  baseURL: 'https://api.example.com',
+  baseURL: "https://api.example.com",
   storage: new CustomStorage(),
 });
 ```
@@ -73,18 +73,18 @@ const client = new OgiriClient({
 ### Error Handling
 
 ```typescript
-import { OgiriClient, OgiriAuthError } from 'ogiri-security-client';
+import { OgiriClient, OgiriAuthError } from "ogiri-security-client";
 
 const client = new OgiriClient({
-  baseURL: 'https://api.example.com',
+  baseURL: "https://api.example.com",
   onAuthError: (error: OgiriAuthError) => {
-    console.error('Auth failed:', error.message);
+    console.error("Auth failed:", error.message);
     // Redirect to login, show notification, etc.
   },
 });
 
 try {
-  await client.get('/api/protected');
+  await client.get("/api/protected");
 } catch (error) {
   if (error instanceof OgiriAuthError) {
     // Handle authentication errors
@@ -100,9 +100,9 @@ try {
 
 ```typescript
 interface OgiriClientConfig {
-  baseURL: string;                              // API base URL
-  authMethod?: 'headers' | 'cookies' | 'both';  // Default: 'headers'
-  storage?: TokenStorage;                       // Default: MemoryTokenStorage
+  baseURL: string; // API base URL
+  authMethod?: "headers" | "cookies" | "both"; // Default: 'headers'
+  storage?: TokenStorage; // Default: MemoryTokenStorage
   onAuthError?: (error: OgiriAuthError) => void;
 }
 ```
@@ -120,8 +120,8 @@ interface OgiriClientConfig {
 
 ```typescript
 interface OgiriRequestOptions {
-  params?: Record<string, string>;  // Query parameters
-  body?: unknown;                    // Request body (auto-serialized to JSON)
+  params?: Record<string, string>; // Query parameters
+  body?: unknown; // Request body (auto-serialized to JSON)
   headers?: Record<string, string>; // Additional headers
   // ...standard fetch options
 }

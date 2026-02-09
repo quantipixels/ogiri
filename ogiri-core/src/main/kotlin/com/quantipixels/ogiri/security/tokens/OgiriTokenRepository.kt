@@ -198,7 +198,8 @@ interface OgiriTokenRepository<T : OgiriToken> {
   /**
    * Count tokens for a user.
    *
-   * Default: Loads all tokens and counts. Override with COUNT query for performance:
+   * Spring Data auto-generates a COUNT query from the method name. For custom implementations,
+   * override with an efficient COUNT query:
    * ```kotlin
    * @Query("SELECT COUNT(t) FROM Token t WHERE t.userId = :userId")
    * override fun countByUserId(userId: Long): Long
@@ -207,37 +208,13 @@ interface OgiriTokenRepository<T : OgiriToken> {
    * @param userId The user ID to count tokens for
    * @return Number of tokens belonging to the user
    */
-  fun countByUserId(userId: Long): Long = findByUserIdOrderByUpdatedAtDesc(userId).size.toLong()
-
-  /**
-   * Find valid (non-expired) tokens by prefix and type.
-   *
-   * Used for O(1) token lookup optimization. The prefix is the first 8 characters of the plaintext
-   * token value.
-   *
-   * Default: Filters all tokens by prefix. Override with indexed query for performance:
-   * ```kotlin
-   * @Query("SELECT t FROM Token t WHERE t.tokenPrefix = :prefix AND t.tokenType = :tokenType AND t.expiryAt > :now")
-   * override fun findByTokenPrefixAndTokenTypeAndExpiryAtAfter(prefix: String, tokenType: String, now: Instant): List<MyToken>
-   * ```
-   *
-   * @param prefix The 8-character token prefix to search for
-   * @param tokenType The token type to filter by (e.g., "app")
-   * @param now Current instant for expiry comparison
-   * @return List of matching non-expired tokens; empty list if none found
-   */
-  fun findByTokenPrefixAndTokenTypeAndExpiryAtAfter(
-      prefix: String,
-      tokenType: String,
-      now: Instant,
-  ): List<T> {
-    return findByTokenType(tokenType).filter { it.tokenPrefix == prefix && !it.isExpired(now) }
-  }
+  fun countByUserId(userId: Long): Long
 
   /**
    * Delete all expired tokens before cutoff.
    *
-   * Default: Finds and deletes individually. Override with bulk DELETE for performance:
+   * Spring Data auto-generates a DELETE query from the method name. For custom implementations,
+   * override with a bulk DELETE for performance:
    * ```kotlin
    * @Modifying
    * @Query("DELETE FROM Token t WHERE t.expiryAt < :cutoff")
@@ -247,9 +224,5 @@ interface OgiriTokenRepository<T : OgiriToken> {
    * @param cutoff Instant used as the expiry threshold; tokens expiring before this are deleted.
    * @return Number of tokens deleted.
    */
-  fun deleteByExpiryAtBefore(cutoff: Instant): Int {
-    val expired = findByExpiryAtBefore(cutoff)
-    expired.forEach { delete(it) }
-    return expired.size
-  }
+  fun deleteByExpiryAtBefore(cutoff: Instant): Int
 }

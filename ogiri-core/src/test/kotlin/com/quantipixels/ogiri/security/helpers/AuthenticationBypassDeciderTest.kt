@@ -24,6 +24,7 @@ import org.springframework.mock.web.MockHttpServletRequest
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher
 
 class AuthenticationBypassDeciderTest {
   @AfterEach
@@ -46,8 +47,10 @@ class AuthenticationBypassDeciderTest {
   @Test
   fun `bypasses whitelisted actuator route`() {
     val catalog = OgiriRouteCatalog(emptyList())
-    val decider = AuthenticationBypassDecider(catalog)
-    val request = MockHttpServletRequest("GET", "/actuator/health")
+    val matcher = AntPathRequestMatcher("/actuator/health")
+    val decider = AuthenticationBypassDecider(catalog, matcher)
+    val request =
+        MockHttpServletRequest("GET", "/actuator/health").apply { servletPath = "/actuator/health" }
 
     assertTrue(decider.canSkip(request))
   }

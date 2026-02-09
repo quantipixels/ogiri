@@ -72,7 +72,6 @@ data class DirectToken(
     @Column(name = "last_token_hash") override var lastToken: String? = null,
     @Column(name = "previous_token_hash") override var previousToken: String? = null,
     @Column(name = "last_used_at") override var lastUsedAt: Instant? = null,
-    @Column(name = "token_prefix", length = 8) override var tokenPrefix: String? = null,
 ) : OgiriToken {
   @Transient override var plainToken: String? = null
 }

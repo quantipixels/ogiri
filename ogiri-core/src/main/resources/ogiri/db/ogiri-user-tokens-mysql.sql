@@ -9,7 +9,6 @@ CREATE
             token_hash VARCHAR(255) NOT NULL,
             token_type VARCHAR(20) NOT NULL,
             token_subtype VARCHAR(64),
-            token_prefix VARCHAR(8),
             expiry_at TIMESTAMP(6) NOT NULL,
             previous_token_hash VARCHAR(255),
             last_token_hash VARCHAR(255),
@@ -25,7 +24,10 @@ CREATE
                 ),
                 INDEX idx_user_tokens_user_id(user_id),
                 INDEX idx_user_tokens_expiry(expiry_at),
-                INDEX idx_user_tokens_prefix(token_prefix)
+                INDEX idx_user_tokens_user_subtype(
+                    user_id,
+                    token_subtype
+                )
         );
 
 -- Optional: uncomment and point to your users table when ready.

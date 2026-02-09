@@ -13,10 +13,13 @@
 package com.quantipixels.ogiri.security.config
 
 import com.quantipixels.ogiri.security.core.DefaultIdentifierPolicy
+import com.quantipixels.ogiri.security.spi.OgiriAuditHook
+import com.quantipixels.ogiri.security.spi.OgiriRateLimitHook
 import com.quantipixels.ogiri.security.spi.OgiriUser
 import com.quantipixels.ogiri.security.spi.OgiriUserDirectory
 import com.quantipixels.ogiri.security.testutil.InMemoryTokenRepository
 import com.quantipixels.ogiri.security.testutil.TestToken
+import com.quantipixels.ogiri.security.testutil.emptyObjectProvider
 import com.quantipixels.ogiri.security.tokens.OgiriSubTokenRegistry
 import com.quantipixels.ogiri.security.tokens.OgiriTokenRepository
 import com.quantipixels.ogiri.security.tokens.OgiriTokenService
@@ -60,6 +63,8 @@ class OgiriSecurityAutoConfigurationWiringTest {
                 identifierPolicy,
                 subTokenRegistry,
                 properties,
+                emptyObjectProvider<OgiriAuditHook>(),
+                emptyObjectProvider<OgiriRateLimitHook>(),
             ) {
           override fun tokenFactory(
               userId: Long,

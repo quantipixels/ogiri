@@ -14,6 +14,8 @@ package com.quantipixels.ogiri.security.core
 
 import java.security.SecureRandom
 
+const val MIN_TOKEN_LENGTH = 32
+
 interface IdentifierPolicy {
   fun generate(): String
 
@@ -21,8 +23,14 @@ interface IdentifierPolicy {
 }
 
 class DefaultIdentifierPolicy(
-    private val length: Int = 32,
+    private val length: Int = MIN_TOKEN_LENGTH,
 ) : IdentifierPolicy {
+  init {
+    require(length >= MIN_TOKEN_LENGTH) {
+      "Token length must be at least $MIN_TOKEN_LENGTH characters (configured: $length)"
+    }
+  }
+
   private val random = SecureRandom()
   private val alphabet =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-".toCharArray()

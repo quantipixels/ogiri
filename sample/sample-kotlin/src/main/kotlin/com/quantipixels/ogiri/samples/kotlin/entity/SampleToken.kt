@@ -31,7 +31,6 @@ import jakarta.persistence.UniqueConstraint
         [
             Index(name = "idx_user_tokens_user_id", columnList = "user_id"),
             Index(name = "idx_user_tokens_expiry", columnList = "expiry_at"),
-            Index(name = "idx_user_tokens_prefix", columnList = "token_prefix"),
         ],
     uniqueConstraints =
         [

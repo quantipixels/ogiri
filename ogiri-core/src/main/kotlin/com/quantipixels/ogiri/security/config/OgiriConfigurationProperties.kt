@@ -111,6 +111,39 @@ open class OgiriConfigurationProperties {
      * Default: true
      */
     var registerFilter: Boolean = true
+
+    /** CSRF configuration for the auto-registered security filter chain. */
+    val csrf: CsrfProperties = CsrfProperties()
+
+    /**
+     * Ant-style path patterns that bypass authentication. Uses Spring Security
+     * AntPathRequestMatcher. Defaults include Swagger UI, webjars, OpenAPI, actuator health/info,
+     * and favicon.
+     */
+    var bypassPaths: List<String> =
+        listOf(
+            "/swagger-ui/**",
+            "/swagger-ui.html",
+            "/webjars/**",
+            "/openapi/**",
+            "/actuator/health",
+            "/actuator/info",
+            "/favicon.ico",
+        )
+
+    /**
+     * CSRF mode for the ogiri auto-registered security chain.
+     *
+     * Supported values:
+     * - "auto": Enable CSRF only when cookies are enabled and SameSite=None.
+     * - "true": Always enable CSRF.
+     * - "false": Always disable CSRF.
+     *
+     * Default: "auto"
+     */
+    open class CsrfProperties {
+      var enabled: String = "auto"
+    }
   }
 
   /**

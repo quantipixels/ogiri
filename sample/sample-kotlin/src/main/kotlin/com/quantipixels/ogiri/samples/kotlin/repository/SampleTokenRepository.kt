@@ -14,6 +14,7 @@ package com.quantipixels.ogiri.samples.kotlin.repository
 
 import com.quantipixels.ogiri.samples.kotlin.entity.SampleToken
 import com.quantipixels.ogiri.security.tokens.OgiriTokenRepository
+import java.time.Instant
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
@@ -61,4 +62,9 @@ interface SampleTokenRepository :
   @Modifying
   @Query("DELETE FROM SampleToken t WHERE t.userId = ?1")
   override fun deleteByUserId(userId: Long)
+
+  @Transactional
+  @Modifying
+  @Query("DELETE FROM SampleToken t WHERE t.expiryAt < ?1")
+  override fun deleteByExpiryAtBefore(cutoff: Instant): Int
 }

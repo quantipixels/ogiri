@@ -1,6 +1,6 @@
 # Database Integration
 
-Ògiri is database-agnostic. For JPA/Hibernate users, the `ogiri-jpa` module provides ready-to-use base classes that reduce boilerplate by ~70%.
+Ogiri is database-agnostic. For JPA/Hibernate users, the `ogiri-jpa` module provides ready-to-use base classes that reduce boilerplate by ~70%.
 
 ## Quick Start with JPA (Recommended)
 
@@ -52,106 +52,42 @@ This includes `ogiri-core` and `spring-boot-starter-data-jpa` transitively.
     }
     ```
 
-That's it! `OgiriBaseTokenEntity` provides all 15+ fields with proper JPA annotations:
+`OgiriBaseTokenEntity` provides all fields with proper JPA annotations:
 
 - `id`, `userId`, `client`, `token`, `tokenType`
 - `expiryAt`, `tokenUpdatedAt`, `createdAt`, `updatedAt`
-- `previousToken`, `lastToken`, `tokenPrefix`, `tokenSubtype`
+- `previousToken`, `lastToken`, `tokenSubtype`
 - `lastUsedAt`, `plainToken` (transient)
 
-### 3. Create JPA Repository Interface
+### 3. Create Repository
 
-=== "Kotlin"
-
-    ```kotlin
-    interface MyTokenJpaRepository : JpaRepository<MyToken, Long> {
-        @Query("SELECT t FROM MyToken t WHERE t.userId = ?1 ORDER BY t.updatedAt DESC")
-        fun findByUserIdOrderByUpdatedAtDesc(userId: Long): List<MyToken>
-
-        @Query("SELECT t FROM MyToken t WHERE t.userId = ?1 AND t.client = ?2")
-        fun findByUserIdAndClient(userId: Long, client: String): MyToken?
-
-        @Query("SELECT t FROM MyToken t WHERE t.userId = ?1 AND t.tokenSubtype = ?2 ORDER BY t.updatedAt DESC")
-        fun findByUserIdAndTokenSubtypeOrderByUpdatedAtDesc(userId: Long, subtype: String): List<MyToken>
-
-        @Query("SELECT t FROM MyToken t WHERE t.expiryAt < ?1")
-        fun findByExpiryAtBefore(cutoff: Instant): List<MyToken>
-
-        @Modifying @Transactional
-        @Query("DELETE FROM MyToken t WHERE t.userId = ?1 AND t.client = ?2")
-        fun deleteByUserIdAndClient(userId: Long, client: String)
-
-        @Modifying @Transactional
-        @Query("DELETE FROM MyToken t WHERE t.userId = ?1 AND t.client IN ?2")
-        fun deleteByUserIdAndClientIn(userId: Long, clients: Collection<String>)
-
-        @Modifying @Transactional
-        @Query("DELETE FROM MyToken t WHERE t.userId = ?1")
-        fun deleteByUserId(userId: Long)
-    }
-    ```
-
-=== "Java"
-
-    ```java
-    public interface MyTokenJpaRepository extends JpaRepository<MyToken, Long> {
-        @Query("SELECT t FROM MyToken t WHERE t.userId = ?1 ORDER BY t.updatedAt DESC")
-        List<MyToken> findByUserIdOrderByUpdatedAtDesc(Long userId);
-
-        @Query("SELECT t FROM MyToken t WHERE t.userId = ?1 AND t.client = ?2")
-        Optional<MyToken> findByUserIdAndClient(Long userId, String client);
-
-        @Query("SELECT t FROM MyToken t WHERE t.userId = ?1 AND t.tokenSubtype = ?2 ORDER BY t.updatedAt DESC")
-        List<MyToken> findByUserIdAndTokenSubtypeOrderByUpdatedAtDesc(Long userId, String subtype);
-
-        @Query("SELECT t FROM MyToken t WHERE t.expiryAt < ?1")
-        List<MyToken> findByExpiryAtBefore(Instant cutoff);
-
-        @Modifying @Transactional
-        @Query("DELETE FROM MyToken t WHERE t.userId = ?1 AND t.client = ?2")
-        void deleteByUserIdAndClient(Long userId, String client);
-
-        @Modifying @Transactional
-        @Query("DELETE FROM MyToken t WHERE t.userId = ?1 AND t.client IN ?2")
-        void deleteByUserIdAndClientIn(Long userId, Collection<String> clients);
-
-        @Modifying @Transactional
-        @Query("DELETE FROM MyToken t WHERE t.userId = ?1")
-        void deleteByUserId(Long userId);
-    }
-    ```
-
-### 4. Create Repository Adapter
+Extend both `JpaRepository` and `OgiriTokenRepository` directly:
 
 === "Kotlin"
 
     ```kotlin
     @Repository
-    @Primary
-    class MyTokenRepositoryAdapter(
-        jpaRepository: MyTokenJpaRepository
-    ) : AbstractJpaTokenRepositoryAdapter<MyToken, MyTokenJpaRepository>(jpaRepository) {
+    interface MyTokenRepository :
+        JpaRepository<MyToken, Long>, OgiriTokenRepository<MyToken> {
 
-        override fun findByUserIdOrderByUpdatedAtDesc(userId: Long) =
-            jpaRepository.findByUserIdOrderByUpdatedAtDesc(userId)
+        @Query("SELECT COUNT(t) FROM MyToken t WHERE t.userId = :userId")
+        override fun countByUserId(userId: Long): Long
 
-        override fun findByUserIdAndClientEquals(userId: Long, client: String) =
-            jpaRepository.findByUserIdAndClient(userId, client)
+        @Transactional @Modifying
+        @Query("DELETE FROM MyToken t WHERE t.userId = ?1 AND t.client = ?2")
+        override fun deleteByUserIdAndClient(userId: Long, client: String)
 
-        override fun findByUserIdAndTokenSubtypeOrderByUpdatedAtDesc(userId: Long, subtype: String) =
-            jpaRepository.findByUserIdAndTokenSubtypeOrderByUpdatedAtDesc(userId, subtype)
+        @Transactional @Modifying
+        @Query("DELETE FROM MyToken t WHERE t.userId = ?1 AND t.client IN ?2")
+        override fun deleteByUserIdAndClientIn(userId: Long, clients: Collection<String>)
 
-        override fun findByExpiryAtBeforeCutoff(cutoff: Instant) =
-            jpaRepository.findByExpiryAtBefore(cutoff)
+        @Transactional @Modifying
+        @Query("DELETE FROM MyToken t WHERE t.userId = ?1")
+        override fun deleteByUserId(userId: Long)
 
-        override fun deleteByUserIdAndClientEquals(userId: Long, client: String) =
-            jpaRepository.deleteByUserIdAndClient(userId, client)
-
-        override fun deleteByUserIdAndClientIdIn(userId: Long, clientIds: Collection<String>) =
-            jpaRepository.deleteByUserIdAndClientIn(userId, clientIds)
-
-        override fun deleteByUserIdJpa(userId: Long) =
-            jpaRepository.deleteByUserId(userId)
+        @Transactional @Modifying
+        @Query("DELETE FROM MyToken t WHERE t.expiryAt < ?1")
+        override fun deleteByExpiryAtBefore(cutoff: Instant): Int
     }
     ```
 
@@ -159,73 +95,68 @@ That's it! `OgiriBaseTokenEntity` provides all 15+ fields with proper JPA annota
 
     ```java
     @Repository
-    @Primary
-    public class MyTokenRepositoryAdapter
-        extends AbstractJpaTokenRepositoryAdapter<MyToken, MyTokenJpaRepository> {
+    public interface MyTokenRepository
+        extends JpaRepository<MyToken, Long>, OgiriTokenRepository<MyToken> {
 
-        public MyTokenRepositoryAdapter(MyTokenJpaRepository jpaRepository) {
-            super(jpaRepository);
-        }
-
+        @Query("SELECT COUNT(t) FROM MyToken t WHERE t.userId = :userId")
         @Override
-        protected List<MyToken> findByUserIdOrderByUpdatedAtDesc(long userId) {
-            return getJpaRepository().findByUserIdOrderByUpdatedAtDesc(userId);
-        }
+        long countByUserId(long userId);
 
+        @Transactional @Modifying
+        @Query("DELETE FROM MyToken t WHERE t.userId = ?1 AND t.client = ?2")
         @Override
-        protected MyToken findByUserIdAndClientEquals(long userId, String client) {
-            return getJpaRepository().findByUserIdAndClient(userId, client).orElse(null);
-        }
+        void deleteByUserIdAndClient(long userId, String client);
 
+        @Transactional @Modifying
+        @Query("DELETE FROM MyToken t WHERE t.userId = ?1 AND t.client IN ?2")
         @Override
-        protected List<MyToken> findByUserIdAndTokenSubtypeOrderByUpdatedAtDesc(long userId, String subtype) {
-            return getJpaRepository().findByUserIdAndTokenSubtypeOrderByUpdatedAtDesc(userId, subtype);
-        }
+        void deleteByUserIdAndClientIn(long userId, Collection<String> clients);
 
+        @Transactional @Modifying
+        @Query("DELETE FROM MyToken t WHERE t.userId = ?1")
         @Override
-        protected List<MyToken> findByExpiryAtBeforeCutoff(Instant cutoff) {
-            return getJpaRepository().findByExpiryAtBefore(cutoff);
-        }
+        void deleteByUserId(long userId);
 
+        @Transactional @Modifying
+        @Query("DELETE FROM MyToken t WHERE t.expiryAt < ?1")
         @Override
-        protected void deleteByUserIdAndClientEquals(long userId, String client) {
-            getJpaRepository().deleteByUserIdAndClient(userId, client);
-        }
-
-        @Override
-        protected void deleteByUserIdAndClientIdIn(long userId, Collection<String> clientIds) {
-            getJpaRepository().deleteByUserIdAndClientIn(userId, clientIds);
-        }
-
-        @Override
-        protected void deleteByUserIdJpa(long userId) {
-            getJpaRepository().deleteByUserId(userId);
-        }
+        int deleteByExpiryAtBefore(Instant cutoff);
     }
     ```
 
-### 5. Create Token Service
+Spring Data auto-generates these from method names:
+
+- `findByUserIdOrderByUpdatedAtDesc(userId)`
+- `findByUserIdAndClient(userId, client)` &rarr; `Optional<T>`
+- `findByUserIdAndClientIn(userId, clients)` &rarr; `List<T>`
+- `findByUserIdAndTokenSubtypeOrderByUpdatedAtDesc(userId, tokenSubtype)`
+- `findByExpiryAtBefore(cutoff)`
+- `findByTokenType(tokenType)`
+
+### 4. Create Token Service
 
 === "Kotlin"
 
     ```kotlin
     @Service
-    @Primary
     class MyTokenService(
         tokenRepository: OgiriTokenRepository<MyToken>,
         passwordEncoder: PasswordEncoder,
         userDirectory: OgiriUserDirectory,
         identifierPolicy: IdentifierPolicy,
         subTokenRegistry: OgiriSubTokenRegistry,
-        properties: OgiriConfigurationProperties
+        properties: OgiriConfigurationProperties,
+        auditHookProvider: ObjectProvider<OgiriAuditHook>,
+        rateLimitHookProvider: ObjectProvider<OgiriRateLimitHook>,
     ) : OgiriTokenService<MyToken>(
         tokenRepository, passwordEncoder, userDirectory,
-        identifierPolicy, subTokenRegistry, properties
+        identifierPolicy, subTokenRegistry, properties,
+        auditHookProvider, rateLimitHookProvider,
     ) {
         override fun tokenFactory(
             userId: Long, client: String, hashedToken: String,
             tokenType: OgiriTokenType, expiry: Instant,
-            tokenSubtype: String?, plainTokenValue: String
+            tokenSubtype: String?, plainTokenValue: String,
         ) = MyToken().apply {
             this.userId = userId
             this.client = client
@@ -242,7 +173,6 @@ That's it! `OgiriBaseTokenEntity` provides all 15+ fields with proper JPA annota
 
     ```java
     @Service
-    @Primary
     public class MyTokenService extends OgiriTokenService<MyToken> {
         public MyTokenService(
             OgiriTokenRepository<MyToken> tokenRepository,
@@ -250,10 +180,13 @@ That's it! `OgiriBaseTokenEntity` provides all 15+ fields with proper JPA annota
             OgiriUserDirectory userDirectory,
             IdentifierPolicy identifierPolicy,
             OgiriSubTokenRegistry subTokenRegistry,
-            OgiriConfigurationProperties properties
+            OgiriConfigurationProperties properties,
+            ObjectProvider<OgiriAuditHook> auditHookProvider,
+            ObjectProvider<OgiriRateLimitHook> rateLimitHookProvider
         ) {
             super(tokenRepository, passwordEncoder, userDirectory,
-                  identifierPolicy, subTokenRegistry, properties);
+                  identifierPolicy, subTokenRegistry, properties,
+                  auditHookProvider, rateLimitHookProvider);
         }
 
         @Override
@@ -293,17 +226,17 @@ class MongoTokenRepository(
     private val mongoTemplate: MongoTemplate
 ) : OgiriTokenRepository<MongoToken> {
 
-    override fun save(token: MongoToken): MongoToken = mongoTemplate.save(token)
+    override fun <S : MongoToken> save(token: S): S = mongoTemplate.save(token)
 
-    override fun findById(id: Long): MongoToken? =
-        mongoTemplate.findById(id, MongoToken::class.java)
+    override fun findById(id: Long): Optional<MongoToken> =
+        Optional.ofNullable(mongoTemplate.findById(id, MongoToken::class.java))
 
-    override fun findByUserIdAndClient(userId: Long, client: String): MongoToken? {
+    override fun findByUserIdAndClient(userId: Long, client: String): Optional<MongoToken> {
         val query = Query(Criteria.where("userId").`is`(userId).and("client").`is`(client))
-        return mongoTemplate.findOne(query, MongoToken::class.java)
+        return Optional.ofNullable(mongoTemplate.findOne(query, MongoToken::class.java))
     }
 
-    override fun findAllByUserId(userId: Long): List<MongoToken> {
+    override fun findByUserIdOrderByUpdatedAtDesc(userId: Long): List<MongoToken> {
         val query = Query(Criteria.where("userId").`is`(userId))
             .with(Sort.by(Sort.Direction.DESC, "updatedAt"))
         return mongoTemplate.find(query, MongoToken::class.java)
@@ -318,6 +251,10 @@ class MongoTokenRepository(
         mongoTemplate.remove(Query(Criteria.where("_id").`is`(token.id)), MongoToken::class.java)
     }
 
+    override fun deleteById(id: Long) {
+        mongoTemplate.remove(Query(Criteria.where("_id").`is`(id)), MongoToken::class.java)
+    }
+
     // ... implement remaining methods
 }
 ```
@@ -330,15 +267,13 @@ class RedisTokenRepository(
     private val redisTemplate: RedisTemplate<String, Token>
 ) : OgiriTokenRepository<Token> {
 
-    override fun findByUserIdAndClient(userId: Long, client: String): Token? =
-        redisTemplate.opsForValue().get("token:$userId:$client")
+    override fun findByUserIdAndClient(userId: Long, client: String): Optional<Token> =
+        Optional.ofNullable(redisTemplate.opsForValue().get("token:$userId:$client"))
 
-    override fun save(token: Token): Token {
+    override fun <S : Token> save(token: S): S {
         val key = "token:${token.userId}:${token.client}"
         val ttl = Duration.between(Instant.now(), token.expiryAt)
-        if (ttl.isNegative || ttl.isZero) {
-            return token // Don't store already-expired tokens
-        }
+        if (ttl.isNegative || ttl.isZero) return token
         redisTemplate.opsForValue().set(key, token, ttl)
         return token
     }
@@ -354,25 +289,6 @@ class RedisTokenRepository(
 }
 ```
 
-### Legacy/Existing Token Table
-
-```kotlin
-@Repository
-class LegacyTokenAdapter(
-    private val legacyService: LegacyTokenService
-) : OgiriTokenRepository<LegacyToken> {
-
-    override fun findByUserIdAndClient(userId: Long, client: String) =
-        legacyService.findByUserAndSession(userId, client)
-
-    override fun save(token: LegacyToken) = legacyService.save(token)
-
-    override fun delete(token: LegacyToken) = legacyService.delete(token.id)
-
-    // ... implement remaining methods
-}
-```
-
 ---
 
 ## Token Model Requirements
@@ -383,7 +299,7 @@ class LegacyTokenAdapter(
 | `userId`         | Long    | Yes      | User identifier                 |
 | `client`         | String  | Yes      | Client/device identifier        |
 | `token`          | String  | Yes      | BCrypt hash                     |
-| `tokenType`      | String  | Yes      | "APP" or sub-token name         |
+| `tokenType`      | String  | Yes      | "app" or "sub"                  |
 | `expiryAt`       | Instant | Yes      | Expiration timestamp            |
 | `createdAt`      | Instant | Yes      | Creation timestamp              |
 | `updatedAt`      | Instant | Yes      | Last update                     |
@@ -424,103 +340,67 @@ spring:
 CREATE TABLE user_tokens (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL,
-    client VARCHAR(255) NOT NULL,
-    token VARCHAR(255) NOT NULL,
-    token_type VARCHAR(50) NOT NULL DEFAULT 'app',
-    token_prefix VARCHAR(8),           -- For O(1) token lookup (v1.3.0+)
-    expiry_at TIMESTAMP NOT NULL,
-    last_token VARCHAR(255),
-    previous_token VARCHAR(255),
-    token_subtype VARCHAR(50),
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    token_updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    last_used_at TIMESTAMP,
-
-    UNIQUE (user_id, client)
+    client_id VARCHAR(255) NOT NULL,
+    token_hash VARCHAR(255) NOT NULL,
+    token_type VARCHAR(20) NOT NULL,
+    token_subtype VARCHAR(64),
+    expiry_at TIMESTAMP(6) NOT NULL,
+    previous_token_hash VARCHAR(255),
+    last_token_hash VARCHAR(255),
+    token_updated_at TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_used_at TIMESTAMP(6),
+    created_at TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Required indexes
+CREATE UNIQUE INDEX uk_user_tokens_user_client ON user_tokens (user_id, client_id);
 CREATE INDEX idx_user_tokens_user_id ON user_tokens (user_id);
 CREATE INDEX idx_user_tokens_expiry ON user_tokens (expiry_at);
-
--- Performance optimization: Enables O(1) token lookup instead of O(n) BCrypt comparisons
-CREATE INDEX idx_user_tokens_prefix ON user_tokens (token_prefix)
-  WHERE token_type = 'app' AND expiry_at > NOW();
+CREATE INDEX idx_user_tokens_user_subtype ON user_tokens (user_id, token_subtype);
 ```
 
 ## Recommended Indexes
-
-For optimal performance, ensure these indexes exist:
 
 | Index                          | Columns                  | Purpose                 |
 | ------------------------------ | ------------------------ | ----------------------- |
 | `idx_user_tokens_user_id`      | `user_id`                | User token lookups      |
 | `idx_user_tokens_expiry`       | `expiry_at`              | Cleanup job performance |
-| `idx_user_tokens_prefix`       | `token_prefix`           | O(1) token validation   |
-| `idx_user_tokens_user_client`  | `user_id, client_id`     | Unique token lookup     |
+| `uk_user_tokens_user_client`   | `user_id, client_id`     | Unique token lookup     |
 | `idx_user_tokens_user_subtype` | `user_id, token_subtype` | Sub-token queries       |
-
-### Adding Token Prefix Index (Migration)
-
-For existing databases, add the `token_prefix` column and index:
-
-```sql
--- PostgreSQL
-ALTER TABLE user_tokens ADD COLUMN token_prefix VARCHAR(8);
-CREATE INDEX idx_user_tokens_prefix ON user_tokens (token_prefix)
-  WHERE token_type = 'app' AND expiry_at > NOW();
-
--- MySQL
-ALTER TABLE user_tokens ADD COLUMN token_prefix VARCHAR(8);
-CREATE INDEX idx_user_tokens_prefix ON user_tokens (token_prefix);
-
--- Note: Existing tokens will have NULL token_prefix.
--- The token service falls back to scanning all tokens when prefix is NULL,
--- ensuring backwards compatibility. New tokens will populate this field automatically.
-```
 
 ## Repository Methods
 
 The `OgiriTokenRepository<T>` interface includes the following methods:
 
-### Core Methods (Required)
+### Core CRUD
 
-| Method                                  | Description                      |
-| --------------------------------------- | -------------------------------- |
-| `findByUserIdAndClient(userId, client)` | Find token by user and client ID |
-| `save(token)`                           | Create or update token           |
-| `delete(token)`                         | Delete token                     |
-| `deleteExpiredTokens(expiryBefore)`     | Delete all expired tokens        |
+| Method                      | Description            |
+| --------------------------- | ---------------------- |
+| `save(token): T`            | Create or update token |
+| `findById(id): Optional<T>` | Find by primary key    |
+| `delete(token)`             | Delete token           |
+| `deleteById(id)`            | Delete by primary key  |
 
-### Performance Optimization Methods (v1.3.0+)
+### Query Methods
 
-These methods have default implementations but can be overridden for database-specific optimization:
+| Method                                                                      | Description                             |
+| --------------------------------------------------------------------------- | --------------------------------------- |
+| `findByUserIdOrderByUpdatedAtDesc(userId): List<T>`                         | All tokens for a user, newest first     |
+| `findByUserIdAndClient(userId, client): Optional<T>`                        | Token for a specific user+client        |
+| `findByUserIdAndClientIn(userId, clients): List<T>`                         | Batch fetch tokens for multiple clients |
+| `findByUserIdAndTokenSubtypeOrderByUpdatedAtDesc(userId, subtype): List<T>` | Sub-tokens by type                      |
+| `findByExpiryAtBefore(cutoff): List<T>`                                     | Expired tokens for cleanup              |
+| `findByTokenType(tokenType): List<T>`                                       | Tokens by type                          |
+| `countByUserId(userId): Long`                                               | Count tokens for a user                 |
 
-| Method                                     | Description                             | Default Behavior                       |
-| ------------------------------------------ | --------------------------------------- | -------------------------------------- |
-| `findValidTokensByPrefix(prefix, now)`     | O(1) token lookup by prefix             | Falls back to scanning all user tokens |
-| `countByUserId(userId)`                    | Count active tokens for user            | Loads all tokens and counts            |
-| `findByUserIdAndClientIn(userId, clients)` | Batch fetch tokens for multiple clients | Auto-generated by Spring Data          |
+### Delete Methods
 
-**Example: Optimized PostgreSQL Implementation**
-
-```kotlin
-@Repository
-interface AppTokenRepository : JpaRepository<AppToken, Long>, OgiriTokenRepository<AppToken> {
-
-  @Query("""
-    SELECT t FROM AppToken t
-    WHERE t.tokenPrefix = :prefix
-      AND t.expiryAt > :now
-      AND t.tokenType = 'app'
-  """)
-  override fun findValidTokensByPrefix(prefix: String, now: Instant): List<AppToken>
-
-  @Query("SELECT COUNT(t) FROM AppToken t WHERE t.userId = :userId")
-  override fun countByUserId(userId: Long): Long
-}
-```
+| Method                                       | Description                      |
+| -------------------------------------------- | -------------------------------- |
+| `deleteByUserIdAndClient(userId, client)`    | Single-device logout             |
+| `deleteByUserIdAndClientIn(userId, clients)` | Bulk session revocation          |
+| `deleteByUserId(userId)`                     | Global logout / account deletion |
+| `deleteByExpiryAtBefore(cutoff): Int`        | Cleanup expired tokens           |
 
 ---
 
@@ -529,8 +409,7 @@ interface AppTokenRepository : JpaRepository<AppToken, Long>, OgiriTokenReposito
 1. **Use `ogiri-jpa`** - Reduces boilerplate by ~70% for JPA users
 2. **Always hash tokens** - Never store plaintext tokens
 3. **Index `expiryAt`** - Enables fast cleanup queries
-4. **Index `token_prefix`** - Enables O(1) token lookups (v1.3.0+)
-5. **Use connection pooling** - HikariCP recommended for production
-6. **Monitor table size** - Archive old tokens if needed
-7. **Test with your database** - Different databases have quirks
-8. **Override performance methods** - Provide database-specific optimizations
+4. **Use connection pooling** - HikariCP recommended for production
+5. **Monitor table size** - Archive old tokens if needed
+6. **Test with your database** - Different databases have quirks
+7. **Override `countByUserId`** - Use `@Query` for performance instead of loading all tokens

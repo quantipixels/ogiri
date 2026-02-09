@@ -31,9 +31,13 @@ class OgiriTokenCleanupJob(
    */
   @Scheduled(fixedDelayString = "\${ogiri.cleanup.interval-ms:21600000}")
   fun cleanupExpiredTokens() {
-    val deleted = tokenServiceResolver.resolve().cleanupExpiredTokensBatched(Instant.now())
-    if (deleted > 0) {
-      logger.info("Expired user tokens removed count={}", deleted)
+    try {
+      val deleted = tokenServiceResolver.resolve().cleanupExpiredTokensBatched(Instant.now())
+      if (deleted > 0) {
+        logger.info("Expired user tokens removed count={}", deleted)
+      }
+    } catch (e: Exception) {
+      logger.error("Token cleanup failed", e)
     }
   }
 }

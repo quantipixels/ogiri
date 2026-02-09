@@ -17,17 +17,20 @@ Detailed guidance for AI coding assistants and contributors working in the Ògir
 ### By Task Type
 
 **Implementing new features:**
+
 1. Read [Architecture](architecture.md) - understand module boundaries
 2. Check [Security](security.md) - ensure auth flow compliance
 3. Follow [Testing](testing.md) - write tests first
 4. Apply [Code Style](code-style.md) - formatting and conventions
 
 **Fixing bugs:**
+
 1. Check [Testing](testing.md) - write failing test first
 2. Review [Security](security.md) - ensure fix doesn't introduce vulnerabilities
 3. Verify [Performance](performance.md) - fix doesn't degrade performance
 
 **Adding configuration:**
+
 1. Read [Configuration](configuration.md) - understand existing properties
 2. Follow naming conventions (`ogiri.*` prefix)
 3. Document defaults and behavior
