@@ -235,12 +235,21 @@ uid: 123
 expiry: 2025-12-25T00:00:00Z
 ```
 
+## Optional: SPI Hooks
+
+Ogiri provides two optional SPI hooks you can implement as Spring beans:
+
+- **`OgiriAuditHook`** - Receive callbacks on login success/failure, token rotation, and revocation (integrate with your SIEM)
+- **`OgiriRateLimitHook`** - Enforce rate limits before login and token creation (e.g., Bucket4j, Redis)
+
+Both default to no-ops if not provided — just register a Spring bean implementing either interface.
+
 ## Next Steps
 
-| Topic                                                                      | Description                                      |
-| -------------------------------------------------------------------------- | ------------------------------------------------ |
-| [Configuration](configuration.md)                                          | Token rotation, cleanup schedules, batch windows |
-| [Database Integration](database.md)                                        | JPA, MongoDB, Redis, custom implementations      |
-| [Sub-tokens](sub-tokens.md)                                                | Device tokens, chat tokens, API tokens           |
-| [Authentication Flow](authentication.md)                                   | Request lifecycle, rotation policies, headers    |
+| Topic                                                                         | Description                                      |
+| ----------------------------------------------------------------------------- | ------------------------------------------------ |
+| [Configuration](configuration.md)                                             | Token rotation, cleanup schedules, batch windows |
+| [Database Integration](database.md)                                           | JPA, MongoDB, Redis, custom implementations      |
+| [Sub-tokens](sub-tokens.md)                                                   | Device tokens, chat tokens, API tokens           |
+| [Authentication Flow](authentication.md)                                      | Request lifecycle, rotation policies, headers    |
 | [Sample Applications](https://github.com/quantipixels/ogiri/tree/main/sample) | Complete Java and Kotlin examples                |

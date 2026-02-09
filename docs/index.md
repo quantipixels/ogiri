@@ -85,9 +85,6 @@ That's it. Ògiri auto-configures the security filter chain.
 ### Getting Started
 
 - [Quickstart](quickstart.md) - Get running in 5 minutes
-- [Interface-First Design](interface-first-design.md) - Architecture and design philosophy
-- [Implementation Guide](implementation-guide.md) - Complete step-by-step implementation
-- [Migration Guide](migration-guide.md) - Upgrading between versions
 
 ### Integration & Configuration
 
@@ -103,7 +100,6 @@ That's it. Ògiri auto-configures the security filter chain.
 ### Contributing
 
 - [Development Guide](development.md) - Build, test, contribute
-- [Contributing Guidelines](contributing.md) - PR process and standards
 - [Changelog](changelog.md) - Release history
 
 ## Requirements

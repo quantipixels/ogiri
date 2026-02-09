@@ -29,10 +29,11 @@ markdown_extensions:
       alternate_style: true
 
 extra:
-  ogiri_version: 1.4.0
+  ogiri_version: 2.0.0
   version:
     provider: mike
     default: latest
+    alias: true
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/quantipixels/ogiri
@@ -52,18 +53,12 @@ plugins:
 nav:
   - Home: index.md
   - Quickstart: quickstart.md
-  - Core Concepts:
-      - Interface Design: interface-first-design.md
-      - Implementation: implementation-guide.md
   - Guides:
       - Configuration: configuration.md
       - Database Integration: database.md
       - Sub-tokens: sub-tokens.md
       - Authentication Flow: authentication.md
-      - Migration Guide: migration-guide.md
   - Contributing:
       - Development Guide: development.md
-      - Contributing Guidelines: contributing.md
       - Security Policy: security.md
-      - Code of Conduct: code-of-conduct.md
   - Changelog: changelog.md

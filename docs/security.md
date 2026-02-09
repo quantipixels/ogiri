@@ -56,7 +56,7 @@ The `Authorization` header contains token information. Ensure:
 - Client-side code doesn't store tokens in localStorage (use httpOnly cookies)
 - CORS policies are properly configured
 
-### Cookie Security (v1.3.0+)
+### Cookie Security
 
 Ogiri supports secure cookie-based authentication with configurable security attributes. Proper cookie configuration is critical to prevent common web vulnerabilities:
 
@@ -273,7 +273,7 @@ None reported yet.
 ❌ Network security (HTTPS is your responsibility)
 ❌ Session fixation protection (implement via headers/cookies)
 ❌ CSRF protection (implement via middleware)
-❌ Rate limiting (implement at your application level)
+❌ Rate limiting (optional `OgiriRateLimitHook` SPI available; bring your own implementation)
 ❌ Intrusion detection (implement monitoring separately)
 
 ### Recommendations for Complete Security
@@ -291,7 +291,7 @@ None reported yet.
 
 For security questions or concerns, contact the project maintainers.
 
-For general support: See [contributing.md](./contributing.md)
+For general support: See [CONTRIBUTING.md](https://github.com/quantipixels/ogiri/blob/main/CONTRIBUTING.md)
 
 ---
 
