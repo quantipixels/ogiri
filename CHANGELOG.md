@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-02-10 (ogiri-security-client)
+
+### Breaking
+
+- `OgiriClient` removed, replaced by `OgiriAuth` (auth primitives) + `OgiriFetchClient` (optional fetch wrapper)
+- Config split: `OgiriAuthConfig` (for `OgiriAuth`) vs `OgiriClientConfig` (for `OgiriFetchClient`)
+
+### Added
+
+- `ogiri-security-client/axios` sub-entrypoint with `createAxiosInterceptors(auth)` for axios adapter
+- `OgiriAuth.subscribe()` for auth state change listeners
+- `OgiriAuth.headerInjector()` for BYO HTTP clients
+- npm publish workflow in `release.yml`
+
+### Changed
+
+- oxlint/oxfmt replaces manual formatting
+
 ## [1.4.1] - 2026-01-14
 
 ### Security Improvements

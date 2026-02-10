@@ -53,7 +53,14 @@ allprojects {
     }
     format("misc") {
       target(".gitignore", ".gitattributes", "**/*.md", "**/*.yaml", "**/*.yml")
-      targetExclude("**/build/**")
+      targetExclude(
+          "**/build/**",
+          "**/node_modules/**",
+          ".claude/**",
+          "plans/**",
+          "**/pnpm-lock.yaml",
+          "pnpm-workspace.yaml",
+          "sample/sample-react/**")
       prettier()
       trimTrailingWhitespace()
       endWithNewline()

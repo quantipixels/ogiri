@@ -135,6 +135,7 @@ echo "  Workflow: https://github.com/quantipixels/ogiri/actions/workflows/releas
 echo ""
 echo "The automated workflows will:"
 echo "  - release.yml: Create GitHub release"
+echo "  - release.yml (publish-npm): Publish ogiri-security-client to npm"
 echo "  - docs.yml: Build and deploy versioned documentation"
 echo "  - Maven workflows: Deploy independently (not blocked by each other)"
 echo ""

@@ -181,13 +181,14 @@ GitHub Actions will:
 
 Configure in GitHub repository settings:
 
-| Secret            | Purpose                |
-| ----------------- | ---------------------- |
-| `OSSRH_USERNAME`  | Sonatype username      |
-| `OSSRH_PASSWORD`  | Sonatype password      |
-| `GPG_KEY_ID`      | GPG key ID             |
-| `GPG_PASSPHRASE`  | GPG passphrase         |
-| `GPG_PRIVATE_KEY` | Base64-encoded GPG key |
+| Secret            | Purpose                                             |
+| ----------------- | --------------------------------------------------- |
+| `OSSRH_USERNAME`  | Sonatype username                                   |
+| `OSSRH_PASSWORD`  | Sonatype password                                   |
+| `GPG_KEY_ID`      | GPG key ID                                          |
+| `GPG_PASSPHRASE`  | GPG passphrase                                      |
+| `GPG_PRIVATE_KEY` | Base64-encoded GPG key                              |
+| `NPM_TOKEN`       | npm registry auth token for `ogiri-security-client` |
 
 Export GPG key:
 
@@ -212,6 +213,7 @@ export OSSRH_PASSWORD=your_password
 - [ ] Version updated in `settings.gradle.kts`
 - [ ] Tag created and pushed
 - [ ] CI workflow completed
+- [ ] npm publish: `NPM_TOKEN` secret configured (for client releases)
 
 ## Common Tasks
 

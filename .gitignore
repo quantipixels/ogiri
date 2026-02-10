@@ -50,6 +50,7 @@ out/
 .tldrignore
 .ai/
 .archive/
+.trae
 
 logs/
 .DS_Store
@@ -59,3 +60,4 @@ site/
 node_modules/
 dist/
 **/coverage/
+reports/

@@ -1,174 +1,157 @@
-# Ògiri TypeScript Client
+# Ògiri Security Client
 
-TypeScript/JavaScript client for Ògiri opaque token authentication with automatic token rotation.
+Pluggable auth primitives for Ògiri opaque token authentication. Zero mandatory runtime dependencies.
 
 ## Status
 
-**⚠️ In Development (v0.1.0)** - Not yet published to npm. API subject to change.
+v2.0.0
 
-## Features
+## Architecture
 
-- **Automatic token rotation** - Handles token refresh transparently
-- **Multiple auth methods** - Headers, cookies, or both
-- **Storage backends** - Memory, localStorage, or custom
-- **Type-safe** - Full TypeScript support
-- **Error handling** - Robust error handling with detailed context (see [lessons learned](../AGENTS.md#lessons-learned-2026-02-06))
+- `OgiriAuth` is the central class - manages token state, provides adapter factories
+- Ship a lightweight fetch wrapper (`OgiriFetchClient`) as a convenience
+- Separate `ogiri-security-client/axios` entrypoint for axios adapter (tree-shaken if unused)
+- Pure functions (`injectAuth`, `extractTokens`) still exported for custom integrations
 
-## Installation
+## Primary Example: OgiriAuth + Axios
 
-```bash
-# Not yet published - install from local directory
-pnpm add ./ogiri-client
-```
-
-## Quick Start
-
-### Basic Usage
+Main consumer pattern with axios + React Query:
 
 ```typescript
-import { OgiriClient } from "ogiri-security-client";
+import { OgiriAuth, LocalStorageTokenStorage } from "ogiri-security-client";
+import { createAxiosInterceptors } from "ogiri-security-client/axios";
+import axios from "axios";
 
-const client = new OgiriClient({
-  baseURL: "https://api.example.com",
-  authMethod: "headers", // 'headers' | 'cookies' | 'both'
+const auth = new OgiriAuth({
+  storage: new LocalStorageTokenStorage(),
+  onAuthError: () => router.push("/login"),
 });
 
-// Login
-const loginResponse = await client.post("/api/auth/login", {
-  body: { username: "user", password: "pass" },
-});
-
-// Authenticated requests (tokens injected automatically)
-const data = await client.get("/api/protected/resource");
-
-// Logout
-await client.post("/api/auth/logout");
+const api = axios.create({ baseURL: "https://api.example.com" });
+const { request, response } = createAxiosInterceptors(auth);
+api.interceptors.request.use(request);
+api.interceptors.response.use(response.onFulfilled, response.onRejected);
 ```
 
-### Custom Storage
+## Secondary: Built-in Fetch Client
 
 ```typescript
-import { OgiriClient, TokenStorage } from "ogiri-security-client";
-
-class CustomStorage implements TokenStorage {
-  async save(tokens: OgiriTokens): Promise<void> {
-    // Save to your preferred storage
-  }
-
-  async load(): Promise<OgiriTokens | null> {
-    // Load from your storage
-  }
-
-  async clear(): Promise<void> {
-    // Clear storage
-  }
-}
-
-const client = new OgiriClient({
-  baseURL: "https://api.example.com",
-  storage: new CustomStorage(),
-});
+const auth = new OgiriAuth({ storage: new MemoryTokenStorage() });
+const client = auth.createFetchClient("https://api.example.com");
+const { data } = await client.post("/api/auth/login", { username, password });
 ```
 
-### Error Handling
+## Advanced: Pure Functions (BYO HTTP Client)
 
 ```typescript
-import { OgiriClient, OgiriAuthError } from "ogiri-security-client";
-
-const client = new OgiriClient({
-  baseURL: "https://api.example.com",
-  onAuthError: (error: OgiriAuthError) => {
-    console.error("Auth failed:", error.message);
-    // Redirect to login, show notification, etc.
-  },
-});
-
-try {
-  await client.get("/api/protected");
-} catch (error) {
-  if (error instanceof OgiriAuthError) {
-    // Handle authentication errors
-  }
-}
+const auth = new OgiriAuth();
+const headers = auth.headerInjector()({ "Content-Type": "application/json" });
+// After response:
+auth.extractFrom(response);
 ```
 
 ## API Reference
 
-### OgiriClient
+### OgiriAuth
 
-#### Constructor Options
+**Constructor:**
 
 ```typescript
-interface OgiriClientConfig {
-  baseURL: string; // API base URL
-  authMethod?: "headers" | "cookies" | "both"; // Default: 'headers'
+interface OgiriAuthConfig {
+  authMethod?: "headers" | "bearer" | "cookies"; // Default: 'headers'
   storage?: TokenStorage; // Default: MemoryTokenStorage
   onAuthError?: (error: OgiriAuthError) => void;
 }
 ```
 
-#### Methods
+**Token state:**
 
-- `get<T>(path, options?)` - GET request
-- `post<T>(path, options?)` - POST request
-- `put<T>(path, options?)` - PUT request
-- `patch<T>(path, options?)` - PATCH request
-- `delete<T>(path, options?)` - DELETE request
-- `request<T>(path, options)` - Generic request
+- `getTokens()` - Returns current token state
+- `setTokens(tokens)` - Manually set tokens
+- `clearTokens()` - Clear all tokens
+- `isAuthenticated()` - Check if user has valid tokens
 
-#### Request Options
+**Adapter factories:**
 
-```typescript
-interface OgiriRequestOptions {
-  params?: Record<string, string>; // Query parameters
-  body?: unknown; // Request body (auto-serialized to JSON)
-  headers?: Record<string, string>; // Additional headers
-  // ...standard fetch options
-}
-```
+- `createFetchClient(baseURL)` - Create OgiriFetchClient instance
+- `headerInjector()` - Returns function to inject tokens into headers
 
-### TokenStorage Interface
+**Low-level:**
 
-Implement this interface for custom token storage:
+- `injectInto(config)` - Inject tokens into RequestInit
+- `extractFrom(response)` - Extract rotated tokens from Response
+- `handleAuthError(body)` - Process auth error response
+
+**Events:**
+
+- `onAuthError(callback)` - Register auth error handler
+- `subscribe(listener)` - Subscribe to token state changes
+
+### OgiriFetchClient
+
+HTTP client built on native fetch:
+
+- `get(path, options?)` - GET request
+- `post(path, options?)` - POST request
+- `put(path, options?)` - PUT request
+- `delete(path, options?)` - DELETE request
+
+Auto-injects auth headers, auto-extracts rotated tokens.
+
+### createAxiosInterceptors(auth)
+
+Returns `{ request, response }` interceptors for axios:
+
+- Handles token injection
+- Extracts rotation tokens from responses
+- Processes 401 errors with `handleAuthError`
+
+### Pure Functions
+
+Direct exports for custom integrations:
+
+- `injectAuth(config, tokens, method)` - Inject tokens into RequestInit
+- `extractTokens(response)` - Extract rotated tokens from Response
+
+### Token Storage
+
+**MemoryTokenStorage** - In-memory storage (SSR-safe, default)
+**LocalStorageTokenStorage** - Browser localStorage
+
+Custom storage must implement:
 
 ```typescript
 interface TokenStorage {
-  save(tokens: OgiriTokens): Promise<void>;
-  load(): Promise<OgiriTokens | null>;
-  clear(): Promise<void>;
+  get(): OgiriTokens | null;
+  set(tokens: OgiriTokens): void;
+  clear(): void;
 }
 ```
 
-### Built-in Storage
+## Auth Methods
 
-- **MemoryTokenStorage** - In-memory storage (default, lost on reload)
-- **LocalStorageTokenStorage** - Browser localStorage (persistent)
+- `'headers'` (default) - Sends access-token/client/uid/expiry/token-type as individual headers
+- `'bearer'` - Base64-encoded JSON token in Authorization header
+- `'cookies'` - Cookie-based (server-side only; browsers ignore programmatic Cookie headers)
 
 ## Development
 
 ```bash
-pnpm install          # Install dependencies
-pnpm build            # Build for production
-pnpm test             # Run tests
-pnpm test:watch       # Watch mode
-pnpm typecheck        # Type checking
+pnpm install
+pnpm build
+pnpm test
+pnpm typecheck
+pnpm lint
+pnpm format:check
 ```
 
 ## Security Considerations
 
-This client implements security best practices identified in code review:
-
-- **Type safety at boundaries** - Validates JSON responses before casting
-- **Storage failure resilience** - Handles QuotaExceededError gracefully
-- **Network error context** - Detailed error messages with method + URL
-- **No plaintext tokens in logs** - Tokens never logged or exposed
-
-See [AGENTS.md](../AGENTS.md#lessons-learned-2026-02-06) for detailed security lessons learned.
-
-## Server Integration
-
-This client is designed to work with the Ògiri Spring Boot library. See the [main README](../README.md) for server setup.
+- Type safety at boundaries - validates JSON responses before casting
+- Storage failure resilience - handles QuotaExceededError gracefully
+- Network error context - detailed error messages with method + URL
+- No plaintext tokens in logs
 
 ## License
 
-Apache License 2.0 - See [LICENSE](LICENSE) for details.
+Apache License 2.0

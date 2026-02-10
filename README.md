@@ -61,8 +61,6 @@ pnpm add ogiri-security-client
 
 The TypeScript client handles token storage, automatic rotation, and request interception. See [ogiri-client/](ogiri-client/) for usage examples and API documentation.
 
-> **Note:** TypeScript client is currently in development (v0.1.0). Package not yet published to npm.
-
 ## Quick Start
 
 **1. Implement user directory:**

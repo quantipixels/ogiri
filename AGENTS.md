@@ -31,9 +31,9 @@ pnpm test -- --coverage      # Run tests with coverage
 
 ⚠️ **NEVER log raw tokens, passwords, or credentials**
 
-## Lessons Learned (2026-02-06)
+## Lessons Learned
 
-### Client Library Error Handling
+### Client Library Error Handling (2026-02-06)
 
 **Context:** Code review of ogiri-client TypeScript package revealed systematic error handling issues.
 
@@ -46,9 +46,31 @@ pnpm test -- --coverage      # Run tests with coverage
 - Network error context (method + URL in all errors)
 - TypeScript exhaustiveness checks
 
-**Applied to:** ogiri-client package (client.ts, token-storage.ts, interceptors.ts)
+**Applied to:** ogiri-client package (auth.ts, fetch-client.ts, token-storage.ts, interceptors.ts)
 
 > Detailed patterns documented in global error-handling rules.
+
+### Repeated Mistakes (2026-02-10)
+
+Patterns that keep recurring. Read before implementing.
+
+**1. Understand domain constraints before reaching for patterns.**
+Tokens are keyed by `(userId, client)` — one device = one writer. There is no write contention. Don't add retry/locking/transaction machinery for a problem that doesn't exist. Ask "does the data model actually have this problem?" before engineering a solution.
+
+**2. Verify code after spotless runs.**
+The spotless formatter (PostToolUse hook) can silently strip new constants, init blocks, and structural additions it doesn't recognize. After adding multi-line structural code, re-read the file to confirm it survived formatting.
+
+**3. When agents crash with internal errors, use direct tools.**
+`classifyHandoffIfNeeded is not defined` and similar internal errors are not recoverable by re-spawning. Fall back to direct Grep/Read/Edit instead of retrying the same agent type.
+
+**4. Trace call paths before assuming code is live.**
+`findTokenCandidates()` had zero callers in the production auth flow but existed across 14 files with a DoS vector. Before modifying or building on existing code, verify it has actual callers. `grep` for the method name in non-test files.
+
+**5. Read the implementation before writing mocks or docs.**
+MSW mocks returned kebab-case keys; queries expected camelCase. README showed async API; implementation was sync. Always read the source of truth (the implementation) before writing anything that depends on its interface.
+
+**6. User interruptions mean wrong direction.**
+High `[Request interrupted]` rate correlates with: excessive verbosity, not researching before implementing, or heading somewhere the user didn't ask for. Be concise. Research first. Ask before building.
 
 ## Detailed Documentation
 
