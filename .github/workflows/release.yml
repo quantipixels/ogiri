@@ -5,9 +5,14 @@ on:
     tags:
       - "v*.*.*"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   release:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: write
       packages: write
@@ -24,11 +29,8 @@ jobs:
 
       - name: Update version file
         run: |
-          # Fetch the ori branch
           git fetch origin ori
-          # Switch to ori branch
           git checkout -B ori origin/ori
-          # Update version
           echo "${{ steps.version.outputs.VERSION }}" > .ogiri-version
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
@@ -76,12 +78,15 @@ jobs:
 
   publish-npm:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: read
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Extract version from tag
         id: version
@@ -93,7 +98,7 @@ jobs:
           version: 10
 
       - name: Setup Node.js 20
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: 20
           cache: "pnpm"
@@ -102,7 +107,7 @@ jobs:
 
       - name: Sync version from tag
         working-directory: ogiri-client
-        run: pnpm version ${{ steps.version.outputs.VERSION }} --no-git-tag-version
+        run: npm pkg set version="${{ steps.version.outputs.VERSION }}"
 
       - name: Install dependencies
         working-directory: ogiri-client
@@ -120,6 +125,7 @@ jobs:
 
   publish:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
       contents: write
       packages: write
@@ -129,6 +135,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Set up JDK 17
         uses: actions/setup-java@v5
@@ -161,19 +168,53 @@ jobs:
           VERSION="${{ steps.version.outputs.VERSION }}"
           URL="https://repo1.maven.org/maven2/com/quantipixels/ogiri/ogiri-core/${VERSION}/ogiri-core-${VERSION}.jar"
           MAX_RETRIES=10
-          RETRY_INTERVAL=60 # seconds
+          RETRY_INTERVAL=60
 
-          echo "🔍 Verifying artifact availability at: $URL"
+          echo "Verifying artifact availability at: $URL"
 
           for i in $(seq 1 $MAX_RETRIES); do
             if curl -sfI "$URL" > /dev/null; then
-              echo "✅ Artifact verified on Maven Central!"
+              echo "Artifact verified on Maven Central"
               exit 0
             fi
 
-            echo "⏳ Attempt $i/$MAX_RETRIES: Artifact not yet available. Retrying in ${RETRY_INTERVAL}s..."
+            echo "Attempt $i/$MAX_RETRIES: Artifact not yet available. Retrying in ${RETRY_INTERVAL}s..."
             sleep $RETRY_INTERVAL
           done
 
           echo "::error::Artifact not available on Maven Central after $((MAX_RETRIES * RETRY_INTERVAL / 60)) minutes."
           exit 1
+
+  deploy-docs:
+    needs: release
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - run: pip install -e .
+
+      - run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Extract minor version
+        id: version
+        run: |
+          TAG="${GITHUB_REF#refs/tags/v}"
+          echo "MINOR=$(echo "$TAG" | grep -oE '^[0-9]+\.[0-9]+')" >> $GITHUB_OUTPUT
+
+      - name: Deploy versioned docs
+        run: |
+          mike deploy --push --update-aliases "${{ steps.version.outputs.MINOR }}" latest
+          mike set-default --push latest

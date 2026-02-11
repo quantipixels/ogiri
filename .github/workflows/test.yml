@@ -6,21 +6,25 @@ on:
   pull_request:
     branches: [ori]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        java-version: [17]
+    timeout-minutes: 15
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
-      - name: Set up JDK ${{ matrix.java-version }}
+      - name: Set up JDK 17
         uses: actions/setup-java@v5
         with:
-          java-version: ${{ matrix.java-version }}
+          java-version: 17
           distribution: "temurin"
           cache: gradle
 
@@ -29,9 +33,9 @@ jobs:
 
       - name: Generate test report
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
-          name: test-results-${{ matrix.java-version }}
+          name: test-results
           path: |
             ogiri-core/build/test-results/
             ogiri-jpa/build/test-results/
@@ -47,3 +51,5 @@ jobs:
             ./ogiri-jpa/build/reports/jacoco/test/jacocoTestReport.xml
           flags: unittests
           fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

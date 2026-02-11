@@ -11,9 +11,14 @@ on:
     paths:
       - "ogiri-client/**"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     strategy:
       matrix:
         node-version: [18, 20]
@@ -25,6 +30,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -32,7 +39,7 @@ jobs:
           version: 10
 
       - name: Setup Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
           cache: "pnpm"
@@ -45,13 +52,10 @@ jobs:
         run: pnpm typecheck
 
       - name: Run tests
-        run: pnpm test
-
-      - name: Run tests with coverage
         run: pnpm vitest run --coverage
 
       - name: Upload coverage reports
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         if: matrix.node-version == 20
         with:
           files: ./ogiri-client/coverage/lcov.info
@@ -77,4 +81,4 @@ jobs:
             echo "Build failed: dist/axios/index.js not found"
             exit 1
           fi
-          echo "✓ Build artifacts verified"
+          echo "Build artifacts verified"
