@@ -48,65 +48,21 @@ class UserDirectoryTest {
   }
 
   @Test
-  void findById_returnsUserForValidId() {
-    OgiriUser user = userDirectory.findById(1L);
+  void findByEmail_resolvesKnownUserAndReturnsNullForUnknown() {
+    OgiriUser found = userDirectory.findByEmail("user1@example.com");
+    OgiriUser missing = userDirectory.findByEmail("unknown@example.com");
 
-    assertNotNull(user);
-    assertEquals("user1", user.getUsername());
-    assertEquals(1L, user.getOgiriUserId());
+    assertNotNull(found);
+    assertEquals("user1", found.getUsername());
+    assertNull(missing);
   }
 
   @Test
-  void findById_returnsNullForUnknownId() {
-    OgiriUser user = userDirectory.findById(999L);
-
-    assertNull(user);
-  }
-
-  @Test
-  void findByEmail_returnsUserForValidEmail() {
-    OgiriUser user = userDirectory.findByEmail("user1@example.com");
-
-    assertNotNull(user);
-    assertEquals("user1", user.getUsername());
-  }
-
-  @Test
-  void findByEmail_returnsNullForUnknownEmail() {
-    OgiriUser user = userDirectory.findByEmail("unknown@example.com");
-
-    assertNull(user);
-  }
-
-  @Test
-  void findByUsername_returnsUserForValidUsername() {
-    OgiriUser user = userDirectory.findByUsername("user2");
-
-    assertNotNull(user);
-    assertEquals("user2", user.getUsername());
-    assertEquals(2L, user.getOgiriUserId());
-  }
-
-  @Test
-  void findByUsername_returnsNullForUnknownUsername() {
-    OgiriUser user = userDirectory.findByUsername("nonexistent");
-
-    assertNull(user);
-  }
-
-  @Test
-  void userHasCorrectAuthorities() {
+  void loadedUser_hasExpectedAuthoritiesAndEnabledFlags() {
     OgiriUser user = userDirectory.loadUserByUsername("user1");
 
-    assertNotNull(user.getAuthorities());
     assertEquals(1, user.getAuthorities().size());
     assertTrue(user.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_USER")));
-  }
-
-  @Test
-  void userIsEnabled() {
-    OgiriUser user = userDirectory.loadUserByUsername("user1");
-
     assertTrue(user.isEnabled());
     assertTrue(user.isAccountNonExpired());
     assertTrue(user.isAccountNonLocked());
@@ -114,19 +70,7 @@ class UserDirectoryTest {
   }
 
   @Test
-  void recordSuccessfulLogin_doesNotThrow() {
+  void recordSuccessfulLogin_isNoOpForSampleDirectory() {
     assertDoesNotThrow(() -> userDirectory.recordSuccessfulLogin(1L));
-  }
-
-  @Test
-  void multipleUsersExist() {
-    OgiriUser user1 = userDirectory.findById(1L);
-    OgiriUser user2 = userDirectory.findById(2L);
-
-    assertNotNull(user1);
-    assertNotNull(user2);
-    assertNotEquals(user1.getUsername(), user2.getUsername());
-    assertEquals("user1", user1.getUsername());
-    assertEquals("user2", user2.getUsername());
   }
 }

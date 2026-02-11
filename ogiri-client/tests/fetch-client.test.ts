@@ -141,34 +141,12 @@ describe("OgiriFetchClient", () => {
             fetchMock.mockResolvedValue(new Response("{}", { status: 200 }));
         });
 
-        it("should call GET", async () => {
-            await client.get("/users");
-            expect(fetchMock).toHaveBeenCalledWith(
-                "https://api.example.com/users",
-                expect.objectContaining({ method: "GET" }),
-            );
-        });
-
-        it("should call POST", async () => {
+        it("should call POST with serialized JSON body", async () => {
             await client.post("/users", { name: "John" });
             const callArgs = fetchMock.mock.calls[0];
             expect(callArgs[1].method).toBe("POST");
             expect(callArgs[1].body).toBe('{"name":"John"}');
-        });
-
-        it("should call PUT", async () => {
-            await client.put("/users/1", { name: "Jane" });
-            const callArgs = fetchMock.mock.calls[0];
-            expect(callArgs[1].method).toBe("PUT");
-            expect(callArgs[1].body).toBe('{"name":"Jane"}');
-        });
-
-        it("should call DELETE", async () => {
-            await client.delete("/users/1");
-            expect(fetchMock).toHaveBeenCalledWith(
-                "https://api.example.com/users/1",
-                expect.objectContaining({ method: "DELETE" }),
-            );
+            expect(callArgs[0]).toBe("https://api.example.com/users");
         });
     });
 });

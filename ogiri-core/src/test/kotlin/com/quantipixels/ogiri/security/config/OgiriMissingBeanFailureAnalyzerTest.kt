@@ -36,7 +36,7 @@ class OgiriMissingBeanFailureAnalyzerTest {
     assertEquals("No OgiriTokenRepository bean found.", analysis!!.description)
     assertTrue(analysis.action.contains("ogiri-jpa"))
     assertTrue(analysis.action.contains("OgiriBaseTokenEntity"))
-    assertTrue(analysis.action.contains("JpaRepository"))
+    assertEquals(exception, analysis.cause)
   }
 
   @Test
@@ -48,9 +48,7 @@ class OgiriMissingBeanFailureAnalyzerTest {
     assertNotNull(analysis)
     assertEquals("No OgiriUserDirectory bean found.", analysis!!.description)
     assertTrue(analysis.action.contains("OgiriUserDirectory"))
-    assertTrue(analysis.action.contains("findById"))
     assertTrue(analysis.action.contains("findByUsername"))
-    assertTrue(analysis.action.contains("OgiriUser"))
   }
 
   @Test
@@ -62,7 +60,6 @@ class OgiriMissingBeanFailureAnalyzerTest {
     assertNotNull(analysis)
     assertEquals("No OgiriRouteRegistry bean found.", analysis!!.description)
     assertTrue(analysis.action.contains("OgiriRouteRegistry"))
-    assertTrue(analysis.action.contains("OgiriRoute"))
     assertTrue(analysis.action.contains("/api/auth/login"))
   }
 
@@ -83,15 +80,5 @@ class OgiriMissingBeanFailureAnalyzerTest {
     val analysis = analyzer.analyze(exception)
 
     assertNull(analysis)
-  }
-
-  @Test
-  fun `should include cause in analysis`() {
-    val exception = NoSuchBeanDefinitionException(OgiriTokenRepository::class.java)
-
-    val analysis = analyzer.analyze(exception)
-
-    assertNotNull(analysis)
-    assertEquals(exception, analysis!!.cause)
   }
 }

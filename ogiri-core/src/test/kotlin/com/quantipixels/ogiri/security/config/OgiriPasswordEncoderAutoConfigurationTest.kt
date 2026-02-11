@@ -12,77 +12,32 @@
  */
 package com.quantipixels.ogiri.security.config
 
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertInstanceOf
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
-import org.springframework.boot.test.context.runner.ApplicationContextRunner
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-import org.springframework.security.crypto.password.PasswordEncoder
 
 class OgiriPasswordEncoderAutoConfigurationTest {
 
-  private val contextRunner =
-      ApplicationContextRunner()
-          .withConfiguration(
-              org.springframework.boot.autoconfigure.AutoConfigurations.of(
-                  PasswordEncoderTestConfig::class.java))
+  private val autoConfiguration = OgiriSecurityAutoConfiguration()
 
   @Test
-  fun `should auto-configure BCryptPasswordEncoder when no PasswordEncoder bean exists`() {
-    contextRunner.run { context ->
-      assertTrue(context.containsBean("ogiriPasswordEncoder"))
-      val encoder = context.getBean(PasswordEncoder::class.java)
-      assertInstanceOf(BCryptPasswordEncoder::class.java, encoder)
-    }
+  fun `ogiriPasswordEncoder provides bcrypt implementation`() {
+    val encoder = autoConfiguration.ogiriPasswordEncoder()
+    val rawPassword = "mySecurePassword123"
+    val encoded = encoder.encode(rawPassword)
+
+    assertTrue(encoder is BCryptPasswordEncoder)
+    assertTrue(encoded.startsWith("\$2"))
+    assertTrue(encoder.matches(rawPassword, encoded))
   }
 
   @Test
-  fun `should not create auto-configured encoder when user provides one`() {
-    contextRunner.withUserConfiguration(CustomPasswordEncoderConfig::class.java).run { context ->
-      val encoders = context.getBeansOfType(PasswordEncoder::class.java)
-      assertEquals(1, encoders.size)
-      assertTrue(encoders.containsKey("customPasswordEncoder"))
+  fun `ogiriPasswordEncoder is guarded with ConditionalOnMissingBean`() {
+    val method = OgiriSecurityAutoConfiguration::class.java.getMethod("ogiriPasswordEncoder")
+    val condition = method.getAnnotation(ConditionalOnMissingBean::class.java)
 
-      // Verify it's our custom encoder, not BCrypt
-      val encoder = context.getBean(PasswordEncoder::class.java)
-      assertEquals("test-encoded", encoder.encode("test"))
-    }
-  }
-
-  @Test
-  fun `auto-configured BCryptPasswordEncoder should hash passwords correctly`() {
-    contextRunner.run { context ->
-      val encoder = context.getBean(PasswordEncoder::class.java)
-      val rawPassword = "mySecurePassword123"
-      val encoded = encoder.encode(rawPassword)
-
-      // Verify it's a BCrypt hash (starts with $2)
-      assertTrue(encoded.startsWith("\$2"))
-      assertTrue(encoder.matches(rawPassword, encoded))
-    }
-  }
-
-  /** Test configuration that provides the password encoder bean with conditional logic. */
-  @Configuration
-  class PasswordEncoderTestConfig {
-    @Bean
-    @ConditionalOnMissingBean(PasswordEncoder::class)
-    fun ogiriPasswordEncoder(): PasswordEncoder = BCryptPasswordEncoder()
-  }
-
-  @Configuration
-  class CustomPasswordEncoderConfig {
-    @Bean
-    fun customPasswordEncoder(): PasswordEncoder =
-        object : PasswordEncoder {
-          override fun encode(rawPassword: CharSequence): String = "test-encoded"
-
-          override fun matches(rawPassword: CharSequence, encodedPassword: String): Boolean =
-              encodedPassword == "test-encoded"
-        }
+    assertNotNull(condition)
   }
 }

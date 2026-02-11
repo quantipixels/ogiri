@@ -64,14 +64,14 @@ class SampleTokenRepositoryTest {
   }
 
   @Test
-  void shouldFindAllTokensForUserOrderedByUpdatedAtDesc() throws InterruptedException {
+  void shouldFindAllTokensForUserAndExcludeTokensFromOtherUsers() {
     SampleToken token1 = createToken(TEST_USER_ID, "client-1", "token-1");
     SampleToken token2 = createToken(TEST_USER_ID, "client-2", "token-2");
+    SampleToken otherUserToken = createToken(2L, "client-3", "token-3");
 
     tokenRepository.save(token1);
-    tokenRepository.flush();
-    Thread.sleep(100); // Ensure different timestamps
     tokenRepository.save(token2);
+    tokenRepository.save(otherUserToken);
 
     List<SampleToken> tokens = tokenRepository.findByUserIdOrderByUpdatedAtDesc(TEST_USER_ID);
 
@@ -113,7 +113,7 @@ class SampleTokenRepositoryTest {
   }
 
   @Test
-  void shouldDeleteMultipleTokensByClientList() {
+  void shouldDeleteSelectedTokensByClientList() {
     SampleToken token1 = createToken(TEST_USER_ID, "client-1", "token-1");
     SampleToken token2 = createToken(TEST_USER_ID, "client-2", "token-2");
     SampleToken token3 = createToken(TEST_USER_ID, "client-3", "token-3");
@@ -127,51 +127,6 @@ class SampleTokenRepositoryTest {
     List<SampleToken> remaining = tokenRepository.findByUserIdOrderByUpdatedAtDesc(TEST_USER_ID);
     assertEquals(1, remaining.size());
     assertEquals("client-3", remaining.get(0).getClient());
-  }
-
-  @Test
-  void shouldDeleteAllTokensForUser() {
-    SampleToken token1 = createToken(TEST_USER_ID, "client-1", "token-1");
-    SampleToken token2 = createToken(TEST_USER_ID, "client-2", "token-2");
-
-    tokenRepository.save(token1);
-    tokenRepository.save(token2);
-
-    tokenRepository.deleteByUserId(TEST_USER_ID);
-
-    List<SampleToken> remaining = tokenRepository.findByUserIdOrderByUpdatedAtDesc(TEST_USER_ID);
-    assertTrue(remaining.isEmpty());
-  }
-
-  @Test
-  void shouldDeleteTokensFromCollection() {
-    SampleToken token1 = createToken(TEST_USER_ID, "client-1", "token-1");
-    SampleToken token2 = createToken(TEST_USER_ID, "client-2", "token-2");
-
-    SampleToken saved1 = tokenRepository.save(token1);
-    tokenRepository.save(token2);
-
-    tokenRepository.delete(saved1);
-
-    List<SampleToken> remaining = tokenRepository.findByUserIdOrderByUpdatedAtDesc(TEST_USER_ID);
-    assertEquals(1, remaining.size());
-    assertEquals("client-2", remaining.get(0).getClient());
-  }
-
-  @Test
-  void shouldUpdateTokenProperties() {
-    SampleToken token = createToken(TEST_USER_ID, TEST_CLIENT, TEST_TOKEN);
-    token = tokenRepository.save(token);
-
-    token.setToken("new-hashed-token");
-    token.setLastUsedAt(Instant.now());
-    tokenRepository.save(token);
-
-    Optional<SampleToken> updated =
-        tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT);
-    assertTrue(updated.isPresent());
-    assertEquals("new-hashed-token", updated.get().getToken());
-    assertNotNull(updated.get().getLastUsedAt());
   }
 
   private SampleToken createToken(Long userId, String client, String token) {

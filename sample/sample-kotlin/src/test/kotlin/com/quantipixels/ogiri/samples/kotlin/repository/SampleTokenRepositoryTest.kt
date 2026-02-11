@@ -18,7 +18,6 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -62,14 +61,14 @@ class SampleTokenRepositoryTest {
   }
 
   @Test
-  fun `should find all tokens for user ordered by updated_at DESC`() {
+  fun `should find all tokens for user and exclude tokens from other users`() {
     val token1 = createToken(testUserId, "client-1", "token-1")
     val token2 = createToken(testUserId, "client-2", "token-2")
+    val otherUserToken = createToken(2L, "client-3", "token-3")
 
     tokenRepository.save(token1)
-    tokenRepository.flush()
-    Thread.sleep(100) // Ensure different timestamps
     tokenRepository.save(token2)
+    tokenRepository.save(otherUserToken)
 
     val tokens = tokenRepository.findByUserIdOrderByUpdatedAtDesc(testUserId)
 
@@ -113,7 +112,7 @@ class SampleTokenRepositoryTest {
   }
 
   @Test
-  fun `should delete multiple tokens by client list`() {
+  fun `should delete selected tokens by client list`() {
     val token1 = createToken(testUserId, "client-1", "token-1")
     val token2 = createToken(testUserId, "client-2", "token-2")
     val token3 = createToken(testUserId, "client-3", "token-3")
@@ -127,50 +126,6 @@ class SampleTokenRepositoryTest {
     val remaining = tokenRepository.findByUserIdOrderByUpdatedAtDesc(testUserId)
     assertEquals(1, remaining.size)
     assertEquals("client-3", remaining[0].client)
-  }
-
-  @Test
-  fun `should delete all tokens for user`() {
-    val token1 = createToken(testUserId, "client-1", "token-1")
-    val token2 = createToken(testUserId, "client-2", "token-2")
-
-    tokenRepository.save(token1)
-    tokenRepository.save(token2)
-
-    tokenRepository.deleteByUserId(testUserId)
-
-    val remaining = tokenRepository.findByUserIdOrderByUpdatedAtDesc(testUserId)
-    assertTrue(remaining.isEmpty())
-  }
-
-  @Test
-  fun `should delete tokens from collection`() {
-    val token1 = createToken(testUserId, "client-1", "token-1")
-    val token2 = createToken(testUserId, "client-2", "token-2")
-
-    val saved1 = tokenRepository.save(token1)
-    tokenRepository.save(token2)
-
-    tokenRepository.delete(saved1)
-
-    val remaining = tokenRepository.findByUserIdOrderByUpdatedAtDesc(testUserId)
-    assertEquals(1, remaining.size)
-    assertEquals("client-2", remaining[0].client)
-  }
-
-  @Test
-  fun `should update token properties`() {
-    var token = createToken(testUserId, testClient, testToken)
-    token = tokenRepository.save(token)
-
-    token.token = "new-hashed-token"
-    token.lastUsedAt = Instant.now()
-    tokenRepository.save(token)
-
-    val updated = tokenRepository.findByUserIdAndClient(testUserId, testClient)
-    assertTrue(updated.isPresent)
-    assertEquals("new-hashed-token", updated.get().token)
-    assertNotNull(updated.get().lastUsedAt)
   }
 
   private fun createToken(

@@ -43,7 +43,7 @@ class AuthHeaderCookieTest {
   inner class AppendAuthCookiesTests {
 
     @Test
-    fun `sets all four auth cookies`() {
+    fun `sets expected cookies and security attributes`() {
       val authHeader =
           AuthHeader(
               accessToken = "test-token",
@@ -51,105 +51,35 @@ class AuthHeaderCookieTest {
               uid = "test-user",
               expiry = "1234567890",
           )
-
-      response.appendAuthCookies(authHeader, cookieConfig)
-
-      val cookies = response.cookies
-      assertEquals(4, cookies.size)
-
-      val cookieNames = cookies.map { it.name }.toSet()
-      assertTrue(cookieNames.contains(ACCESS_TOKEN))
-      assertTrue(cookieNames.contains(CLIENT))
-      assertTrue(cookieNames.contains(UID))
-      assertTrue(cookieNames.contains(EXPIRY))
-    }
-
-    @Test
-    fun `sets HttpOnly flag correctly`() {
-      val authHeader = AuthHeader(accessToken = "token", client = "client", uid = "user")
-      cookieConfig.httpOnly = true
-
-      response.appendAuthCookies(authHeader, cookieConfig)
-
-      response.cookies.forEach { cookie -> assertTrue(cookie.isHttpOnly) }
-    }
-
-    @Test
-    fun `sets Secure flag correctly`() {
-      val authHeader = AuthHeader(accessToken = "token", client = "client", uid = "user")
-      cookieConfig.secure = true
-
-      response.appendAuthCookies(authHeader, cookieConfig)
-
-      response.cookies.forEach { cookie -> assertTrue(cookie.secure) }
-    }
-
-    @Test
-    fun `sets SameSite Strict attribute`() {
-      val authHeader = AuthHeader(accessToken = "token", client = "client", uid = "user")
-      cookieConfig.sameSite = "Strict"
-
-      response.appendAuthCookies(authHeader, cookieConfig)
-
-      response.cookies.forEach { cookie -> assertEquals("Strict", cookie.getAttribute("SameSite")) }
-    }
-
-    @Test
-    fun `sets SameSite Lax attribute`() {
-      val authHeader = AuthHeader(accessToken = "token", client = "client", uid = "user")
+      cookieConfig.path = "/api"
       cookieConfig.sameSite = "Lax"
 
       response.appendAuthCookies(authHeader, cookieConfig)
 
-      response.cookies.forEach { cookie -> assertEquals("Lax", cookie.getAttribute("SameSite")) }
+      assertEquals(4, response.cookies.size)
+      assertEquals("test-token", response.cookies.find { it.name == ACCESS_TOKEN }?.value)
+      assertEquals("test-client", response.cookies.find { it.name == CLIENT }?.value)
+      assertEquals("test-user", response.cookies.find { it.name == UID }?.value)
+      assertEquals("1234567890", response.cookies.find { it.name == EXPIRY }?.value)
+      response.cookies.forEach { cookie ->
+        assertTrue(cookie.isHttpOnly)
+        assertTrue(cookie.secure)
+        assertEquals("/api", cookie.path)
+        assertEquals("Lax", cookie.getAttribute("SameSite"))
+      }
     }
 
     @Test
-    fun `sets cookie path correctly`() {
-      val authHeader = AuthHeader(accessToken = "token", client = "client", uid = "user")
-      cookieConfig.path = "/api"
+    fun `skips cookies for blank fields`() {
+      val authHeader = AuthHeader(accessToken = "", client = "client", uid = null, expiry = "12345")
 
       response.appendAuthCookies(authHeader, cookieConfig)
 
-      response.cookies.forEach { cookie -> assertEquals("/api", cookie.path) }
-    }
-
-    @Test
-    fun `skips cookie for blank access token`() {
-      val authHeader = AuthHeader(accessToken = "", client = "client", uid = "user")
-
-      response.appendAuthCookies(authHeader, cookieConfig)
-
-      val accessTokenCookie = response.cookies.find { it.name == ACCESS_TOKEN }
-      assertNull(accessTokenCookie)
-    }
-
-    @Test
-    fun `skips cookie for null access token`() {
-      val authHeader = AuthHeader(accessToken = null, client = "client", uid = "user")
-
-      response.appendAuthCookies(authHeader, cookieConfig)
-
-      val accessTokenCookie = response.cookies.find { it.name == ACCESS_TOKEN }
-      assertNull(accessTokenCookie)
-    }
-
-    @Test
-    fun `cookie values match auth header values`() {
-      val authHeader =
-          AuthHeader(
-              accessToken = "my-token-value",
-              client = "my-client-id",
-              uid = "my-user-id",
-              expiry = "9999999999",
-          )
-
-      response.appendAuthCookies(authHeader, cookieConfig)
-
-      assertEquals("my-token-value", response.cookies.find { it.name == ACCESS_TOKEN }?.value)
-      assertEquals("my-client-id", response.cookies.find { it.name == CLIENT }?.value)
-      assertEquals("my-user-id", response.cookies.find { it.name == UID }?.value)
-      assertEquals("9999999999", response.cookies.find { it.name == EXPIRY }?.value)
+      assertNull(response.cookies.find { it.name == ACCESS_TOKEN })
+      assertNull(response.cookies.find { it.name == UID })
+      assertEquals(2, response.cookies.size)
+      assertEquals("client", response.cookies.find { it.name == CLIENT }?.value)
+      assertEquals("12345", response.cookies.find { it.name == EXPIRY }?.value)
     }
   }
 
@@ -157,15 +87,18 @@ class AuthHeaderCookieTest {
   inner class AppendAuthHeadersWithCookiesTests {
 
     @Test
-    fun `sets cookies when cookieConfig enabled`() {
+    fun `sets both headers and cookies when enabled`() {
       val authHeader =
           AuthHeader(accessToken = "token", client = "client", uid = "user", expiry = "12345")
       cookieConfig.enabled = true
 
       response.appendAuthHeaders(authHeader, cookieConfig)
 
-      assertTrue(response.cookies.isNotEmpty())
+      assertEquals("token", response.getHeader(ACCESS_TOKEN))
+      assertEquals("client", response.getHeader(CLIENT))
+      assertEquals("user", response.getHeader(UID))
       assertEquals(4, response.cookies.size)
+      assertEquals("token", response.cookies.find { it.name == ACCESS_TOKEN }?.value)
     }
 
     @Test
@@ -190,25 +123,7 @@ class AuthHeaderCookieTest {
     }
 
     @Test
-    fun `sets both headers and cookies when enabled`() {
-      val authHeader =
-          AuthHeader(accessToken = "token", client = "client", uid = "user", expiry = "12345")
-      cookieConfig.enabled = true
-
-      response.appendAuthHeaders(authHeader, cookieConfig)
-
-      // Check headers are set
-      assertEquals("token", response.getHeader(ACCESS_TOKEN))
-      assertEquals("client", response.getHeader(CLIENT))
-      assertEquals("user", response.getHeader(UID))
-
-      // Check cookies are also set
-      assertEquals(4, response.cookies.size)
-      assertEquals("token", response.cookies.find { it.name == ACCESS_TOKEN }?.value)
-    }
-
-    @Test
-    fun `null authHeaders does not throw and sets nothing`() {
+    fun `null authHeaders leaves response unchanged`() {
       response.appendAuthHeaders(null, cookieConfig)
 
       assertEquals(0, response.cookies.size)

@@ -12,17 +12,25 @@
  */
 package com.quantipixels.ogiri.samples.kotlin
 
-import com.quantipixels.ogiri.samples.kotlin.entity.SampleToken
 import com.quantipixels.ogiri.samples.kotlin.repository.SampleTokenRepository
-import java.time.Instant
-import java.time.temporal.ChronoUnit
+import com.quantipixels.ogiri.samples.kotlin.service.SampleTokenService
+import com.quantipixels.ogiri.security.core.ACCESS_TOKEN
+import com.quantipixels.ogiri.security.core.CLIENT
+import com.quantipixels.ogiri.security.core.EXPIRY
+import com.quantipixels.ogiri.security.core.SecurityServiceException
+import com.quantipixels.ogiri.security.core.UID
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.mock.web.MockHttpServletRequest
+import org.springframework.mock.web.MockHttpServletResponse
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.transaction.annotation.Transactional
 
@@ -30,147 +38,109 @@ import org.springframework.transaction.annotation.Transactional
 @ActiveProfiles("test")
 @Transactional
 class TokenServiceIntegrationTest {
+  @Autowired private lateinit var tokenService: SampleTokenService
   @Autowired private lateinit var tokenRepository: SampleTokenRepository
 
   private val testUserId = 1L
-  private val testClient = "test-app"
+  private val testEmail = "user1@example.com"
+  private val testPassword = "password"
 
   @BeforeEach
   fun setUp() {
     tokenRepository.deleteAll()
+    SecurityContextHolder.clearContext()
   }
 
   @Test
-  fun `should create and save new token`() {
-    val token =
-        SampleToken().apply {
-          userId = testUserId
-          client = testClient
-          token = "hashed-token-value"
-          expiryAt = Instant.now().plusSeconds(3600)
-          plainToken = "plain-token-value"
-        }
-    tokenRepository.save(token)
+  fun `createNewAuthToken with null client generates client and persists APP token`() {
+    val authHeader = tokenService.createNewAuthToken(testUserId, null, null)
 
-    val savedToken = tokenRepository.findByUserIdAndClient(testUserId, testClient).orElse(null)
+    assertNotNull(authHeader.accessToken)
+    assertNotNull(authHeader.client)
+    assertEquals("user1", authHeader.uid)
+
+    val savedToken =
+        tokenRepository.findByUserIdAndClient(testUserId, authHeader.client!!).orElse(null)
     assertNotNull(savedToken)
     assertEquals(testUserId, savedToken!!.userId)
-    assertEquals(testClient, savedToken.client)
-    assertEquals("hashed-token-value", savedToken.token)
-    assertEquals("app", savedToken.tokenType)
+    assertEquals(authHeader.client, savedToken.client)
+    assertEquals("APP", savedToken.tokenType)
   }
 
   @Test
-  fun `should support token rotation with grace period`() {
-    // Save initial token
-    val token1 =
-        SampleToken().apply {
-          userId = testUserId
-          client = testClient
-          token = "token-hash-1"
-          expiryAt = Instant.now().plusSeconds(3600)
-        }
-    tokenRepository.save(token1)
+  fun `verifyUser authenticates and appends auth headers`() {
+    val request =
+        MockHttpServletRequest("POST", "/api/auth/login").apply { remoteAddr = "127.0.0.1" }
+    val response = MockHttpServletResponse()
 
-    // Rotate token by deleting old and saving new
-    tokenRepository.deleteByUserIdAndClient(testUserId, testClient)
-    tokenRepository.flush() // Ensure delete is flushed before saving new token
+    tokenService.verifyUser(request, response, testEmail, testPassword)
 
-    val token2 =
-        SampleToken().apply {
-          userId = testUserId
-          client = testClient
-          token = "token-hash-2"
-          expiryAt = Instant.now().plusSeconds(3600)
-        }
-    tokenRepository.save(token2)
-
-    val rotatedToken = tokenRepository.findByUserIdAndClient(testUserId, testClient).orElse(null)
-    assertNotNull(rotatedToken)
-    assertEquals("token-hash-2", rotatedToken!!.token)
+    val authentication = SecurityContextHolder.getContext().authentication
+    assertNotNull(authentication)
+    assertEquals("user1", authentication.name)
+    assertNotNull(response.getHeader(ACCESS_TOKEN))
+    assertNotNull(response.getHeader(CLIENT))
+    assertEquals("user1", response.getHeader(UID))
+    assertNotNull(response.getHeader(EXPIRY))
   }
 
   @Test
-  fun `should handle multiple concurrent clients for same user`() {
-    val clients = listOf("mobile", "web", "desktop")
+  fun `verifyUser rejects invalid credentials without creating auth context`() {
+    val request =
+        MockHttpServletRequest("POST", "/api/auth/login").apply { remoteAddr = "127.0.0.1" }
+    val response = MockHttpServletResponse()
 
-    for (clientName in clients) {
-      val token =
-          SampleToken().apply {
-            userId = testUserId
-            client = clientName
-            token = "hash-$clientName"
-            expiryAt = Instant.now().plusSeconds(3600)
-          }
-      tokenRepository.save(token)
+    assertThrows(SecurityServiceException::class.java) {
+      tokenService.verifyUser(request, response, testEmail, "wrong-password")
     }
-
-    val userTokens = tokenRepository.findByUserIdOrderByUpdatedAtDesc(testUserId)
-    assertEquals(3, userTokens.size)
-    assertTrue(userTokens.map { it.client }.containsAll(clients))
+    assertNull(SecurityContextHolder.getContext().authentication)
+    assertEquals(0, tokenRepository.findByUserIdOrderByUpdatedAtDesc(testUserId).size)
   }
 
   @Test
-  fun `should support sub-tokens`() {
-    val mainToken =
-        SampleToken().apply {
-          userId = testUserId
-          client = testClient
-          token = "main-token"
-          expiryAt = Instant.now().plusSeconds(3600)
-        }
-    tokenRepository.save(mainToken)
+  fun `createNewAuthToken rotates token for same client while keeping single persisted row`() {
+    val first = tokenService.createNewAuthToken(testUserId, "web", null)
+    val second = tokenService.createNewAuthToken(testUserId, "web", null)
 
-    val subToken =
-        SampleToken().apply {
-          userId = testUserId
-          client = "$testClient.device"
-          token = "sub-token"
-          expiryAt = Instant.now().plusSeconds(1800)
-          tokenSubtype = "device"
-        }
-    tokenRepository.save(subToken)
-
-    val mainSaved = tokenRepository.findByUserIdAndClient(testUserId, testClient).orElse(null)
-    val subSaved =
-        tokenRepository.findByUserIdAndClient(testUserId, "$testClient.device").orElse(null)
-
-    assertNotNull(mainSaved)
-    assertNotNull(subSaved)
-    assertEquals("app", mainSaved!!.tokenType)
-    assertEquals("app", subSaved!!.tokenType)
-    assertEquals("device", subSaved.tokenSubtype)
+    assertNotEquals(first.accessToken, second.accessToken)
+    val webTokens =
+        tokenRepository.findByUserIdOrderByUpdatedAtDesc(testUserId).filter { it.client == "web" }
+    assertEquals(1, webTokens.size)
   }
 
   @Test
-  fun `should cleanup expired tokens`() {
-    val now = Instant.now()
+  fun `deleteToken removes only targeted client token for same user`() {
+    tokenService.createNewAuthToken(testUserId, "mobile", null)
+    tokenService.createNewAuthToken(testUserId, "web", null)
 
-    val expiredToken =
-        SampleToken().apply {
-          userId = testUserId
-          client = "expired-client"
-          token = "expired-hash"
-          expiryAt = now.minus(1, ChronoUnit.HOURS)
+    tokenService.deleteToken(testUserId, "mobile")
+
+    assertNull(tokenRepository.findByUserIdAndClient(testUserId, "mobile").orElse(null))
+    assertNotNull(tokenRepository.findByUserIdAndClient(testUserId, "web").orElse(null))
+  }
+
+  @Test
+  fun `revokeClient removes token for client represented by headers`() {
+    val issued = tokenService.createNewAuthToken(testUserId, "mobile", null)
+    assertNotNull(tokenRepository.findByUserIdAndClient(testUserId, "mobile").orElse(null))
+    val accessToken = requireNotNull(issued.accessToken)
+    val client = requireNotNull(issued.client)
+    val uid = requireNotNull(issued.uid)
+    val expiry = requireNotNull(issued.expiry)
+
+    val request =
+        MockHttpServletRequest("POST", "/api/auth/logout").apply {
+          addHeader(ACCESS_TOKEN, accessToken)
+          addHeader(CLIENT, client)
+          addHeader(UID, uid)
+          addHeader(EXPIRY, expiry)
         }
-    tokenRepository.save(expiredToken)
+    val response = MockHttpServletResponse()
 
-    val validToken =
-        SampleToken().apply {
-          userId = testUserId
-          client = "valid-client"
-          token = "valid-hash"
-          expiryAt = now.plus(1, ChronoUnit.HOURS)
-        }
-    tokenRepository.save(validToken)
+    tokenService.revokeClient(testUserId, request, response)
 
-    val expiredTokens = tokenRepository.findByExpiryAtBefore(now)
-    assertEquals(1, expiredTokens.size)
-
-    tokenRepository.deleteAll(expiredTokens)
-
-    val remaining = tokenRepository.findByUserIdOrderByUpdatedAtDesc(testUserId)
-    assertEquals(1, remaining.size)
-    assertEquals("valid-client", remaining[0].client)
+    assertNull(tokenRepository.findByUserIdAndClient(testUserId, "mobile").orElse(null))
+    assertEquals(accessToken, response.getHeader(ACCESS_TOKEN))
+    assertEquals(client, response.getHeader(CLIENT))
   }
 }

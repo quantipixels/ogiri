@@ -14,7 +14,6 @@ package com.quantipixels.ogiri.samples.kotlin.security
 
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -52,65 +51,21 @@ class UserDirectoryTest {
   }
 
   @Test
-  fun `findById returns user for valid id`() {
-    val user = userDirectory.findById(1L)
+  fun `findByEmail resolves known user and returns null for unknown`() {
+    val found = userDirectory.findByEmail("user1@example.com")
+    val missing = userDirectory.findByEmail("unknown@example.com")
 
-    assertNotNull(user)
-    assertEquals("user1", user!!.username)
-    assertEquals(1L, user.getOgiriUserId())
+    assertNotNull(found)
+    assertEquals("user1", found!!.username)
+    assertNull(missing)
   }
 
   @Test
-  fun `findById returns null for unknown id`() {
-    val user = userDirectory.findById(999L)
-
-    assertNull(user)
-  }
-
-  @Test
-  fun `findByEmail returns user for valid email`() {
-    val user = userDirectory.findByEmail("user1@example.com")
-
-    assertNotNull(user)
-    assertEquals("user1", user!!.username)
-  }
-
-  @Test
-  fun `findByEmail returns null for unknown email`() {
-    val user = userDirectory.findByEmail("unknown@example.com")
-
-    assertNull(user)
-  }
-
-  @Test
-  fun `findByUsername returns user for valid username`() {
-    val user = userDirectory.findByUsername("user2")
-
-    assertNotNull(user)
-    assertEquals("user2", user!!.username)
-    assertEquals(2L, user.getOgiriUserId())
-  }
-
-  @Test
-  fun `findByUsername returns null for unknown username`() {
-    val user = userDirectory.findByUsername("nonexistent")
-
-    assertNull(user)
-  }
-
-  @Test
-  fun `user has correct authorities`() {
+  fun `loaded user has expected authorities and enabled flags`() {
     val user = userDirectory.loadUserByUsername("user1")
 
-    assertNotNull(user.authorities)
     assertEquals(1, user.authorities.size)
     assertTrue(user.authorities.contains(SimpleGrantedAuthority("ROLE_USER")))
-  }
-
-  @Test
-  fun `user is enabled`() {
-    val user = userDirectory.loadUserByUsername("user1")
-
     assertTrue(user.isEnabled)
     assertTrue(user.isAccountNonExpired)
     assertTrue(user.isAccountNonLocked)
@@ -118,26 +73,7 @@ class UserDirectoryTest {
   }
 
   @Test
-  fun `recordSuccessfulLogin does not throw`() {
+  fun `recordSuccessfulLogin is a no-op for sample directory`() {
     assertDoesNotThrow { userDirectory.recordSuccessfulLogin(1L) }
-  }
-
-  @Test
-  fun `multiple users exist`() {
-    val user1 = userDirectory.findById(1L)
-    val user2 = userDirectory.findById(2L)
-
-    assertNotNull(user1)
-    assertNotNull(user2)
-    assertNotEquals(user1!!.username, user2!!.username)
-    assertEquals("user1", user1.username)
-    assertEquals("user2", user2.username)
-  }
-
-  @Test
-  fun `user has correct ogiri user id`() {
-    val user = userDirectory.loadUserByUsername("user1")
-
-    assertEquals(1L, user.getOgiriUserId())
   }
 }

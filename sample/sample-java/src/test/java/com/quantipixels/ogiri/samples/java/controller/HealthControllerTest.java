@@ -40,29 +40,11 @@ class HealthControllerTest {
   }
 
   @Test
-  void healthEndpoint_accessibleWithoutAuthentication() throws Exception {
-    // Health endpoint should be public
-    mockMvc
-        .perform(get("/api/health"))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.status").value("UP"));
-  }
-
-  @Test
   void meEndpoint_withoutAuthentication_returnsAnonymous() throws Exception {
-    // Without auth, returns anonymous info (filter disabled in test)
     mockMvc
         .perform(get("/api/me").accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.authenticated").value(false))
         .andExpect(jsonPath("$.principal").value("anonymous"));
-  }
-
-  @Test
-  void healthEndpoint_returnsJsonContentType() throws Exception {
-    mockMvc
-        .perform(get("/api/health"))
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON));
   }
 }

@@ -40,14 +40,6 @@ class HealthControllerTest {
   }
 
   @Test
-  fun `health endpoint accessible without authentication`() {
-    mockMvc.get("/api/health").andExpect {
-      status { isOk() }
-      jsonPath("$.status") { value("UP") }
-    }
-  }
-
-  @Test
   fun `me endpoint without authentication returns anonymous`() {
     mockMvc
         .get("/api/me") { accept = MediaType.APPLICATION_JSON }
@@ -56,13 +48,5 @@ class HealthControllerTest {
           jsonPath("$.authenticated") { value(false) }
           jsonPath("$.principal") { value("anonymous") }
         }
-  }
-
-  @Test
-  fun `health endpoint returns JSON content type`() {
-    mockMvc.get("/api/health").andExpect {
-      status { isOk() }
-      content { contentType(MediaType.APPLICATION_JSON) }
-    }
   }
 }

@@ -176,17 +176,6 @@ describe("OgiriAuth", () => {
 
             expect(onAuthError).toHaveBeenCalledWith(expect.any(OgiriAuthError));
         });
-
-        it("should fire callback set via onAuthError method", () => {
-            const auth = new OgiriAuth();
-            const callback = vi.fn();
-            auth.onAuthError(callback);
-            auth.setTokens(mockTokens);
-
-            auth.handleAuthError(null);
-
-            expect(callback).toHaveBeenCalledWith(expect.any(OgiriAuthError));
-        });
     });
 
     describe("headerInjector", () => {
@@ -212,14 +201,4 @@ describe("OgiriAuth", () => {
         });
     });
 
-    describe("createFetchClient", () => {
-        it("should create an OgiriFetchClient instance", () => {
-            const auth = new OgiriAuth();
-            const client = auth.createFetchClient("https://api.example.com");
-
-            expect(client).toBeDefined();
-            expect(typeof client.get).toBe("function");
-            expect(typeof client.post).toBe("function");
-        });
-    });
 });

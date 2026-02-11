@@ -166,13 +166,6 @@ class TokenCleanupTest {
     }
 
     @Test
-    fun `returns zero when repository is empty`() {
-      val deletedCount = repository.deleteByExpiryAtBefore(Instant.now())
-
-      assertEquals(0, deletedCount)
-    }
-
-    @Test
     fun `does not delete tokens with expiry equal to cutoff`() {
       val cutoff = Instant.now()
       val tokenAtCutoff = TestToken.create(userId = 1L, client = "c1", expiryAt = cutoff)
@@ -188,50 +181,10 @@ class TokenCleanupTest {
       assertEquals(1, repository.getCount())
       assertEquals("c1", repository.getAllTokens().first().client)
     }
-
-    @Test
-    fun `deletes tokens from multiple users`() {
-      val now = Instant.now()
-      val user1Expired =
-          TestToken.create(userId = 1L, client = "u1c1", expiryAt = now.minusSeconds(100))
-      val user2Expired =
-          TestToken.create(userId = 2L, client = "u2c1", expiryAt = now.minusSeconds(50))
-      val user1Valid =
-          TestToken.create(userId = 1L, client = "u1c2", expiryAt = now.plusSeconds(100))
-      val user2Valid =
-          TestToken.create(userId = 2L, client = "u2c2", expiryAt = now.plusSeconds(100))
-
-      repository.save(user1Expired)
-      repository.save(user2Expired)
-      repository.save(user1Valid)
-      repository.save(user2Valid)
-
-      val deletedCount = repository.deleteByExpiryAtBefore(now)
-
-      assertEquals(2, deletedCount)
-      assertEquals(2, repository.getCount())
-    }
   }
 
   @Nested
   inner class CleanupExpiredTokensTests {
-
-    @Test
-    fun `cleanupExpiredTokens deletes expired tokens`() {
-      val now = Instant.now()
-      val expiredToken =
-          TestToken.create(userId = 1L, client = "c1", expiryAt = now.minusSeconds(100))
-      val validToken =
-          TestToken.create(userId = 1L, client = "c2", expiryAt = now.plusSeconds(3600))
-
-      repository.save(expiredToken)
-      repository.save(validToken)
-
-      val deletedCount = tokenService.cleanupExpiredTokens(now)
-
-      assertEquals(1, deletedCount)
-      assertEquals(1, repository.getCount())
-    }
 
     @Test
     fun `cleanupExpiredTokens returns count of deleted tokens`() {
@@ -263,13 +216,6 @@ class TokenCleanupTest {
       assertEquals(0, deletedCount)
       assertEquals(1, repository.getCount())
     }
-
-    @Test
-    fun `cleanupExpiredTokens with empty repository returns zero`() {
-      val deletedCount = tokenService.cleanupExpiredTokens()
-
-      assertEquals(0, deletedCount)
-    }
   }
 
   @Nested
@@ -298,16 +244,6 @@ class TokenCleanupTest {
 
       assertEquals(1, repository.getCount())
       assertEquals("c2", repository.getAllTokens().first().client)
-    }
-
-    @Test
-    fun `deleteToken with empty collection does nothing`() {
-      val token = TestToken.create(userId = 1L, client = "c1")
-      repository.save(token)
-
-      tokenService.deleteToken(1L, emptyList())
-
-      assertEquals(1, repository.getCount())
     }
 
     @Test

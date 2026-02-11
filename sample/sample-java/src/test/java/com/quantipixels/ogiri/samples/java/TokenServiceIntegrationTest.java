@@ -12,17 +12,23 @@
  */
 package com.quantipixels.ogiri.samples.java;
 
+import static com.quantipixels.ogiri.security.core.AuthHeaderKt.ACCESS_TOKEN;
+import static com.quantipixels.ogiri.security.core.AuthHeaderKt.CLIENT;
+import static com.quantipixels.ogiri.security.core.AuthHeaderKt.EXPIRY;
+import static com.quantipixels.ogiri.security.core.AuthHeaderKt.UID;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.quantipixels.ogiri.samples.java.entity.SampleToken;
 import com.quantipixels.ogiri.samples.java.repository.SampleTokenRepository;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.List;
+import com.quantipixels.ogiri.samples.java.service.SampleTokenService;
+import com.quantipixels.ogiri.security.core.SecurityServiceException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,135 +37,107 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 class TokenServiceIntegrationTest {
 
+  @Autowired private SampleTokenService tokenService;
   @Autowired private SampleTokenRepository tokenRepository;
 
   private static final Long TEST_USER_ID = 1L;
-  private static final String TEST_CLIENT = "test-app";
+  private static final String TEST_EMAIL = "user1@example.com";
+  private static final String TEST_PASSWORD = "password";
 
   @BeforeEach
   void setUp() {
     tokenRepository.deleteAll();
+    SecurityContextHolder.clearContext();
   }
 
   @Test
-  void shouldCreateAndSaveNewToken() {
-    SampleToken token = new SampleToken();
-    token.setUserId(TEST_USER_ID);
-    token.setClient(TEST_CLIENT);
-    token.setToken("hashed-token-value");
-    token.setExpiryAt(Instant.now().plusSeconds(3600));
-    token.setPlainToken("plain-token-value");
-    tokenRepository.save(token);
+  void createNewAuthToken_withNullClient_generatesClientAndPersistsAppToken() {
+    var authHeader = tokenService.createNewAuthToken(TEST_USER_ID, null, null);
 
-    SampleToken savedToken =
-        tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT).orElse(null);
+    assertNotNull(authHeader.getAccessToken());
+    assertNotNull(authHeader.getClient());
+    assertEquals("user1", authHeader.getUid());
+
+    var savedToken =
+        tokenRepository.findByUserIdAndClient(TEST_USER_ID, authHeader.getClient()).orElse(null);
     assertNotNull(savedToken);
     assertEquals(TEST_USER_ID, savedToken.getUserId());
-    assertEquals(TEST_CLIENT, savedToken.getClient());
-    assertEquals("hashed-token-value", savedToken.getToken());
-    assertEquals("app", savedToken.getTokenType());
+    assertEquals(authHeader.getClient(), savedToken.getClient());
+    assertEquals("APP", savedToken.getTokenType());
   }
 
   @Test
-  void shouldSupportTokenRotationWithGracePeriod() {
-    // Save initial token
-    SampleToken token1 = new SampleToken();
-    token1.setUserId(TEST_USER_ID);
-    token1.setClient(TEST_CLIENT);
-    token1.setToken("token-hash-1");
-    token1.setExpiryAt(Instant.now().plusSeconds(3600));
-    tokenRepository.save(token1);
+  void verifyUser_authenticatesAndAppendsAuthHeaders() {
+    var request = new MockHttpServletRequest("POST", "/api/auth/login");
+    request.setRemoteAddr("127.0.0.1");
+    var response = new MockHttpServletResponse();
 
-    // Rotate token by deleting old and saving new
-    tokenRepository.deleteByUserIdAndClient(TEST_USER_ID, TEST_CLIENT);
-    tokenRepository.flush(); // Ensure delete is flushed before saving new token
+    tokenService.verifyUser(request, response, TEST_EMAIL, TEST_PASSWORD);
 
-    SampleToken token2 = new SampleToken();
-    token2.setUserId(TEST_USER_ID);
-    token2.setClient(TEST_CLIENT);
-    token2.setToken("token-hash-2");
-    token2.setExpiryAt(Instant.now().plusSeconds(3600));
-    tokenRepository.save(token2);
-
-    SampleToken rotatedToken =
-        tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT).orElse(null);
-    assertNotNull(rotatedToken);
-    assertEquals("token-hash-2", rotatedToken.getToken());
+    var authentication = SecurityContextHolder.getContext().getAuthentication();
+    assertNotNull(authentication);
+    assertEquals("user1", authentication.getName());
+    assertNotNull(response.getHeader(ACCESS_TOKEN));
+    assertNotNull(response.getHeader(CLIENT));
+    assertEquals("user1", response.getHeader(UID));
+    assertNotNull(response.getHeader(EXPIRY));
   }
 
   @Test
-  void shouldHandleMultipleConcurrentClientsForSameUser() {
-    List<String> clients = List.of("mobile", "web", "desktop");
+  void verifyUser_rejectsInvalidCredentialsWithoutCreatingAuthContext() {
+    var request = new MockHttpServletRequest("POST", "/api/auth/login");
+    request.setRemoteAddr("127.0.0.1");
+    var response = new MockHttpServletResponse();
 
-    for (String client : clients) {
-      SampleToken token = new SampleToken();
-      token.setUserId(TEST_USER_ID);
-      token.setClient(client);
-      token.setToken("hash-" + client);
-      token.setExpiryAt(Instant.now().plusSeconds(3600));
-      tokenRepository.save(token);
-    }
-
-    List<SampleToken> userTokens = tokenRepository.findByUserIdOrderByUpdatedAtDesc(TEST_USER_ID);
-    assertEquals(3, userTokens.size());
-    assertTrue(userTokens.stream().map(SampleToken::getClient).anyMatch(clients::contains));
+    assertThrows(
+        SecurityServiceException.class,
+        () -> tokenService.verifyUser(request, response, TEST_EMAIL, "wrong-password"));
+    assertNull(SecurityContextHolder.getContext().getAuthentication());
+    assertEquals(0, tokenRepository.findByUserIdOrderByUpdatedAtDesc(TEST_USER_ID).size());
   }
 
   @Test
-  void shouldSupportSubTokens() {
-    SampleToken mainToken = new SampleToken();
-    mainToken.setUserId(TEST_USER_ID);
-    mainToken.setClient(TEST_CLIENT);
-    mainToken.setToken("main-token");
-    mainToken.setExpiryAt(Instant.now().plusSeconds(3600));
-    tokenRepository.save(mainToken);
+  void createNewAuthToken_rotatesTokenForSameClientWhileKeepingSinglePersistedRow() {
+    var first = tokenService.createNewAuthToken(TEST_USER_ID, "web", null);
+    var second = tokenService.createNewAuthToken(TEST_USER_ID, "web", null);
 
-    SampleToken subToken = new SampleToken();
-    subToken.setUserId(TEST_USER_ID);
-    subToken.setClient(TEST_CLIENT + ".device");
-    subToken.setToken("sub-token");
-    subToken.setExpiryAt(Instant.now().plusSeconds(1800));
-    subToken.setTokenType("sub");
-    subToken.setTokenSubtype("device");
-    tokenRepository.save(subToken);
-
-    SampleToken mainSaved =
-        tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT).orElse(null);
-    SampleToken subSaved =
-        tokenRepository.findByUserIdAndClient(TEST_USER_ID, TEST_CLIENT + ".device").orElse(null);
-
-    assertNotNull(mainSaved);
-    assertNotNull(subSaved);
-    assertEquals("app", mainSaved.getTokenType());
-    assertEquals("sub", subSaved.getTokenType());
-    assertEquals("device", subSaved.getTokenSubtype());
+    assertNotEquals(first.getAccessToken(), second.getAccessToken());
+    var webTokens =
+        tokenRepository.findByUserIdOrderByUpdatedAtDesc(TEST_USER_ID).stream()
+            .filter(token -> "web".equals(token.getClient()))
+            .toList();
+    assertEquals(1, webTokens.size());
   }
 
   @Test
-  void shouldCleanupExpiredTokens() {
-    Instant now = Instant.now();
+  void deleteToken_removesOnlyTargetedClientTokenForSameUser() {
+    tokenService.createNewAuthToken(TEST_USER_ID, "mobile", null);
+    tokenService.createNewAuthToken(TEST_USER_ID, "web", null);
 
-    SampleToken expiredToken = new SampleToken();
-    expiredToken.setUserId(TEST_USER_ID);
-    expiredToken.setClient("expired-client");
-    expiredToken.setToken("expired-hash");
-    expiredToken.setExpiryAt(now.minus(3600, ChronoUnit.SECONDS));
-    tokenRepository.save(expiredToken);
+    tokenService.deleteToken(TEST_USER_ID, "mobile");
 
-    SampleToken validToken = new SampleToken();
-    validToken.setUserId(TEST_USER_ID);
-    validToken.setClient("valid-client");
-    validToken.setToken("valid-hash");
-    validToken.setExpiryAt(now.plus(3600, ChronoUnit.SECONDS));
-    tokenRepository.save(validToken);
+    assertNull(tokenRepository.findByUserIdAndClient(TEST_USER_ID, "mobile").orElse(null));
+    assertNotNull(tokenRepository.findByUserIdAndClient(TEST_USER_ID, "web").orElse(null));
+  }
 
-    List<SampleToken> expiredTokens = tokenRepository.findByExpiryAtBefore(now);
-    assertEquals(1, expiredTokens.size());
+  @Test
+  void revokeClient_removesTokenForClientRepresentedByHeaders() {
+    var issued = tokenService.createNewAuthToken(TEST_USER_ID, "mobile", null);
+    SampleToken savedToken =
+        tokenRepository.findByUserIdAndClient(TEST_USER_ID, "mobile").orElse(null);
+    assertNotNull(savedToken);
 
-    tokenRepository.deleteAll(expiredTokens);
+    var request = new MockHttpServletRequest("POST", "/api/auth/logout");
+    request.addHeader(ACCESS_TOKEN, issued.getAccessToken());
+    request.addHeader(CLIENT, issued.getClient());
+    request.addHeader(UID, issued.getUid());
+    request.addHeader(EXPIRY, issued.getExpiry());
+    var response = new MockHttpServletResponse();
 
-    List<SampleToken> remaining = tokenRepository.findByUserIdOrderByUpdatedAtDesc(TEST_USER_ID);
-    assertEquals(1, remaining.size());
-    assertEquals("valid-client", remaining.get(0).getClient());
+    tokenService.revokeClient(TEST_USER_ID, request, response);
+
+    assertNull(tokenRepository.findByUserIdAndClient(TEST_USER_ID, "mobile").orElse(null));
+    assertEquals(issued.getAccessToken(), response.getHeader(ACCESS_TOKEN));
+    assertEquals("mobile", response.getHeader(CLIENT));
   }
 }

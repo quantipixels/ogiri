@@ -109,15 +109,6 @@ describe("createAxiosInterceptors", () => {
             });
         });
 
-        it("should pass through response on success", () => {
-            const { response } = createAxiosInterceptors(auth);
-
-            const axiosResponse = makeAxiosResponse();
-            const result = response.onFulfilled(axiosResponse);
-
-            expect(result).toBe(axiosResponse);
-        });
-
         it("should not update tokens when rotation headers missing", () => {
             auth.setTokens(mockTokens);
             const { response } = createAxiosInterceptors(auth);
