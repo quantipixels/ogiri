@@ -1,14 +1,11 @@
 #!/bin/bash
 
-# Ogiri Security Sample Testing Script
-# Tests authentication endpoints for both Kotlin and Java samples
-
 set -e
 
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
 function print_header() {
     echo -e "\n${BLUE}=== $1 ===${NC}\n"
@@ -29,7 +26,6 @@ function test_sample() {
 
     print_header "Testing $SAMPLE_NAME Sample (port $PORT)"
 
-    # Test health endpoint
     print_header "1. Health Check"
     HEALTH=$(curl -s "$BASE_URL/api/health")
     if [[ $HEALTH == *"UP"* ]]; then
@@ -39,9 +35,7 @@ function test_sample() {
         return 1
     fi
 
-    # Test login
     print_header "2. Login"
-    # Get full response with headers to extract Authorization header
     curl -s -X POST "$BASE_URL/api/auth/login" \
         -H "Content-Type: application/json" \
         -d '{"username":"user1@example.com","password":"password"}' \
@@ -57,13 +51,11 @@ function test_sample() {
         return 1
     fi
 
-    # Extract tokens from JSON body
     TOKEN=$(echo "$LOGIN_RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin)['accessToken'])")
     CLIENT=$(echo "$LOGIN_RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin)['client'])")
     USER_ID=$(echo "$LOGIN_RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin)['uid'])")
     EXPIRY=$(echo "$LOGIN_RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin)['expiry'])")
 
-    # Extract Authorization header for Bearer token testing (remove carriage return)
     BEARER_HEADER=$(grep "Authorization:" /tmp/login-response-$PORT.txt | cut -d' ' -f2- | tr -d '\r')
 
     echo "Tokens extracted:"
@@ -73,7 +65,6 @@ function test_sample() {
     echo "  EXPIRY: $EXPIRY"
     echo "  BEARER: ${BEARER_HEADER:0:50}... (truncated)"
 
-    # Test Method 1: HTTP Headers
     print_header "3. Authentication Method 1: HTTP Headers"
     HEADERS_RESPONSE=$(curl -s "$BASE_URL/api/demo/headers" \
         -H "access-token: $TOKEN" \
@@ -88,7 +79,6 @@ function test_sample() {
         print_error "Header-based authentication failed: $HEADERS_RESPONSE"
     fi
 
-    # Test Method 2: Secure Cookies
     print_header "4. Authentication Method 2: Secure Cookies"
     COOKIES_RESPONSE=$(curl -s "$BASE_URL/api/demo/cookies" \
         -b "access-token=$TOKEN;client=$CLIENT;uid=$USER_ID;expiry=$EXPIRY")
@@ -100,9 +90,7 @@ function test_sample() {
         print_error "Cookie-based authentication failed: $COOKIES_RESPONSE"
     fi
 
-    # Test Method 3: Bearer Token
     print_header "5. Authentication Method 3: Bearer Token"
-    # Use the actual Authorization header from login response
     BEARER_RESPONSE=$(curl -s "$BASE_URL/api/demo/bearer" \
         -H "Authorization: $BEARER_HEADER")
 
@@ -116,7 +104,6 @@ function test_sample() {
         print_error "Bearer token authentication failed: $BEARER_RESPONSE"
     fi
 
-    # Test general auth info endpoint
     print_header "6. General Auth Info (works with any method)"
     INFO_RESPONSE=$(curl -s "$BASE_URL/api/demo/info" \
         -H "access-token: $TOKEN" \
@@ -131,7 +118,6 @@ function test_sample() {
         print_error "General auth endpoint failed: $INFO_RESPONSE"
     fi
 
-    # Test /api/me endpoint
     print_header "7. Current User Info (/api/me)"
     ME_RESPONSE=$(curl -s "$BASE_URL/api/me" \
         -H "access-token: $TOKEN" \
@@ -146,7 +132,6 @@ function test_sample() {
         print_error "Current user endpoint failed: $ME_RESPONSE"
     fi
 
-    # Test logout
     print_header "8. Logout"
     LOGOUT_RESPONSE=$(curl -s -X POST "$BASE_URL/api/auth/logout" \
         -H "access-token: $TOKEN" \
@@ -161,7 +146,6 @@ function test_sample() {
         print_error "Logout failed: $LOGOUT_RESPONSE"
     fi
 
-    # Verify token is invalidated after logout
     print_header "9. Verify token invalidated after logout"
     AFTER_LOGOUT=$(curl -s "$BASE_URL/api/demo/headers" \
         -H "access-token: $TOKEN" \
@@ -178,17 +162,13 @@ function test_sample() {
     print_header "$SAMPLE_NAME Sample Tests Complete!"
 }
 
-# Main execution
 echo -e "${BLUE}"
 echo "╔════════════════════════════════════════════════════╗"
 echo "║  Ogiri Security Sample Application Test Suite    ║"
-echo "╔════════════════════════════════════════════════════╝"
+echo "╚════════════════════════════════════════════════════╝"
 echo -e "${NC}"
 
-# Test Java sample on port 48080
 test_sample "Java" 48080
-
-# Test Kotlin sample on port 48081
 test_sample "Kotlin" 48081
 
 echo ""

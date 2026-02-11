@@ -68,72 +68,8 @@ allprojects {
   }
 }
 
-// Task to install git hooks for development workflow
-tasks.register("installGitHooks") {
-  description = "Install git pre-commit and pre-push hooks for code quality checks"
+tasks.register<Exec>("setupDev") {
+  description = "Install lefthook git hooks for development workflow"
   group = "Development"
-
-  doLast {
-    val installScript = file("scripts/install.sh")
-    if (!installScript.exists()) {
-      throw GradleException("install.sh script not found at scripts/install.sh")
-    }
-
-    val process = ProcessBuilder("bash", installScript.absolutePath).start()
-
-    // Read streams concurrently to avoid deadlocks from full buffers
-    val stdout = StringBuilder()
-    val stderr = StringBuilder()
-
-    val stdoutThread = Thread {
-      process.inputStream.bufferedReader().use { reader ->
-        var line: String? = reader.readLine()
-        while (line != null) {
-          stdout.append(line).append("\n")
-          line = reader.readLine()
-        }
-      }
-    }
-
-    val stderrThread = Thread {
-      process.errorStream.bufferedReader().use { reader ->
-        var line: String? = reader.readLine()
-        while (line != null) {
-          stderr.append(line).append("\n")
-          line = reader.readLine()
-        }
-      }
-    }
-
-    stdoutThread.start()
-    stderrThread.start()
-
-    val exitCode = process.waitFor()
-    stdoutThread.join()
-    stderrThread.join()
-
-    if (exitCode != 0) {
-      throw GradleException("Failed to install git hooks (exit $exitCode):\n$stderr")
-    }
-
-    if (stdout.isNotEmpty()) {
-      println(stdout.toString().trim())
-    }
-  }
-}
-
-// Automatically install hooks when setting up the project
-tasks.register("setupDev") {
-  description = "Set up development environment (installs git hooks)"
-  group = "Development"
-  dependsOn("installGitHooks")
-
-  doLast {
-    println("")
-    println("✅ Development environment setup complete!")
-    println("")
-    println("Your git hooks are installed. They will:")
-    println("  • pre-commit:  Check code formatting before allowing commits")
-    println("  • pre-push:    Verify tests pass before allowing pushes")
-  }
+  commandLine("lefthook", "install")
 }

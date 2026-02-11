@@ -1,0 +1,10 @@
+pre-commit:
+  commands:
+    spotless-check:
+      glob: "*.{kt,kts,java,sql,toml,md,yaml,yml}"
+      run: ./gradlew spotlessCheck --no-daemon -q
+
+pre-push:
+  commands:
+    build:
+      run: ./gradlew build --no-daemon

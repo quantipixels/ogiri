@@ -52,6 +52,7 @@ out/
 .archive/
 .trae
 
+lefthook-local.yml
 logs/
 .DS_Store
 site/

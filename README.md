@@ -125,7 +125,7 @@ See the [full Quickstart Guide](https://quantipixels.github.io/ogiri/quickstart/
 ./gradlew spotlessApply  # Format code
 
 # Enable git hooks (optional)
-./scripts/install.sh
+lefthook install
 ```
 
 See [development guide](https://quantipixels.github.io/ogiri/contributing/development-guide/) for contributor guidelines.
