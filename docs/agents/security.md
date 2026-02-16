@@ -25,6 +25,12 @@
 - Tokens **BCrypt-hashed** before storage (never plaintext)
 - Token comparison results **cached** (Caffeine, 1hr) to reduce BCrypt overhead
 - Token prefix (8-char) enables **O(1) DB lookups** vs O(n) BCrypt scans
+- **DUMMY_HASH** must be a valid 60-char BCrypt hash (not a short placeholder) so `BCryptPasswordEncoder.matches()` performs a full computation on the "user not found" path, preventing user enumeration via timing
+
+### Sub-token Validation
+
+- Fallback linear scan in `validateSubToken()` is bounded to `maxClients` entries to limit worst-case BCrypt comparisons
+- Primary path (bearer with client ID) uses direct O(1) lookup via `getByUserIdAndClient()`
 
 ### Authentication Flow
 

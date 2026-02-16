@@ -723,8 +723,11 @@ open class OgiriTokenService<T : OgiriToken>(
   companion object {
     private val logger = LoggerFactory.getLogger(OgiriTokenService::class.java)
 
-    // Pre-computed BCrypt hash for timing normalization
-    private const val DUMMY_HASH = "\$2a\$10\$dummyhashvalueforconstanttimecheck"
+    // Pre-computed valid BCrypt hash for constant-time comparison when user is not found.
+    // Must be a properly formatted 60-char BCrypt hash so that BCryptPasswordEncoder.matches()
+    // performs a full BCrypt computation rather than short-circuiting on pattern validation.
+    private const val DUMMY_HASH =
+        "\$2a\$10\$II9GOMND5IObe5IA9/7EXuflfP5U77aqrWyXCEXEFpXolIDmBbLmS"
   }
 
   @Transactional
@@ -847,6 +850,7 @@ open class OgiriTokenService<T : OgiriToken>(
         repository
             .findByUserIdAndTokenSubtypeOrderByUpdatedAtDesc(user.getOgiriUserId(), subTokenName)
             .filter { OgiriTokenType.of(it.tokenType) == OgiriTokenType.SUB }
+            .take(maxClients.toInt())
     return all.any { tokenMatches(it, tokenField) && registration.validate(tokenField) }
   }
 
