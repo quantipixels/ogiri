@@ -33,6 +33,7 @@ import jakarta.servlet.http.HttpServletResponse
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.Base64
+import java.util.concurrent.ThreadLocalRandom
 import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.ObjectProvider
@@ -144,11 +145,11 @@ open class OgiriTokenService<T : OgiriToken>(
 
     val result = tokenEqualityCache.get(key) { passwordEncoder.matches(token, tokenHash) }
 
-    // Ensure minimum 100ms to mask cache hit vs miss timing
+    // Randomized jitter to mask cache hit vs miss timing without a fixed floor
+    val jitter = ThreadLocalRandom.current().nextLong(80_000_000L, 120_000_000L)
     val elapsed = System.nanoTime() - startTime
-    val minDelayNanos = 100_000_000L // 100ms
-    if (elapsed < minDelayNanos) {
-      Thread.sleep((minDelayNanos - elapsed) / 1_000_000)
+    if (elapsed < jitter) {
+      Thread.sleep((jitter - elapsed) / 1_000_000)
     }
 
     return result
@@ -723,8 +724,11 @@ open class OgiriTokenService<T : OgiriToken>(
   companion object {
     private val logger = LoggerFactory.getLogger(OgiriTokenService::class.java)
 
-    // Pre-computed BCrypt hash for timing normalization
-    private const val DUMMY_HASH = "\$2a\$10\$dummyhashvalueforconstanttimecheck"
+    // Pre-computed valid BCrypt hash for constant-time comparison when user is not found.
+    // Must be a properly formatted 60-char BCrypt hash so that BCryptPasswordEncoder.matches()
+    // performs a full BCrypt computation rather than short-circuiting on pattern validation.
+    private const val DUMMY_HASH =
+        "\$2a\$10\$II9GOMND5IObe5IA9/7EXuflfP5U77aqrWyXCEXEFpXolIDmBbLmS"
   }
 
   @Transactional
@@ -847,6 +851,7 @@ open class OgiriTokenService<T : OgiriToken>(
         repository
             .findByUserIdAndTokenSubtypeOrderByUpdatedAtDesc(user.getOgiriUserId(), subTokenName)
             .filter { OgiriTokenType.of(it.tokenType) == OgiriTokenType.SUB }
+            .take(maxClients.toInt())
     return all.any { tokenMatches(it, tokenField) && registration.validate(tokenField) }
   }
 

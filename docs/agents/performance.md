@@ -21,8 +21,8 @@
 
 ## Timing Attack Protection
 
-- `tokensMatch()` enforces a **100ms floor** on token comparison to mask cache hit vs miss timing
-- Each auth request holds a servlet thread for at least 100ms during token validation
+- `tokensMatch()` applies **randomized jitter (80–120ms)** on token comparison to mask cache hit vs miss timing
+- Each auth request holds a servlet thread for the jitter duration during token validation
 - **Thread pool sizing**: with a 200-thread pool, max theoretical auth throughput is ~2,000 req/s
 - Size `server.tomcat.threads.max` accordingly for auth-heavy workloads
 
