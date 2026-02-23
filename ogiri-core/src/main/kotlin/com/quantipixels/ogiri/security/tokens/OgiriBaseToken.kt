@@ -47,7 +47,7 @@ import java.time.Instant
  */
 abstract class OgiriBaseToken : OgiriToken {
   /** Unique token identifier (primary key). Database auto-increment recommended. */
-  abstract override val id: Long
+  abstract override var id: Long
 
   /** User identifier associated with this token. Should be indexed for efficient lookups. */
   abstract override val userId: Long
@@ -81,7 +81,7 @@ abstract class OgiriBaseToken : OgiriToken {
   abstract override val createdAt: Instant
 
   /** Timestamp when token was last updated. Usually auto-updated on any row modification. */
-  abstract override val updatedAt: Instant
+  abstract override var updatedAt: Instant
 
   /** Timestamp when token rotation last occurred. Used for token rotation policy decisions. */
   abstract override var tokenUpdatedAt: Instant

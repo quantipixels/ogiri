@@ -26,6 +26,8 @@ include(":ogiri-core")
 
 include(":ogiri-jpa")
 
+include(":ogiri-jdbc")
+
 include(":sample:sample-java")
 
 include(":sample:sample-kotlin")

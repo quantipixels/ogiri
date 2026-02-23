@@ -25,7 +25,7 @@ import java.time.Instant
  */
 data class TestToken(
     /** Primary key - mutable for testing. */
-    override val id: Long = 0,
+    override var id: Long = 0,
     /** User ID. */
     override val userId: Long,
     /** Client identifier. */
