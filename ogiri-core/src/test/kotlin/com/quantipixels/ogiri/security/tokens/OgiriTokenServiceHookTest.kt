@@ -114,6 +114,7 @@ class OgiriTokenServiceHookTest {
           properties,
           auditHook?.let { objectProviderOf(it) } ?: emptyObjectProvider(),
           rateLimitHook?.let { objectProviderOf(it) } ?: emptyObjectProvider(),
+          emptyObjectProvider(),
       ) {
     override fun tokenFactory(
         userId: Long,

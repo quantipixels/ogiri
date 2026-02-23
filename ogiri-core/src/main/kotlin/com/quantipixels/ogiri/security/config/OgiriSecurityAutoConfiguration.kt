@@ -19,6 +19,7 @@ import com.quantipixels.ogiri.security.routes.OgiriRouteCatalog
 import com.quantipixels.ogiri.security.routes.OgiriRouteRegistry
 import com.quantipixels.ogiri.security.spi.OgiriAuditHook
 import com.quantipixels.ogiri.security.spi.OgiriRateLimitHook
+import com.quantipixels.ogiri.security.spi.OgiriTokenLookupCache
 import com.quantipixels.ogiri.security.spi.OgiriUserDirectory
 import com.quantipixels.ogiri.security.tokens.DefaultOgiriSubTokenRegistry
 import com.quantipixels.ogiri.security.tokens.DefaultOgiriTokenServiceResolver
@@ -172,6 +173,7 @@ class OgiriSecurityAutoConfiguration {
       properties: OgiriConfigurationProperties,
       auditHookProvider: ObjectProvider<OgiriAuditHook>,
       rateLimitHookProvider: ObjectProvider<OgiriRateLimitHook>,
+      lookupCacheProvider: ObjectProvider<OgiriTokenLookupCache<T>>,
   ): OgiriTokenService<T> =
       OgiriTokenService(
           repository,
@@ -182,6 +184,7 @@ class OgiriSecurityAutoConfiguration {
           properties,
           auditHookProvider,
           rateLimitHookProvider,
+          lookupCacheProvider,
       )
 
   /**

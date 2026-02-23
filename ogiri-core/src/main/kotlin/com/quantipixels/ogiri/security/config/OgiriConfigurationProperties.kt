@@ -72,6 +72,9 @@ open class OgiriConfigurationProperties {
   /** Token comparison cache configuration. */
   val cache: CacheProperties = CacheProperties()
 
+  /** Token entity lookup cache configuration. */
+  val lookup: LookupCacheProperties = LookupCacheProperties()
+
   companion object {
     private val logger = LoggerFactory.getLogger(OgiriConfigurationProperties::class.java)
   }
@@ -389,6 +392,54 @@ open class OgiriConfigurationProperties {
      * Default: "/" (entire site)
      */
     var path: String = "/"
+  }
+
+  /**
+   * Token entity lookup cache configuration.
+   *
+   * Controls the optional token lookup cache added by `ogiri-caffeine` or `ogiri-redis`. No cache
+   * is active unless `ogiri.lookup.type` is explicitly set.
+   *
+   * Example (application.yml):
+   * ```yaml
+   * ogiri:
+   *   lookup:
+   *     type: caffeine   # or redis
+   *     max-size: 10000
+   *     expiry-minutes: 5
+   * ```
+   */
+  open class LookupCacheProperties {
+    /**
+     * Cache backend to activate.
+     *
+     * Supported values:
+     * - `caffeine` — in-process Caffeine cache (single-instance deployments)
+     * - `redis` — shared Redis cache (multi-instance deployments)
+     * - (absent) — no lookup cache; every request hits the database
+     *
+     * The corresponding module (`ogiri-caffeine` or `ogiri-redis`) must be on the classpath.
+     */
+    var type: String = ""
+
+    /**
+     * Maximum number of token entities to hold in the cache.
+     *
+     * Applies to Caffeine. Ignored by Redis (which relies on TTL-based eviction only).
+     *
+     * Default: 10000
+     */
+    @field:Min(100) var maxSize: Long = 10_000
+
+    /**
+     * Time in minutes before a cached token entity expires.
+     *
+     * Applies to both Caffeine and Redis. A shorter TTL (e.g. 5 minutes) is recommended for token
+     * entities because revocation must propagate quickly.
+     *
+     * Default: 5
+     */
+    @field:Min(1) var expiryMinutes: Long = 5
   }
 
   /**

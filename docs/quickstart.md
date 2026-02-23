@@ -260,18 +260,28 @@ expiry: 2025-12-25T00:00:00Z
 
 ## Optional: SPI Hooks
 
-Ogiri provides two optional SPI hooks you can implement as Spring beans:
+Ogiri provides optional SPI hooks and cache modules you can opt into as Spring beans or extra dependencies.
 
-- **`OgiriAuditHook`** - Receive callbacks on login success/failure, token rotation, and revocation (integrate with your SIEM)
-- **`OgiriRateLimitHook`** - Enforce rate limits before login and token creation (e.g., Bucket4j, Redis)
+**Hooks** (implement as a `@Component`, no extra dependency needed):
 
-Both default to no-ops if not provided — just register a Spring bean implementing either interface.
+- **`OgiriAuditHook`** — Callbacks on login success/failure, token rotation, and revocation (integrate with your SIEM)
+- **`OgiriRateLimitHook`** — Enforce rate limits before login and token creation (e.g., Bucket4j, Redis)
+
+Both default to no-ops if not provided.
+
+**Token Lookup Cache** (eliminates per-request DB reads for the same user/client):
+
+- **`ogiri-caffeine`** — In-process Caffeine cache. Add the dependency and set `ogiri.lookup.type: caffeine`. Best for single-instance deployments.
+- **`ogiri-redis`** — Shared Redis cache. Add `ogiri-redis` + `spring-boot-starter-data-redis` and set `ogiri.lookup.type: redis`. Required for multi-instance deployments where revocations must propagate across nodes.
+
+See [Token Lookup Cache](configuration.md#token-lookup-cache) for full setup instructions.
 
 ## Next Steps
 
 | Topic                                                                         | Description                                      |
 | ----------------------------------------------------------------------------- | ------------------------------------------------ |
 | [Configuration](configuration.md)                                             | Token rotation, cleanup schedules, batch windows |
+| [Token Lookup Cache](configuration.md#token-lookup-cache)                     | Caffeine and Redis cache modules, opt-in setup   |
 | [Database Integration](database.md)                                           | JPA, MongoDB, Redis, custom implementations      |
 | [Sub-tokens](sub-tokens.md)                                                   | Device tokens, chat tokens, API tokens           |
 | [Authentication Flow](authentication.md)                                      | Request lifecycle, rotation policies, headers    |

@@ -28,6 +28,10 @@ include(":ogiri-jpa")
 
 include(":ogiri-jdbc")
 
+include(":ogiri-caffeine")
+
+include(":ogiri-redis")
+
 include(":sample:sample-java")
 
 include(":sample:sample-kotlin")

@@ -26,6 +26,7 @@ import com.quantipixels.ogiri.security.core.appendAuthHeaders
 import com.quantipixels.ogiri.security.core.extractAuthHeader
 import com.quantipixels.ogiri.security.spi.OgiriAuditHook
 import com.quantipixels.ogiri.security.spi.OgiriRateLimitHook
+import com.quantipixels.ogiri.security.spi.OgiriTokenLookupCache
 import com.quantipixels.ogiri.security.spi.OgiriUser
 import com.quantipixels.ogiri.security.spi.OgiriUserDirectory
 import jakarta.servlet.http.HttpServletRequest
@@ -75,11 +76,13 @@ open class OgiriTokenService<T : OgiriToken>(
     protected val properties: OgiriConfigurationProperties,
     auditHookProvider: ObjectProvider<OgiriAuditHook>,
     rateLimitHookProvider: ObjectProvider<OgiriRateLimitHook>,
+    lookupCacheProvider: ObjectProvider<OgiriTokenLookupCache<T>>,
 ) {
   private val auditHook: OgiriAuditHook =
       auditHookProvider.getIfAvailable { object : OgiriAuditHook {} }
   private val rateLimitHook: OgiriRateLimitHook =
       rateLimitHookProvider.getIfAvailable { object : OgiriRateLimitHook {} }
+  private val lookupCache: OgiriTokenLookupCache<T>? = lookupCacheProvider.getIfAvailable()
   private val maxClients: Long = properties.auth.maxClients
   private val batchGraceSeconds: Long = properties.auth.batchGraceSeconds
   private val tokenLifespanDays: Long = properties.auth.tokenLifespanDays
@@ -107,6 +110,29 @@ open class OgiriTokenService<T : OgiriToken>(
         .maximumSize(properties.cache.maxSize)
         .expireAfterWrite(batchGraceSeconds + 1, TimeUnit.SECONDS)
         .build()
+  }
+
+  /**
+   * Look up a token by userId/client, checking [lookupCache] before the repository.
+   *
+   * On a cache miss the result is stored so subsequent reads within the same cache window skip the
+   * DB entirely.
+   */
+  private fun lookupToken(userId: Long, client: String): T? {
+    lookupCache?.get(userId, client)?.let {
+      return it
+    }
+    val token = repository.findByUserIdAndClient(userId, client).orElse(null)
+    token?.let { lookupCache?.put(userId, client, it) }
+    return token
+  }
+
+  private fun evictFromCache(userId: Long, client: String) {
+    lookupCache?.evict(userId, client)
+  }
+
+  private fun evictAllFromCache(userId: Long) {
+    lookupCache?.evictAll(userId)
   }
 
   /** Generate cache key for batch timestamp lookup. */
@@ -240,6 +266,7 @@ open class OgiriTokenService<T : OgiriToken>(
       client: String,
   ) {
     repository.deleteByUserIdAndClient(userId, client)
+    evictFromCache(userId, client)
   }
 
   @Transactional
@@ -249,11 +276,13 @@ open class OgiriTokenService<T : OgiriToken>(
   ) {
     if (clients.isEmpty()) return
     repository.deleteByUserIdAndClientIn(userId, clients)
+    clients.forEach { evictFromCache(userId, it) }
   }
 
   @Transactional
   fun deleteAllForUser(userId: Long) {
     repository.deleteByUserId(userId)
+    evictAllFromCache(userId)
   }
 
   @Transactional
@@ -300,8 +329,8 @@ open class OgiriTokenService<T : OgiriToken>(
       return cachedTimestamp.isAfter(threshold) || cachedTimestamp == threshold
     }
 
-    // Cache miss - query database and cache the result
-    val token = getByUserIdAndClient(userId, client)
+    // Cache miss - query database (lookupToken populates entity cache on miss)
+    val token = lookupToken(userId, client)
     val updatedAt = token?.takeIf { !it.isExpired() }?.updatedAt ?: return false
 
     batchTimestampCache.put(cacheKey, updatedAt)
@@ -316,7 +345,7 @@ open class OgiriTokenService<T : OgiriToken>(
       client: String,
   ): AuthHeader? {
     val userId = user.getOgiriUserId()
-    val clientToken = getByUserIdAndClient(userId, client) ?: return null
+    val clientToken = lookupToken(userId, client) ?: return null
     val now = Instant.now()
 
     // Only update database if timestamp is stale (older than half batch window)
@@ -351,7 +380,7 @@ open class OgiriTokenService<T : OgiriToken>(
     val tokenClient = client ?: identifierPolicy.generate()
     val generatedToken = identifierPolicy.generate()
     val hashedToken = passwordEncoder.encode(generatedToken)
-    var token = client?.let { getByUserIdAndClient(user.getOgiriUserId(), it) }
+    var token = client?.let { lookupToken(user.getOgiriUserId(), it) }
     val isRotation = token != null && token.id != 0L && tokenType == OgiriTokenType.APP
 
     if (token == null) {
@@ -380,6 +409,7 @@ open class OgiriTokenService<T : OgiriToken>(
     token.plainToken = generatedToken
 
     val savedToken = repository.save(token)
+    evictFromCache(user.getOgiriUserId(), savedToken.client)
     batchTimestampCache.invalidate(batchCacheKey(user.getOgiriUserId(), savedToken.client))
 
     if (isRotation) {
@@ -420,15 +450,14 @@ open class OgiriTokenService<T : OgiriToken>(
           requestedNames?.let { names -> it.name in names } ?: it.includeByDefault
         }
     val results = mutableMapOf<String, T>()
-    val parentToken = getByUserIdAndClient(user.getOgiriUserId(), parentClient)
+    val parentToken = lookupToken(user.getOgiriUserId(), parentClient)
     val parentExpiry =
         parentToken?.expiryAt ?: Instant.now().plus(tokenLifespanDays, ChronoUnit.DAYS)
     registrations.forEach { reg ->
       val subClient = clientForSubToken(reg, parentClient)
       val expiry = reg.expiry(parentExpiry)
       val existing =
-          if (!forceNew && !reg.forceNew) getByUserIdAndClient(user.getOgiriUserId(), subClient)
-          else null
+          if (!forceNew && !reg.forceNew) lookupToken(user.getOgiriUserId(), subClient) else null
       val token =
           existing
               ?: createOrUpdateToken(
@@ -586,7 +615,7 @@ open class OgiriTokenService<T : OgiriToken>(
       user: OgiriUser,
       client: String,
   ): Boolean {
-    val token = getByUserIdAndClient(user.getOgiriUserId(), client) ?: return false
+    val token = lookupToken(user.getOgiriUserId(), client) ?: return false
     if (tokenIsCurrent(plainToken, token)) return true
     return tokenCanBeReused(plainToken, token)
   }
@@ -626,7 +655,7 @@ open class OgiriTokenService<T : OgiriToken>(
       client: String,
       issuedSubTokens: Map<String, T>? = null,
   ): AuthHeader {
-    val appToken = getByUserIdAndClient(user.getOgiriUserId(), client)
+    val appToken = lookupToken(user.getOgiriUserId(), client)
 
     // Batch fetch all sub-tokens to avoid N+1 queries
     val subClients = cachedRegistrations.map { it.clientIdFor(client) }
@@ -681,7 +710,7 @@ open class OgiriTokenService<T : OgiriToken>(
       thresholdSeconds: Long,
   ): Boolean {
     if (thresholdSeconds <= 0) return true
-    val token = getByUserIdAndClient(user.getOgiriUserId(), client) ?: return true
+    val token = lookupToken(user.getOgiriUserId(), client) ?: return true
     val cutoff = Instant.now().minusSeconds(thresholdSeconds)
     return token.tokenUpdatedAt.isBefore(cutoff)
   }
@@ -736,7 +765,7 @@ open class OgiriTokenService<T : OgiriToken>(
     val user = userDirectory.findById(userId) ?: return
     val authHeader = request.extractAuthHeader()
     val clientId = authHeader.client ?: return
-    val token = getByUserIdAndClient(user.getOgiriUserId(), clientId)
+    val token = lookupToken(user.getOgiriUserId(), clientId)
     val isTokenValid = token?.let { doesTokenMatch(it.token, authHeader.accessToken) } ?: false
 
     if (isTokenValid) {
@@ -764,7 +793,7 @@ open class OgiriTokenService<T : OgiriToken>(
 
     val clientId = authHeader.client ?: throw SecurityServiceException("error.auth.missing_token")
     val parent =
-        getByUserIdAndClient(currentUser.getOgiriUserId(), clientId)
+        lookupToken(currentUser.getOgiriUserId(), clientId)
             ?: throw SecurityServiceException("error.auth.missing_token")
     if (parent.isExpired()) throw SecurityServiceException("error.auth.bad_credentials")
 
@@ -912,7 +941,7 @@ open class OgiriTokenService<T : OgiriToken>(
       subtypeName: String,
   ): AuthHeader? {
     val user = userDirectory.findById(userId) ?: return null
-    val parentToken = getByUserIdAndClient(userId, parentClient) ?: return null
+    val parentToken = lookupToken(userId, parentClient) ?: return null
     if (parentToken.isExpired()) return null
 
     val registration = cachedRegistrations.find { it.name == subtypeName } ?: return null

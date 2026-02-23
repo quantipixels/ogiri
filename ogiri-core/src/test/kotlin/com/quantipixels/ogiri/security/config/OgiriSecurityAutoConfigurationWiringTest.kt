@@ -65,6 +65,7 @@ class OgiriSecurityAutoConfigurationWiringTest {
                 properties,
                 emptyObjectProvider<OgiriAuditHook>(),
                 emptyObjectProvider<OgiriRateLimitHook>(),
+                emptyObjectProvider(),
             ) {
           override fun tokenFactory(
               userId: Long,

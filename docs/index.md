@@ -4,10 +4,11 @@
 
 ## Why Ògiri?
 
-- **Database Freedom** - Use JPA, MongoDB, Redis, or any custom persistence
-- **Zero Configuration** - Works out of the box with sensible defaults
-- **Flexible Tokens** - Support for sub-tokens (device, chat, API) alongside main tokens
-- **Production Ready** - BCrypt hashing, automatic rotation, batch request detection
+- **Database Freedom** — Use JPA, MongoDB, Redis, or any custom persistence
+- **Zero Configuration** — Works out of the box with sensible defaults
+- **Flexible Tokens** — Support for sub-tokens (device, chat, API) alongside main tokens
+- **Production Ready** — BCrypt hashing, automatic rotation, batch request detection
+- **Optional Caching** — Drop in `ogiri-caffeine` or `ogiri-redis` to eliminate per-request DB reads; explicit opt-in, zero impact if absent
 
 ## Getting Started
 

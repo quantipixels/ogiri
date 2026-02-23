@@ -45,12 +45,137 @@ All ogiri properties are prefixed with `ogiri`.
 | `ogiri.cookies.same-site` | `Strict` | SameSite attribute (Strict/Lax/None) |
 | `ogiri.cookies.path`      | `"/"`    | Cookie path                          |
 
-### Token Cache
+### BCrypt Comparison Cache
+
+Caches the result of BCrypt comparisons to avoid repeated hashing for the same token.
 
 | Property                     | Default | Description                  |
 | ---------------------------- | ------- | ---------------------------- |
 | `ogiri.cache.max-size`       | `10000` | Max cached token comparisons |
 | `ogiri.cache.expiry-minutes` | `60`    | Cache entry TTL in minutes   |
+
+### Token Lookup Cache
+
+Caches full token entities to eliminate repeated DB reads on every authenticated request.
+Disabled by default. Requires `ogiri-caffeine` or `ogiri-redis` on the classpath.
+
+| Property                      | Default | Description                                          |
+| ----------------------------- | ------- | ---------------------------------------------------- |
+| `ogiri.lookup.type`           | (none)  | `caffeine` or `redis` — absent means no lookup cache |
+| `ogiri.lookup.max-size`       | `10000` | Max cached entities (Caffeine only)                  |
+| `ogiri.lookup.expiry-minutes` | `5`     | Cache entry TTL in minutes (both Caffeine and Redis) |
+
+## Token Lookup Cache
+
+Every authenticated request calls `getByUserIdAndClient()` — a DB read — to load the token entity.
+For high-traffic apps with polling endpoints, this adds up. The token lookup cache eliminates that
+read for the same user/client within the configured TTL window.
+
+### Choosing a Backend
+
+| Module           | Property value   | Best for                                         |
+| ---------------- | ---------------- | ------------------------------------------------ |
+| `ogiri-caffeine` | `type: caffeine` | Single-instance deployments, zero infrastructure |
+| `ogiri-redis`    | `type: redis`    | Multi-instance / containerised deployments       |
+| (neither)        | (absent)         | Default: every request hits the database         |
+
+!!! warning "Multi-instance deployments"
+Caffeine is **per-JVM**. If you run multiple application instances, token revocations
+on one node are not visible to others until the cache entry expires. Use `ogiri-redis`
+when running more than one instance.
+
+### ogiri-caffeine
+
+Add the dependency (Caffeine is included, no extra peer dep needed):
+
+=== "Gradle (Kotlin DSL)"
+`kotlin
+    implementation("com.quantipixels.ogiri:ogiri-caffeine:{{ config.extra.ogiri_version }}")
+    `
+
+=== "Gradle (Groovy)"
+`groovy
+    implementation 'com.quantipixels.ogiri:ogiri-caffeine:{{ config.extra.ogiri_version }}'
+    `
+
+=== "Maven"
+`xml
+    <dependency>
+      <groupId>com.quantipixels.ogiri</groupId>
+      <artifactId>ogiri-caffeine</artifactId>
+      <version>{{ config.extra.ogiri_version }}</version>
+    </dependency>
+    `
+
+Activate in `application.yml`:
+
+```yaml
+ogiri:
+  lookup:
+    type: caffeine
+    max-size: 10000
+    expiry-minutes: 5
+```
+
+### ogiri-redis
+
+Add both the Ogiri Redis module **and** the Spring Data Redis starter (peer dependency):
+
+=== "Gradle (Kotlin DSL)"
+`kotlin
+    implementation("com.quantipixels.ogiri:ogiri-redis:{{ config.extra.ogiri_version }}")
+    implementation("org.springframework.boot:spring-boot-starter-data-redis")
+    `
+
+=== "Gradle (Groovy)"
+`groovy
+    implementation 'com.quantipixels.ogiri:ogiri-redis:{{ config.extra.ogiri_version }}'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    `
+
+=== "Maven"
+`xml
+    <dependency>
+      <groupId>com.quantipixels.ogiri</groupId>
+      <artifactId>ogiri-redis</artifactId>
+      <version>{{ config.extra.ogiri_version }}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-redis</artifactId>
+    </dependency>
+    `
+
+Activate in `application.yml` (your existing `spring.data.redis.*` config is reused automatically):
+
+```yaml
+spring:
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+ogiri:
+  lookup:
+    type: redis
+    expiry-minutes: 5
+```
+
+### Custom Cache
+
+Provide your own `OgiriTokenLookupCache<T>` bean and neither autoconfiguration activates:
+
+```kotlin
+@Component
+class MyCustomTokenCache : OgiriTokenLookupCache<MyToken> {
+  override fun get(userId: Long, client: String): MyToken? = TODO()
+  override fun put(userId: Long, client: String, token: MyToken) = TODO()
+  override fun evict(userId: Long, client: String) = TODO()
+  override fun evictAll(userId: Long) = TODO()
+}
+```
+
+No `ogiri.lookup.type` property is required when supplying a custom bean.
 
 ## Configuration Examples
 
@@ -73,6 +198,7 @@ ogiri:
   cache:
     max-size: 10000
     expiry-minutes: 60
+  # lookup.type is absent by default — no entity cache
   cookies:
     enabled: true
     secure: true
