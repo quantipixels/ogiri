@@ -11,8 +11,9 @@
 
 - **ogiri-core**: Core library (tokens, auth, config)
 - **ogiri-jpa**: JPA persistence helpers
-- **sample/sample-java**: Java integration example
-- **sample/sample-kotlin**: Kotlin integration example
+- **ogiri-jdbc**: Spring JDBC (`JdbcClient`) persistence helpers
+- **sample/sample-java**: Java integration example (JPA + JDBC profiles)
+- **sample/sample-kotlin**: Kotlin integration example (JPA + JDBC profiles)
 - **docs**: MkDocs documentation
 - **.github**: CI/CD workflows
 
@@ -52,6 +53,7 @@ Base: `ogiri-core/src/main/kotlin/com/quantipixels/ogiri/security/`
 ## Test Location
 
 - Tests: `ogiri-core/src/test/kotlin/<package>/<Name>Test.kt`
+- JDBC tests: `ogiri-jdbc/src/test/kotlin/com/quantipixels/ogiri/jdbc/OgiriJdbcTokenRepositoryTest.kt`
 - SQL resources: `ogiri-core/src/main/resources/ogiri/db`
 
 ## Persistence Design

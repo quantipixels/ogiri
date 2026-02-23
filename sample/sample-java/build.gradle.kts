@@ -21,6 +21,7 @@ dependencyManagement {
 dependencies {
   implementation(project(":ogiri-jpa"))
   // ogiri-jpa transitively includes ogiri-core and spring-boot-starter-data-jpa
+  implementation(project(":ogiri-jdbc"))
   implementation("org.springframework.boot:spring-boot-starter-web")
 
   // Database drivers

@@ -30,18 +30,10 @@ Users would extend `OgiriJpaTokenRepository<MyToken>` instead of both `JpaReposi
 
 ## R2: Test Coverage Gaps
 
-Audit issue 13 identified missing test coverage areas. Not blocking but should be addressed:
+Remaining gaps not yet addressed:
 
 - Edge cases in token rotation during concurrent requests
-- Sub-token lifecycle (create, validate, revoke, renew) end-to-end
 - Cleanup job behavior under load
-- Error paths in `verifyUser` (rate limiting, audit hooks)
 
 **Impact**: Prevents regressions as the codebase evolves
 **Effort**: Medium
-
----
-
-## R3: Migration Guide [COMPLETED]
-
-Completed in 2.0.0 docs overhaul. The migration guide now covers all version upgrades with breaking changes, schema migration SQL, and before/after code examples.

@@ -27,6 +27,29 @@ Get ogiri integrated into your Spring Boot application in 5 minutes.
 
     Includes `ogiri-core` and `spring-boot-starter-data-jpa` transitively. **Reduces boilerplate by ~70%.**
 
+=== "JDBC"
+
+    **Gradle (Kotlin DSL):**
+    ```kotlin
+    implementation("com.quantipixels.ogiri:ogiri-jdbc:{{ config.extra.ogiri_version }}")
+    ```
+
+    **Gradle (Groovy):**
+    ```groovy
+    implementation 'com.quantipixels.ogiri:ogiri-jdbc:{{ config.extra.ogiri_version }}'
+    ```
+
+    **Maven:**
+    ```xml
+    <dependency>
+      <groupId>com.quantipixels.ogiri</groupId>
+      <artifactId>ogiri-jdbc</artifactId>
+      <version>{{ config.extra.ogiri_version }}</version>
+    </dependency>
+    ```
+
+    Includes `ogiri-core` and `spring-boot-starter-jdbc` transitively. No Hibernate, no `@Entity`. See [JDBC setup](database.md#quick-start-with-jdbc).
+
 === "Core Only"
 
     **Gradle (Kotlin DSL):**

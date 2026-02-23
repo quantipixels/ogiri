@@ -10,9 +10,8 @@
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  */
-package com.quantipixels.ogiri.samples.java.service;
+package com.quantipixels.ogiri.samples.java.jdbc;
 
-import com.quantipixels.ogiri.samples.java.entity.SampleToken;
 import com.quantipixels.ogiri.security.config.OgiriConfigurationProperties;
 import com.quantipixels.ogiri.security.core.IdentifierPolicy;
 import com.quantipixels.ogiri.security.spi.OgiriAuditHook;
@@ -29,21 +28,20 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 /**
- * Sample TokenService implementation for the Java example app.
+ * Token service for the JDBC-backed Java sample.
  *
- * <p>This service demonstrates how users should extend OgiriTokenService and override the
- * tokenFactory() method to instantiate their custom Token class.
+ * <p>Active only when the "jdbc" Spring profile is enabled. The companion JPA-backed {@link
+ * com.quantipixels.ogiri.samples.java.service.SampleTokenService} is excluded via
+ * {@code @Profile("!jdbc")}, so only one OgiriTokenService bean exists at runtime.
  *
- * <p>Since SampleToken extends OgiriBaseTokenEntity, it inherits all fields. The tokenFactory()
- * simply creates a new instance and sets the required properties.
+ * <p>Run with: {@code --spring.profiles.active=jdbc}
  */
 @Service
-@Profile("!jdbc")
-public class SampleTokenService extends OgiriTokenService<SampleToken> {
+@Profile("jdbc")
+public class JdbcSampleTokenService extends OgiriTokenService<JdbcSampleToken> {
 
-  /** Constructor - injects all dependencies needed by TokenService. */
-  public SampleTokenService(
-      OgiriTokenRepository<SampleToken> tokenRepository,
+  public JdbcSampleTokenService(
+      OgiriTokenRepository<JdbcSampleToken> tokenRepository,
       PasswordEncoder passwordEncoder,
       OgiriUserDirectory userDirectory,
       IdentifierPolicy identifierPolicy,
@@ -62,14 +60,8 @@ public class SampleTokenService extends OgiriTokenService<SampleToken> {
         rateLimitHookProvider);
   }
 
-  /**
-   * Factory method for creating SampleToken instances.
-   *
-   * <p>Since SampleToken extends OgiriBaseTokenEntity, all fields are inherited and can be set via
-   * setters.
-   */
   @Override
-  protected SampleToken tokenFactory(
+  protected JdbcSampleToken tokenFactory(
       long userId,
       String client,
       String hashedToken,
@@ -77,11 +69,11 @@ public class SampleTokenService extends OgiriTokenService<SampleToken> {
       Instant expiry,
       String tokenSubtype,
       String plainTokenValue) {
-    SampleToken token = new SampleToken();
+    JdbcSampleToken token = new JdbcSampleToken();
     token.setUserId(userId);
     token.setClient(client);
     token.setToken(hashedToken);
-    token.setTokenType(tokenType.name());
+    token.setTokenType(tokenType.getLabel());
     token.setExpiryAt(expiry);
     token.setTokenSubtype(tokenSubtype);
     token.setPlainToken(plainTokenValue);

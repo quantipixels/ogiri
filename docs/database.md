@@ -1,6 +1,9 @@
 # Database Integration
 
-Ogiri is database-agnostic. For JPA/Hibernate users, the `ogiri-jpa` module provides ready-to-use base classes that reduce boilerplate by ~70%.
+Ogiri is database-agnostic. Two official adapter modules are available:
+
+- **`ogiri-jpa`** — JPA/Hibernate (recommended for Spring Data users)
+- **`ogiri-jdbc`** — Spring JDBC via `JdbcClient` (recommended when you want lightweight SQL without Hibernate)
 
 ## Quick Start with JPA (Recommended)
 
@@ -207,6 +210,225 @@ Spring Data auto-generates these from method names:
         }
     }
     ```
+
+---
+
+## Quick Start with JDBC
+
+Use `ogiri-jdbc` for Spring JDBC (`JdbcClient`) — no Hibernate, no `@Entity` annotations.
+
+### 1. Add Dependency
+
+```kotlin
+implementation("com.quantipixels.ogiri:ogiri-jdbc:{{ config.extra.ogiri_version }}")
+```
+
+This includes `ogiri-core` and `spring-boot-starter-jdbc` transitively.
+
+### 2. Create Your Token Row Class
+
+=== "Kotlin"
+
+    ```kotlin
+    class MyToken : OgiriBaseTokenRow()
+    ```
+
+    No annotations needed. Extend `OgiriBaseTokenRow` and you're done.
+
+=== "Java"
+
+    ```java
+    public class MyToken extends OgiriBaseTokenRow {
+        public MyToken() {
+            super(0L, 0L, "", "", "app",
+                  Instant.now(), Instant.now(), Instant.now(), Instant.now());
+        }
+    }
+    ```
+
+    Java must call the primary constructor explicitly (no `@JvmOverloads` on the Kotlin `open class`).
+
+`OgiriBaseTokenRow` provides all standard fields:
+
+- `id`, `userId`, `client`, `token`, `tokenType`
+- `expiryAt`, `tokenUpdatedAt`, `createdAt`, `updatedAt`
+- `previousToken`, `lastToken`, `tokenSubtype`, `lastUsedAt`
+- `plainToken` (transient)
+
+### 3. Create Repository
+
+Extend `OgiriJdbcTokenRepository<T>` and implement two methods:
+
+=== "Kotlin"
+
+    ```kotlin
+    @Repository
+    class MyTokenRepository(jdbcClient: JdbcClient) :
+        OgiriJdbcTokenRepository<MyToken>(jdbcClient) {
+
+        override fun tableName() = "user_tokens"
+
+        override fun rowMapper() = RowMapper { rs, _ ->
+            MyToken().apply {
+                id = rs.getLong("id")
+                userId = rs.getLong("user_id")
+                client = rs.getString("client_id")
+                token = rs.getString("token_hash")
+                tokenType = rs.getString("token_type")
+                tokenSubtype = rs.getString("token_subtype")
+                expiryAt = rs.getTimestamp("expiry_at").toInstant()
+                createdAt = rs.getTimestamp("created_at").toInstant()
+                updatedAt = rs.getTimestamp("updated_at").toInstant()
+                tokenUpdatedAt = rs.getTimestamp("token_updated_at").toInstant()
+                lastToken = rs.getString("last_token_hash")
+                previousToken = rs.getString("previous_token_hash")
+                lastUsedAt = rs.getTimestamp("last_used_at")?.toInstant()
+            }
+        }
+    }
+    ```
+
+=== "Java"
+
+    ```java
+    @Repository
+    public class MyTokenRepository extends OgiriJdbcTokenRepository<MyToken> {
+
+        public MyTokenRepository(JdbcClient jdbcClient) {
+            super(jdbcClient);
+        }
+
+        @Override
+        public String tableName() { return "user_tokens"; }
+
+        @Override
+        public RowMapper<MyToken> rowMapper() {
+            return (rs, rowNum) -> {
+                MyToken t = new MyToken();
+                t.setId(rs.getLong("id"));
+                t.setUserId(rs.getLong("user_id"));
+                t.setClient(rs.getString("client_id"));
+                t.setToken(rs.getString("token_hash"));
+                t.setTokenType(rs.getString("token_type"));
+                t.setTokenSubtype(rs.getString("token_subtype"));
+                t.setExpiryAt(rs.getTimestamp("expiry_at").toInstant());
+                t.setCreatedAt(rs.getTimestamp("created_at").toInstant());
+                t.setUpdatedAt(rs.getTimestamp("updated_at").toInstant());
+                t.setTokenUpdatedAt(rs.getTimestamp("token_updated_at").toInstant());
+                t.setLastToken(rs.getString("last_token_hash"));
+                t.setPreviousToken(rs.getString("previous_token_hash"));
+                java.sql.Timestamp lastUsed = rs.getTimestamp("last_used_at");
+                if (lastUsed != null) t.setLastUsedAt(lastUsed.toInstant());
+                return t;
+            };
+        }
+    }
+    ```
+
+`OgiriJdbcTokenRepository` auto-implements all 15 `OgiriTokenRepository` methods.
+
+### 4. Create Token Service
+
+=== "Kotlin"
+
+    ```kotlin
+    @Service
+    class MyTokenService(
+        tokenRepository: OgiriTokenRepository<MyToken>,
+        passwordEncoder: PasswordEncoder,
+        userDirectory: OgiriUserDirectory,
+        identifierPolicy: IdentifierPolicy,
+        subTokenRegistry: OgiriSubTokenRegistry,
+        properties: OgiriConfigurationProperties,
+        auditHookProvider: ObjectProvider<OgiriAuditHook>,
+        rateLimitHookProvider: ObjectProvider<OgiriRateLimitHook>,
+    ) : OgiriTokenService<MyToken>(
+        tokenRepository, passwordEncoder, userDirectory,
+        identifierPolicy, subTokenRegistry, properties,
+        auditHookProvider, rateLimitHookProvider,
+    ) {
+        override fun tokenFactory(
+            userId: Long, client: String, hashedToken: String,
+            tokenType: OgiriTokenType, expiry: Instant,
+            tokenSubtype: String?, plainTokenValue: String,
+        ) = MyToken().apply {
+            this.userId = userId
+            this.client = client
+            this.token = hashedToken
+            this.tokenType = tokenType.label
+            this.expiryAt = expiry
+            this.tokenSubtype = tokenSubtype
+            this.plainToken = plainTokenValue
+        }
+    }
+    ```
+
+=== "Java"
+
+    ```java
+    @Service
+    public class MyTokenService extends OgiriTokenService<MyToken> {
+        public MyTokenService(
+            OgiriTokenRepository<MyToken> tokenRepository,
+            PasswordEncoder passwordEncoder,
+            OgiriUserDirectory userDirectory,
+            IdentifierPolicy identifierPolicy,
+            OgiriSubTokenRegistry subTokenRegistry,
+            OgiriConfigurationProperties properties,
+            ObjectProvider<OgiriAuditHook> auditHookProvider,
+            ObjectProvider<OgiriRateLimitHook> rateLimitHookProvider
+        ) {
+            super(tokenRepository, passwordEncoder, userDirectory,
+                  identifierPolicy, subTokenRegistry, properties,
+                  auditHookProvider, rateLimitHookProvider);
+        }
+
+        @Override
+        protected MyToken tokenFactory(
+            Long userId, String client, String hashedToken,
+            OgiriTokenType tokenType, Instant expiry,
+            String tokenSubtype, String plainTokenValue
+        ) {
+            MyToken token = new MyToken();
+            token.setUserId(userId);
+            token.setClient(client);
+            token.setToken(hashedToken);
+            token.setTokenType(tokenType.getLabel());
+            token.setExpiryAt(expiry);
+            token.setTokenSubtype(tokenSubtype);
+            token.setPlainToken(plainTokenValue);
+            return token;
+        }
+    }
+    ```
+
+!!! note "JDBC uses `tokenType.label` not `tokenType.name`"
+`OgiriBaseTokenRow` stores the column value as `"app"` or `"sub"`, matching the SQL schema.
+Use `tokenType.label` (Kotlin) or `tokenType.getLabel()` (Java) — not `.name` / `.name()`.
+
+### 5. Configure Application
+
+Exclude JPA auto-configuration and point Spring at the bundled schema:
+
+```yaml
+spring:
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration
+  datasource:
+    url: jdbc:postgresql://localhost:5432/mydb
+    username: ${DB_USER}
+    password: ${DB_PASS}
+  sql:
+    init:
+      schema-locations: classpath:ogiri/db/ogiri-user-tokens.sql
+      mode: always
+```
+
+### Switching Between JPA and JDBC (Spring Profiles)
+
+The samples demonstrate profile-based switching. Annotate your JPA service with `@Profile("!jdbc")` and your JDBC service with `@Profile("jdbc")`, then activate via `--spring.profiles.active=jdbc`.
 
 ---
 
