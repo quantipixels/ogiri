@@ -40,7 +40,7 @@ dependencies {
     exclude(module = "mockito-core")
   }
   testImplementation("org.springframework.boot:spring-boot-starter-data-redis")
-  testImplementation("com.redis:testcontainers-redis:2.2.2")
+  testImplementation("com.redis:testcontainers-redis:2.2.4")
   testImplementation("org.testcontainers:junit-jupiter")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
