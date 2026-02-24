@@ -36,7 +36,6 @@ import java.time.temporal.ChronoUnit
 import java.util.Base64
 import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.ObjectProvider
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.crypto.password.PasswordEncoder
@@ -71,27 +70,52 @@ data class OgiriGeneratedTokens<T : OgiriToken>(
  * Core token orchestration: issues/rotates APP tokens, manages pluggable sub-tokens, and validates
  * tokens for authentication and downstream protocols.
  *
- * This service works with any token implementation of OgiriToken. Subclasses can override
- * tokenFactory() to customize token creation if needed, or supply tokens directly through the
- * public API methods.
+ * This service works with any [OgiriToken] implementation. Extend this class and override
+ * [tokenFactory] to instantiate your custom token class. Inject the six required collaborators;
+ * optional extension points are passed directly via the constructor or wired by the
+ * auto-configuration.
+ *
+ * ```kotlin
+ * @Service
+ * class MyTokenService(
+ *     repo: OgiriTokenRepository<MyToken>,
+ *     passwordEncoder: PasswordEncoder,
+ *     userDirectory: OgiriUserDirectory,
+ *     identifierPolicy: IdentifierPolicy,
+ *     subTokenRegistry: OgiriSubTokenRegistry,
+ *     properties: OgiriConfigurationProperties,
+ * ) : OgiriTokenService<MyToken>(repo, passwordEncoder, userDirectory,
+ *                                identifierPolicy, subTokenRegistry, properties) {
+ *     override fun tokenFactory(...): MyToken = MyToken(...)
+ * }
+ * ```
+ *
+ * Optional extension points (all default to no-op):
+ * - Supply an [OgiriAuditHook] to receive audit events.
+ * - Supply an [OgiriRateLimitHook] to enforce rate limits.
+ * - Add `ogiri-caffeine` or `ogiri-redis` and set `ogiri.lookup.type` to enable token caching.
+ *
+ * **Java callers:** use the full 9-argument constructor and pass `null` explicitly for any optional
+ * parameter you do not need — Kotlin named-argument syntax is unavailable in Java.
  */
 @OgiriService
-open class OgiriTokenService<T : OgiriToken>(
+open class OgiriTokenService<T : OgiriToken>
+// @JvmOverloads emits overloaded constructors for each trailing optional param so Java subclasses
+// can omit the optional hook/cache arguments without Kotlin named-argument syntax.
+@JvmOverloads
+constructor(
     private val repository: OgiriTokenRepository<T>,
     private val passwordEncoder: PasswordEncoder,
     private val userDirectory: OgiriUserDirectory,
     private val identifierPolicy: IdentifierPolicy,
     private val subTokenRegistry: OgiriSubTokenRegistry,
     protected val properties: OgiriConfigurationProperties,
-    auditHookProvider: ObjectProvider<OgiriAuditHook>,
-    rateLimitHookProvider: ObjectProvider<OgiriRateLimitHook>,
-    lookupCacheProvider: ObjectProvider<OgiriTokenLookupCache<T>>,
+    auditHook: OgiriAuditHook? = null,
+    rateLimitHook: OgiriRateLimitHook? = null,
+    private val lookupCache: OgiriTokenLookupCache<T>? = null,
 ) {
-  private val auditHook: OgiriAuditHook =
-      auditHookProvider.getIfAvailable { object : OgiriAuditHook {} }
-  private val rateLimitHook: OgiriRateLimitHook =
-      rateLimitHookProvider.getIfAvailable { object : OgiriRateLimitHook {} }
-  private val lookupCache: OgiriTokenLookupCache<T>? = lookupCacheProvider.getIfAvailable()
+  private val auditHook: OgiriAuditHook = auditHook ?: object : OgiriAuditHook {}
+  private val rateLimitHook: OgiriRateLimitHook = rateLimitHook ?: object : OgiriRateLimitHook {}
   private val maxClients: Long = properties.auth.maxClients
   private val batchGraceSeconds: Long = properties.auth.batchGraceSeconds
   private val tokenLifespanDays: Long = properties.auth.tokenLifespanDays

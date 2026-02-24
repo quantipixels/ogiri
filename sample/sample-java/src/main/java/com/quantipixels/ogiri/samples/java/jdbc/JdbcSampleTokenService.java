@@ -14,16 +14,15 @@ package com.quantipixels.ogiri.samples.java.jdbc;
 
 import com.quantipixels.ogiri.security.config.OgiriConfigurationProperties;
 import com.quantipixels.ogiri.security.core.IdentifierPolicy;
-import com.quantipixels.ogiri.security.spi.OgiriAuditHook;
-import com.quantipixels.ogiri.security.spi.OgiriRateLimitHook;
+import com.quantipixels.ogiri.security.spi.OgiriTokenLookupCache;
 import com.quantipixels.ogiri.security.spi.OgiriUserDirectory;
 import com.quantipixels.ogiri.security.tokens.OgiriSubTokenRegistry;
 import com.quantipixels.ogiri.security.tokens.OgiriTokenRepository;
 import com.quantipixels.ogiri.security.tokens.OgiriTokenService;
 import com.quantipixels.ogiri.security.tokens.OgiriTokenType;
 import java.time.Instant;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Profile;
+import org.springframework.lang.Nullable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -47,8 +46,7 @@ public class JdbcSampleTokenService extends OgiriTokenService<JdbcSampleToken> {
       IdentifierPolicy identifierPolicy,
       OgiriSubTokenRegistry subTokenRegistry,
       OgiriConfigurationProperties properties,
-      ObjectProvider<OgiriAuditHook> auditHookProvider,
-      ObjectProvider<OgiriRateLimitHook> rateLimitHookProvider) {
+      @Nullable OgiriTokenLookupCache<JdbcSampleToken> lookupCache) {
     super(
         tokenRepository,
         passwordEncoder,
@@ -56,8 +54,9 @@ public class JdbcSampleTokenService extends OgiriTokenService<JdbcSampleToken> {
         identifierPolicy,
         subTokenRegistry,
         properties,
-        auditHookProvider,
-        rateLimitHookProvider);
+        /* auditHook */ null,
+        /* rateLimitHook */ null,
+        lookupCache);
   }
 
   @Override

@@ -15,15 +15,13 @@ package com.quantipixels.ogiri.samples.kotlin.service
 import com.quantipixels.ogiri.samples.kotlin.entity.SampleToken
 import com.quantipixels.ogiri.security.config.OgiriConfigurationProperties
 import com.quantipixels.ogiri.security.core.IdentifierPolicy
-import com.quantipixels.ogiri.security.spi.OgiriAuditHook
-import com.quantipixels.ogiri.security.spi.OgiriRateLimitHook
+import com.quantipixels.ogiri.security.spi.OgiriTokenLookupCache
 import com.quantipixels.ogiri.security.spi.OgiriUserDirectory
 import com.quantipixels.ogiri.security.tokens.OgiriSubTokenRegistry
 import com.quantipixels.ogiri.security.tokens.OgiriTokenRepository
 import com.quantipixels.ogiri.security.tokens.OgiriTokenService
 import com.quantipixels.ogiri.security.tokens.OgiriTokenType
 import java.time.Instant
-import org.springframework.beans.factory.ObjectProvider
 import org.springframework.context.annotation.Profile
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -36,6 +34,9 @@ import org.springframework.stereotype.Service
  *
  * Since SampleToken extends OgiriBaseTokenEntity, it inherits all fields. The tokenFactory() simply
  * creates a new instance and sets the required properties.
+ *
+ * The optional [OgiriAuditHook] and [OgiriRateLimitHook] follow the same injection pattern as
+ * [OgiriTokenLookupCache]: add them as nullable constructor parameters and pass via named argument.
  */
 @Service
 @Profile("!jdbc")
@@ -46,8 +47,7 @@ class SampleTokenService(
     identifierPolicy: IdentifierPolicy,
     subTokenRegistry: OgiriSubTokenRegistry,
     properties: OgiriConfigurationProperties,
-    auditHookProvider: ObjectProvider<OgiriAuditHook>,
-    rateLimitHookProvider: ObjectProvider<OgiriRateLimitHook>,
+    lookupCache: OgiriTokenLookupCache<SampleToken>? = null,
 ) :
     OgiriTokenService<SampleToken>(
         tokenRepository,
@@ -56,8 +56,7 @@ class SampleTokenService(
         identifierPolicy,
         subTokenRegistry,
         properties,
-        auditHookProvider,
-        rateLimitHookProvider,
+        lookupCache = lookupCache,
     ) {
 
   /**
