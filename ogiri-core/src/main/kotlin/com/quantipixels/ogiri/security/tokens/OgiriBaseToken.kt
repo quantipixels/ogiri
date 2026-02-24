@@ -110,8 +110,8 @@ abstract class OgiriBaseToken : OgiriToken {
   override var lastUsedAt: Instant? = null
 
   /**
-   * Plain (unhashed) token value. NEVER persisted to database. Only exists in-memory temporarily
-   * during token creation. Sent to client for authentication headers.
+   * Plain (unhashed) token value. NEVER persisted to database. NEVER logged. Only exists in-memory
+   * temporarily during token creation. Sent to client for authentication headers.
    */
   override var plainToken: String? = null
 

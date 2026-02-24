@@ -68,6 +68,10 @@ interface OgiriToken {
 
   /**
    * Client/application identifier. Combined with userId for unique constraint. Should be indexed.
+   *
+   * The (userId, client) pair is the primary lookup key — each user has at most one token per
+   * client. This means writes are single-writer per key: no two writers can race for the same
+   * user/client record.
    */
   val client: String
 
@@ -124,8 +128,8 @@ interface OgiriToken {
   var lastUsedAt: Instant?
 
   /**
-   * Plain (unhashed) token value. NEVER persisted to database. Only exists in-memory temporarily
-   * during token creation. Sent to client for authentication headers.
+   * Plain (unhashed) token value. NEVER persisted to database. NEVER logged. Only exists in-memory
+   * temporarily during token creation. Sent to client for authentication headers.
    *
    * Implementations using JPA/Hibernate should mark this with @Transient.
    */
