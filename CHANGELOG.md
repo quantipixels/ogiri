@@ -5,12 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.1] - 2026-02-24 (ogiri-security server)
+## [2.1.0] - 2026-02-24 (ogiri-security server)
 
-### Documentation
+### Breaking Changes
 
-- Comprehensive KDoc pass across `ogiri-core` and `ogiri-jdbc` — public API contracts, SPI hook parameters, and JDBC module usage examples
-- Removed redundant inline comments and fixed misplaced KDoc blocks
+- **`OgiriTokenService` constructor signature changed** — the three trailing `ObjectProvider<Hook>` parameters (`auditHookProvider`, `rateLimitHookProvider`, `lookupCacheProvider`) are replaced by nullable direct references (`auditHook: OgiriAuditHook? = null`, `rateLimitHook: OgiriRateLimitHook? = null`, `lookupCache: OgiriTokenLookupCache<T>? = null`).
+
+  **Kotlin subclasses** — replace `ObjectProvider` params with nullable params and pass via named argument:
+
+  ```kotlin
+  // Before
+  class MyTokenService(..., auditHookProvider: ObjectProvider<OgiriAuditHook>, ...) :
+      OgiriTokenService<MyToken>(..., auditHookProvider, rateLimitHookProvider, lookupCacheProvider)
+
+  // After
+  class MyTokenService(..., lookupCache: OgiriTokenLookupCache<MyToken>? = null) :
+      OgiriTokenService<MyToken>(..., lookupCache = lookupCache)
+  ```
+
+  **Java subclasses** — pass `null` explicitly for unused optional params (named-argument syntax unavailable in Java):
+
+  ```java
+  // Before
+  super(..., auditHookProvider, rateLimitHookProvider);
+
+  // After
+  super(..., /* auditHook */ null, /* rateLimitHook */ null, lookupCache);
+  ```
+
+  Auto-configuration is unaffected — it still resolves hooks via Spring `ObjectProvider` and passes the resolved nullable values to the constructor.
 
 ### Added
 
@@ -19,6 +42,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`ogiri-redis` module** — optional distributed Redis lookup cache for `OgiriTokenLookupCache` SPI
 - **`OgiriTokenLookupCache` SPI** — pluggable cache interface wired into `OgiriTokenService`; custom beans auto-detected via Spring
 - **JDBC sample profile** — `sample/` now includes a JDBC Spring profile alongside existing JPA examples
+- `ogiri-caffeine` dependency added to both Java and Kotlin sample apps
+
+### Changed
+
+- `OgiriTokenService` constructor annotated with `@JvmOverloads` so Java subclasses can omit trailing optional parameters without needing to pass all nine arguments explicitly
+- `scripts/release.sh` now reads the current `.ogiri-version`, shows the pending version change in the confirmation prompt, and writes the new value after the user confirms — no manual file edit needed when passing `--version`
+
+### Documentation
+
+- Comprehensive KDoc pass across `ogiri-core` and `ogiri-jdbc` — public API contracts, SPI hook parameters, and JDBC module usage examples
+- `plainToken` documented as `NEVER logged` (in addition to never persisted) on both `OgiriToken` and `OgiriBaseToken`
+- `(userId, client)` pair documented as a single-writer key to prevent unnecessary locking machinery being added in future
+- Developer quick-start, TypeScript client setup, and tool prerequisites consolidated into `README.md`; `docs/agents/` directory and per-sample `AGENTS.md` files removed
 
 ## [2.0.0] - 2026-02-10 (ogiri-security-client)
 
