@@ -21,8 +21,6 @@ import com.quantipixels.ogiri.security.spi.OgiriUserDirectory
 import com.quantipixels.ogiri.security.testutil.InMemoryTokenRepository
 import com.quantipixels.ogiri.security.testutil.TestFixtures
 import com.quantipixels.ogiri.security.testutil.TestToken
-import com.quantipixels.ogiri.security.testutil.emptyObjectProvider
-import com.quantipixels.ogiri.security.testutil.objectProviderOf
 import jakarta.servlet.http.HttpServletRequest
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicLong
@@ -112,10 +110,8 @@ class OgiriTokenServiceHookTest {
           identifierPolicy,
           subTokenRegistry,
           properties,
-          auditHook?.let { objectProviderOf(it) } ?: emptyObjectProvider(),
-          rateLimitHook?.let { objectProviderOf(it) } ?: emptyObjectProvider(),
-          emptyObjectProvider(),
-      ) {
+          auditHook = auditHook,
+          rateLimitHook = rateLimitHook) {
     override fun tokenFactory(
         userId: Long,
         client: String,
@@ -147,9 +143,9 @@ class OgiriTokenServiceHookTest {
   }
 
   @Nested
-  inner class ObjectProviderFallbackTests {
+  inner class NullHookFallbackTests {
     @Test
-    fun `service works with no hook beans (empty ObjectProvider uses no-op defaults)`() {
+    fun `service works with no hooks (null uses no-op defaults)`() {
       val service = createService()
       val headers = service.createNewAuthToken(user.getOgiriUserId(), "client-a")
       assertTrue(headers.accessToken != null)

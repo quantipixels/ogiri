@@ -19,7 +19,6 @@ import com.quantipixels.ogiri.security.spi.OgiriUser
 import com.quantipixels.ogiri.security.spi.OgiriUserDirectory
 import com.quantipixels.ogiri.security.testutil.InMemoryTokenRepository
 import com.quantipixels.ogiri.security.testutil.TestToken
-import com.quantipixels.ogiri.security.testutil.emptyObjectProvider
 import com.quantipixels.ogiri.security.tokens.OgiriSubTokenRegistry
 import com.quantipixels.ogiri.security.tokens.OgiriTokenRepository
 import com.quantipixels.ogiri.security.tokens.OgiriTokenService
@@ -62,11 +61,7 @@ class OgiriSecurityAutoConfigurationWiringTest {
                 userDirectory,
                 identifierPolicy,
                 subTokenRegistry,
-                properties,
-                emptyObjectProvider<OgiriAuditHook>(),
-                emptyObjectProvider<OgiriRateLimitHook>(),
-                emptyObjectProvider(),
-            ) {
+                properties) {
           override fun tokenFactory(
               userId: Long,
               client: String,
@@ -110,6 +105,34 @@ class OgiriSecurityAutoConfigurationWiringTest {
       org.junit.jupiter.api.Assertions.assertTrue(context.startupFailure != null)
       org.junit.jupiter.api.Assertions.assertTrue(
           context.startupFailure!!.message!!.contains("Multiple OgiriTokenService beans found"))
+    }
+  }
+
+  @Test
+  fun `no OgiriAuditHook bean in context when none provided`() {
+    contextRunner.run { context ->
+      org.junit.jupiter.api.Assertions.assertEquals(
+          0, context.getBeansOfType(OgiriAuditHook::class.java).size)
+    }
+  }
+
+  @Test
+  fun `no OgiriRateLimitHook bean in context when none provided`() {
+    contextRunner.run { context ->
+      org.junit.jupiter.api.Assertions.assertEquals(
+          0, context.getBeansOfType(OgiriRateLimitHook::class.java).size)
+    }
+  }
+
+  @Test
+  fun `custom OgiriAuditHook is the only hook bean when provided`() {
+    contextRunner.withUserConfiguration(UserProvidedAuditHook::class.java).run { context ->
+      val hooks = context.getBeansOfType(OgiriAuditHook::class.java)
+      org.junit.jupiter.api.Assertions.assertEquals(1, hooks.size)
+      org.junit.jupiter.api.Assertions.assertTrue(
+          context.containsBean("ogiriTokenService"),
+          "Token service should start when custom audit hook is present",
+      )
     }
   }
 
@@ -240,5 +263,10 @@ class OgiriSecurityAutoConfigurationWiringTest {
             identifierPolicy,
             subTokenRegistry,
             properties)
+  }
+
+  @Configuration
+  class UserProvidedAuditHook {
+    @Bean fun testAuditHook(): OgiriAuditHook = object : OgiriAuditHook {}
   }
 }

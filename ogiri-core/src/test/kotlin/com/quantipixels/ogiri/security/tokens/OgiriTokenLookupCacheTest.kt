@@ -14,15 +14,11 @@ package com.quantipixels.ogiri.security.tokens
 
 import com.quantipixels.ogiri.security.config.OgiriConfigurationProperties
 import com.quantipixels.ogiri.security.core.IdentifierPolicy
-import com.quantipixels.ogiri.security.spi.OgiriAuditHook
-import com.quantipixels.ogiri.security.spi.OgiriRateLimitHook
 import com.quantipixels.ogiri.security.spi.OgiriTokenLookupCache
 import com.quantipixels.ogiri.security.spi.OgiriUserDirectory
 import com.quantipixels.ogiri.security.testutil.InMemoryTokenRepository
 import com.quantipixels.ogiri.security.testutil.TestFixtures
 import com.quantipixels.ogiri.security.testutil.TestToken
-import com.quantipixels.ogiri.security.testutil.emptyObjectProvider
-import com.quantipixels.ogiri.security.testutil.objectProviderOf
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicLong
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -113,9 +109,7 @@ class OgiriTokenLookupCacheTest {
                   tokenLifespanDays = 14
                 }
               },
-              emptyObjectProvider<OgiriAuditHook>(),
-              emptyObjectProvider<OgiriRateLimitHook>(),
-              cache?.let { objectProviderOf(it) } ?: emptyObjectProvider(),
+              lookupCache = cache,
           ) {
         override fun tokenFactory(
             userId: Long,

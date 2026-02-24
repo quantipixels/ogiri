@@ -15,13 +15,10 @@ package com.quantipixels.ogiri.security.tokens
 import com.quantipixels.ogiri.security.config.OgiriConfigurationProperties
 import com.quantipixels.ogiri.security.core.AuthHeader
 import com.quantipixels.ogiri.security.core.IdentifierPolicy
-import com.quantipixels.ogiri.security.spi.OgiriAuditHook
-import com.quantipixels.ogiri.security.spi.OgiriRateLimitHook
 import com.quantipixels.ogiri.security.spi.OgiriUserDirectory
 import com.quantipixels.ogiri.security.testutil.InMemoryTokenRepository
 import com.quantipixels.ogiri.security.testutil.TestFixtures
 import com.quantipixels.ogiri.security.testutil.TestToken
-import com.quantipixels.ogiri.security.testutil.emptyObjectProvider
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicLong
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -91,11 +88,7 @@ class TokenServiceSubTokenTest {
           userDirectory,
           identifierPolicy,
           subTokenRegistry,
-          properties,
-          emptyObjectProvider<OgiriAuditHook>(),
-          emptyObjectProvider<OgiriRateLimitHook>(),
-          emptyObjectProvider(),
-      ) {
+          properties) {
     override fun tokenFactory(
         userId: Long,
         client: String,

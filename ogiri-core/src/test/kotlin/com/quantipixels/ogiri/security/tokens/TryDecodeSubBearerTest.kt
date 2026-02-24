@@ -14,13 +14,10 @@ package com.quantipixels.ogiri.security.tokens
 
 import com.quantipixels.ogiri.security.config.OgiriConfigurationProperties
 import com.quantipixels.ogiri.security.core.IdentifierPolicy
-import com.quantipixels.ogiri.security.spi.OgiriAuditHook
-import com.quantipixels.ogiri.security.spi.OgiriRateLimitHook
 import com.quantipixels.ogiri.security.spi.OgiriUserDirectory
 import com.quantipixels.ogiri.security.testutil.InMemoryTokenRepository
 import com.quantipixels.ogiri.security.testutil.TestFixtures
 import com.quantipixels.ogiri.security.testutil.TestToken
-import com.quantipixels.ogiri.security.testutil.emptyObjectProvider
 import java.time.Instant
 import java.util.Base64
 import java.util.concurrent.atomic.AtomicLong
@@ -76,11 +73,7 @@ class TryDecodeSubBearerTest {
                 userDirectory,
                 identifierPolicy,
                 DefaultOgiriSubTokenRegistry(emptyList()),
-                OgiriConfigurationProperties(),
-                emptyObjectProvider<OgiriAuditHook>(),
-                emptyObjectProvider<OgiriRateLimitHook>(),
-                emptyObjectProvider(),
-            ) {
+                OgiriConfigurationProperties()) {
           override fun tokenFactory(
               userId: Long,
               client: String,
