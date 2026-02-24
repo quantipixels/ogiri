@@ -20,12 +20,43 @@ import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.simple.JdbcClient
 import org.springframework.jdbc.support.GeneratedKeyHolder
 
+/**
+ * Abstract [JdbcClient]-based implementation of [OgiriTokenRepository].
+ *
+ * Provides all standard query and mutation operations using ANSI SQL with named parameters. Column
+ * names are fixed (see [OgiriBaseTokenRow]). Insert vs. update is detected by `id == 0L`.
+ *
+ * Subclasses must implement:
+ * - [tableName]: unqualified table name (e.g., `"tokens"`)
+ * - [rowMapper]: maps all token columns to a [OgiriBaseToken] subtype
+ *
+ * Example:
+ * ```kotlin
+ * @Repository
+ * class MyTokenRepository(client: JdbcClient) : OgiriJdbcTokenRepository<MyTokenRow>(client) {
+ *     override fun tableName() = "user_tokens"
+ *     override fun rowMapper() = RowMapper { rs, _ ->
+ *         MyTokenRow(id = rs.getLong("id"), userId = rs.getLong("user_id"), ...)
+ *     }
+ * }
+ * ```
+ */
 abstract class OgiriJdbcTokenRepository<T : OgiriBaseToken>(
     protected val jdbcClient: JdbcClient,
 ) : OgiriTokenRepository<T> {
 
+  /**
+   * The database table name used for all queries in this repository. Must not include a schema
+   * prefix unless your datasource targets a fixed schema.
+   */
   abstract fun tableName(): String
 
+  /**
+   * Maps a [java.sql.ResultSet] row to an instance of [T]. Must read all columns defined on
+   * [OgiriBaseTokenRow] (`id`, `user_id`, `client_id`, `token_hash`, `token_type`, `token_subtype`,
+   * `expiry_at`, `previous_token_hash`, `last_token_hash`, `token_updated_at`, `last_used_at`,
+   * `created_at`, `updated_at`).
+   */
   abstract fun rowMapper(): RowMapper<T>
 
   override fun <S : T> save(token: S): S {

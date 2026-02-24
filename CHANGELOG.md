@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.1] - 2026-02-24 (ogiri-security server)
+
+### Documentation
+
+- Comprehensive KDoc pass across `ogiri-core` and `ogiri-jdbc` — public API contracts, SPI hook parameters, and JDBC module usage examples
+- Removed redundant inline comments and fixed misplaced KDoc blocks
+
+### Added
+
+- **`ogiri-jdbc` module** — Spring `JdbcClient`-based token repository adapter; drop-in alternative to JPA with no ORM overhead
+- **`ogiri-caffeine` module** — optional in-process Caffeine lookup cache for `OgiriTokenLookupCache` SPI
+- **`ogiri-redis` module** — optional distributed Redis lookup cache for `OgiriTokenLookupCache` SPI
+- **`OgiriTokenLookupCache` SPI** — pluggable cache interface wired into `OgiriTokenService`; custom beans auto-detected via Spring
+- **JDBC sample profile** — `sample/` now includes a JDBC Spring profile alongside existing JPA examples
+
 ## [2.0.0] - 2026-02-10 (ogiri-security-client)
 
 ### Breaking

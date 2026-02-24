@@ -138,32 +138,6 @@ open class OgiriTokenAuthenticationFilter(
   protected data class AuthResult(val user: OgiriUser, val authHeader: AuthHeader?)
 
   /**
-   * Authenticate a single HTTP request using token headers.
-   *
-   * **Validation steps:**
-   * 1. Extract authentication headers (access-token, client, uid, expiry, access-token-kind)
-   * 2. Validate header presence and format
-   * 3. Validate client and uid identifiers using [IdentifierPolicy]
-   * 4. Verify token is APP token (not sub-token)
-   * 5. Load user from [OgiriUserDirectory], throw if not found
-   * 6. Validate token hash matches stored token via [OgiriTokenService.validToken]
-   * 7. Detect batch requests and decide token rotation
-   *
-   * **Batch detection:**
-   * - If request is within batch grace window, only update lastUsedAt, return no new headers
-   * - Otherwise, rotate token and return refreshed headers
-   *
-   * **Error handling:**
-   * - Invalid headers or format: Return null (not an authentication attempt)
-   * - User not found or token invalid: Throw BadCredentialsException (authentication failure)
-   * - These exceptions are caught by doFilterInternal and delegated to AuthenticationEntryPoint
-   *
-   * @param request HTTP request to authenticate
-   * @return AuthResult with user and optionally rotated AuthHeader, or null if not an auth attempt
-   * @throws BadCredentialsException if user not found or token invalid
-   * @throws BadCredentialsException if client/uid fails identifier validation
-   */
-  /**
    * Extract authentication header values, falling back to parsing a Bearer token from the
    * Authorization header.
    *
@@ -177,7 +151,6 @@ open class OgiriTokenAuthenticationFilter(
     val headerToken = request.extractAuthHeader()
     if (headerToken.isValid()) return headerToken
 
-    // Try Bearer token as fallback
     val authHeader = request.getHeader("Authorization") ?: return headerToken
     val fields =
         parseBearerToken(authHeader, properties.auth.maxBearerTokenSize) ?: return headerToken

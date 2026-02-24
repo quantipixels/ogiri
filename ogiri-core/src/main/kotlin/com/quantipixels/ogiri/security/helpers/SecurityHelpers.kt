@@ -97,13 +97,29 @@ object SecurityHelpers {
    */
   fun getClientIP(request: HttpServletRequest): String? = request.remoteAddr
 
+  /**
+   * Returns the client IP address of the current request, or `null` if called outside a servlet
+   * request context (e.g., from a background thread).
+   *
+   * Relies on [RequestContextHolder]. Accurate IP resolution behind a reverse proxy requires
+   * `server.forward-headers-strategy=NATIVE`.
+   */
   val clientIP: String?
     get() {
       val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
       return attributes?.let { getClientIP(it.request) }
     }
 
+  /**
+   * Returns `true` if [method] is `OPTIONS` (case-insensitive), indicating a CORS preflight
+   * request. Does not validate CORS headers — only the HTTP method is checked.
+   */
   fun isPreflight(method: String?): Boolean = "OPTIONS".equals(method, ignoreCase = true)
 
+  /**
+   * Returns `true` if the current thread's
+   * [org.springframework.security.core.context.SecurityContext] contains a non-null authentication
+   * object.
+   */
   fun isAuthenticated(): Boolean = SecurityContextHolder.getContext().authentication != null
 }

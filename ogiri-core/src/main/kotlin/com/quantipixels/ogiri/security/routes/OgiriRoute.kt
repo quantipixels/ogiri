@@ -67,6 +67,12 @@ class OgiriRoute(
 
   fun apply(vararg params: Pair<String, Any>): String = apply(params.toMap())
 
+  /**
+   * Returns this route's [path] with all path-variable placeholders (`{name}` and `:name`) replaced
+   * by `*` for Ant-style pattern matching.
+   *
+   * Used internally by route catalog bypass checks; prefer [apply] when constructing real URLs.
+   */
   fun pathWithWildcardVariables(): String {
     var pattern = path
     pattern = braceVarRegex.replace(pattern) { "*" }

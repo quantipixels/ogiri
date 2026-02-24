@@ -18,6 +18,22 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
 import org.springframework.context.annotation.Configuration
 import org.springframework.jdbc.core.simple.JdbcClient
 
+/**
+ * Auto-configuration for Ogiri JDBC support.
+ *
+ * Activated when [JdbcClient] is on the classpath (Spring 6 / Spring Boot 3+). Loaded after
+ * [OgiriSecurityAutoConfiguration].
+ *
+ * To use, extend [OgiriJdbcTokenRepository] and provide a row class that extends
+ * [OgiriBaseTokenRow]:
+ * ```kotlin
+ * @Repository
+ * class MyTokenRepository(jdbcClient: JdbcClient) : OgiriJdbcTokenRepository<MyTokenRow>(jdbcClient) {
+ *     override fun tableName() = "tokens"
+ *     override fun rowMapper() = RowMapper { rs, _ -> MyTokenRow(...) }
+ * }
+ * ```
+ */
 @Configuration
 @ConditionalOnClass(JdbcClient::class)
 @AutoConfigureAfter(OgiriSecurityAutoConfiguration::class)

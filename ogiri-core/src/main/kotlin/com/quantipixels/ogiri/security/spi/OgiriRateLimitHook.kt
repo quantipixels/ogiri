@@ -25,6 +25,23 @@ import jakarta.servlet.http.HttpServletRequest
  * "error.auth.rate_limited" to reject the request.
  */
 interface OgiriRateLimitHook {
+  /**
+   * Called before a login attempt is processed.
+   *
+   * @param request The current HTTP request (for IP, headers, etc.).
+   * @param identifier The email or username provided by the caller.
+   * @throws [com.quantipixels.ogiri.security.core.SecurityServiceException] with code
+   *   `"error.auth.rate_limited"` to reject the request.
+   */
   fun beforeLogin(request: HttpServletRequest, identifier: String) {}
+
+  /**
+   * Called before a new token is issued for a user.
+   *
+   * @param request The current HTTP request.
+   * @param userId The ID of the user requesting a new token.
+   * @throws [com.quantipixels.ogiri.security.core.SecurityServiceException] with code
+   *   `"error.auth.rate_limited"` to reject the request.
+   */
   fun beforeTokenCreation(request: HttpServletRequest, userId: Long) {}
 }

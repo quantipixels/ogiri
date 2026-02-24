@@ -13,12 +13,6 @@
 package com.quantipixels.ogiri.security.tokens
 
 /**
- * Filter tokens by their type (APP or SUB).
- *
- * @param type The token type to filter by
- * @return List of tokens matching the given type
- */
-/**
  * Filter the collection to tokens that match the specified OgiriTokenType.
  *
  * @param type The OgiriTokenType to keep.

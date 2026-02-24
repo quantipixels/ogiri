@@ -23,29 +23,47 @@ Reusable Spring Boot security components for token-based authentication with plu
 
 ### Server (Kotlin/Java)
 
+> See the Maven Central badge above for the latest version. Replace `VERSION` in all snippets below.
+
 **With JPA Support (Recommended):**
 
 ```kotlin
-implementation("com.quantipixels.ogiri:ogiri-jpa:1.4.1")
+// See badge above for latest version
+implementation("com.quantipixels.ogiri:ogiri-jpa:VERSION")
+```
+
+**With JDBC Support (no ORM):**
+
+```kotlin
+// See badge above for latest version
+implementation("com.quantipixels.ogiri:ogiri-jdbc:VERSION")
 ```
 
 **Core Only (Custom Persistence):**
 
 ```kotlin
-implementation("com.quantipixels.ogiri:ogiri-core:1.4.1")
+// See badge above for latest version
+implementation("com.quantipixels.ogiri:ogiri-core:VERSION")
+```
+
+**Optional lookup caches:**
+
+```kotlin
+// See badge above for latest version
+implementation("com.quantipixels.ogiri:ogiri-caffeine:VERSION") // in-process
+implementation("com.quantipixels.ogiri:ogiri-redis:VERSION")    // distributed
 ```
 
 **Maven (JPA):**
 
 ```xml
+<!-- See badge above for latest version -->
 <dependency>
   <groupId>com.quantipixels.ogiri</groupId>
   <artifactId>ogiri-jpa</artifactId>
-  <version>1.4.1</version>
+  <version>VERSION</version>
 </dependency>
 ```
-
-> **Note:** Replace `LATEST` with the version found in [.ogiri-version](./.ogiri-version) or on [Maven Central](https://maven-badges.herokuapp.com/maven-central/com.quantipixels.ogiri/ogiri-core).
 
 **Requirements:** Java 17+, Spring Boot 3.5+
 
@@ -111,7 +129,7 @@ See the [full Quickstart Guide](https://quantipixels.github.io/ogiri/quickstart/
 | [Quickstart](https://quantipixels.github.io/ogiri/quickstart/)                            | 5-minute integration guide                 |
 | [Interface Design](https://quantipixels.github.io/ogiri/core-concepts/interface-design/)  | Architecture and design philosophy         |
 | [Configuration](https://quantipixels.github.io/ogiri/guides/configuration/)               | Token rotation, cleanup, batch windows     |
-| [Database Integration](https://quantipixels.github.io/ogiri/guides/database-integration/) | JPA, MongoDB, Redis examples               |
+| [Database Integration](https://quantipixels.github.io/ogiri/guides/database-integration/) | JPA, JDBC, MongoDB, Redis examples         |
 | [Sub-tokens](https://quantipixels.github.io/ogiri/guides/sub-tokens/)                     | Device, chat, API tokens                   |
 | [Authentication Flow](https://quantipixels.github.io/ogiri/guides/authentication-flow/)   | Request lifecycle, headers                 |
 | [Migration Guide](https://quantipixels.github.io/ogiri/guides/migration-guide/)           | Upgrade guide (see docs for version notes) |

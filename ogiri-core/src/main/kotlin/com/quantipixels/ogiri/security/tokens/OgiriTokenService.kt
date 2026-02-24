@@ -53,6 +53,15 @@ import org.springframework.web.context.request.ServletRequestAttributes
  */
 const val CLEANUP_THRESHOLD_RATIO = 0.8
 
+/**
+ * Result of a token creation operation.
+ *
+ * @property appToken The newly issued APP token. [OgiriToken.plainToken] is populated here and
+ *   should be sent to the client; it is `null` after a round-trip from the database.
+ * @property subTokens Map of sub-token registration name → issued sub-token. Empty when no
+ *   sub-token registrations are active. Keys match [OgiriSubTokenRegistration.name], not client
+ *   IDs.
+ */
 data class OgiriGeneratedTokens<T : OgiriToken>(
     val appToken: T,
     val subTokens: Map<String, T>,
@@ -135,7 +144,6 @@ open class OgiriTokenService<T : OgiriToken>(
     lookupCache?.evictAll(userId)
   }
 
-  /** Generate cache key for batch timestamp lookup. */
   private fun batchCacheKey(
       userId: Long,
       client: String,
@@ -243,7 +251,6 @@ open class OgiriTokenService<T : OgiriToken>(
       tokenSubtype: String?,
       plainTokenValue: String,
   ): T {
-    // Default factory throws informative error - subclass must override
     throw UnsupportedOperationException(
         "TokenService.tokenFactory() must be overridden by subclass. " +
             "Extend TokenService and provide your token implementation. " +
@@ -251,15 +258,27 @@ open class OgiriTokenService<T : OgiriToken>(
     )
   }
 
+  /**
+   * Returns all tokens (APP and SUB) for [userId], ordered by most recently updated first. Expired
+   * tokens are included; filter on [OgiriToken.isExpired] if needed.
+   */
   @Transactional(readOnly = true)
   fun getAllByUserId(userId: Long): List<T> = repository.findByUserIdOrderByUpdatedAtDesc(userId)
 
+  /**
+   * Returns the token for [userId]/[client], or `null` if none exists. Expired tokens are returned;
+   * check [OgiriToken.isExpired] if currency matters.
+   */
   @Transactional(readOnly = true)
   fun getByUserIdAndClient(
       userId: Long,
       client: String,
   ): T? = repository.findByUserIdAndClient(userId, client).orElse(null)
 
+  /**
+   * Deletes the token for [userId]/[client] and evicts it from the lookup cache. Silent no-op if no
+   * matching token exists. Does not cascade to sub-tokens.
+   */
   @Transactional
   fun deleteToken(
       userId: Long,
@@ -269,6 +288,11 @@ open class OgiriTokenService<T : OgiriToken>(
     evictFromCache(userId, client)
   }
 
+  /**
+   * Deletes tokens for [userId] matching any of the given [clients] and evicts them from the lookup
+   * cache. Silent no-op for any client IDs that have no matching token. Does not cascade to
+   * sub-tokens.
+   */
   @Transactional
   fun deleteToken(
       userId: Long,
@@ -279,12 +303,24 @@ open class OgiriTokenService<T : OgiriToken>(
     clients.forEach { evictFromCache(userId, it) }
   }
 
+  /**
+   * Deletes all tokens (APP and SUB) for [userId] and evicts all user entries from the lookup
+   * cache.
+   */
   @Transactional
   fun deleteAllForUser(userId: Long) {
     repository.deleteByUserId(userId)
     evictAllFromCache(userId)
   }
 
+  /**
+   * Deletes all expired tokens in a single bulk DELETE.
+   *
+   * For large token tables prefer [cleanupExpiredTokensBatched] to avoid long table locks.
+   *
+   * @param now Cutoff instant; tokens with `expiryAt` before this value are deleted.
+   * @return Number of tokens deleted.
+   */
   @Transactional
   fun cleanupExpiredTokens(now: Instant = Instant.now()): Int =
       repository.deleteByExpiryAtBefore(now)
@@ -313,6 +349,15 @@ open class OgiriTokenService<T : OgiriToken>(
     return totalDeleted
   }
 
+  /**
+   * Returns `true` when the [user]/[client] token was last updated within [batchGraceSeconds] of
+   * [requestStartedAt], indicating that a concurrent batch of requests is in flight.
+   *
+   * Batch requests should call [extendBatchBuffer] instead of triggering a full token rotation.
+   * Checks the in-memory timestamp cache before falling back to the database.
+   *
+   * @param requestStartedAt The instant at which the current request began (caller's clock).
+   */
   @Transactional(readOnly = true)
   fun isBatchRequest(
       user: OgiriUser,
@@ -322,7 +367,6 @@ open class OgiriTokenService<T : OgiriToken>(
     val userId = user.getOgiriUserId()
     val cacheKey = batchCacheKey(userId, client)
 
-    // Check cache first to avoid database query
     val cachedTimestamp = batchTimestampCache.getIfPresent(cacheKey)
     if (cachedTimestamp != null) {
       val threshold = requestStartedAt.minusSeconds(batchGraceSeconds)
@@ -338,6 +382,15 @@ open class OgiriTokenService<T : OgiriToken>(
     return updatedAt.isAfter(threshold) || updatedAt == threshold
   }
 
+  /**
+   * Refreshes the batch window for a user/client without rotating the token.
+   *
+   * Writes `lastUsedAt` to the database only when the stored value is older than half of
+   * [batchGraceSeconds], reducing write pressure during high-frequency batch requests.
+   *
+   * @param token Plain (unhashed) access-token value from the request headers.
+   * @return Refreshed [AuthHeader], or `null` if no token exists for this user/client.
+   */
   @Transactional
   fun extendBatchBuffer(
       user: OgiriUser,
@@ -357,7 +410,6 @@ open class OgiriTokenService<T : OgiriToken>(
     if (shouldUpdate) {
       clientToken.lastUsedAt = now
       repository.save(clientToken)
-      // Update batch timestamp cache to reflect the new timestamp
       batchTimestampCache.put(batchCacheKey(userId, client), now)
     }
     return updateAuthHeader(user, token, client)
@@ -402,7 +454,6 @@ open class OgiriTokenService<T : OgiriToken>(
       token.lastToken = token.token
     }
 
-    // Update token fields (common to both new and existing tokens)
     token.expiryAt = expiry
     token.token = hashedToken
     token.tokenUpdatedAt = Instant.now()
@@ -419,6 +470,16 @@ open class OgiriTokenService<T : OgiriToken>(
     return savedToken
   }
 
+  /**
+   * Creates a new APP token for [user]/[client], issues all default sub-tokens, and conditionally
+   * cleans up old tokens when approaching the [maxClients] limit.
+   *
+   * Lower-level than [createNewAuthToken]. Prefer [createNewAuthToken] for the full login flow,
+   * which also handles rate limiting and produces a ready-to-send [AuthHeader].
+   *
+   * @param client Optional client ID; a random ID is generated when `null`.
+   * @return The created APP token and a map of sub-tokens keyed by registration name.
+   */
   @Transactional
   fun createToken(
       user: OgiriUser,
@@ -648,6 +709,17 @@ open class OgiriTokenService<T : OgiriToken>(
     return doesTokenMatch(lastTokenHash, plainToken)
   }
 
+  /**
+   * Builds an [AuthHeader] for [user]/[client] without triggering token cleanup or rotation.
+   *
+   * Batch-fetches sub-token entries to avoid N+1 queries. When [issuedSubTokens] is provided, those
+   * plain-token values take precedence over persisted values in the response.
+   *
+   * @param token Plain (unhashed) access-token value to embed in the header.
+   * @param issuedSubTokens Newly issued sub-tokens whose plain values should be returned. Pass
+   *   `null` to use only persisted sub-tokens.
+   * @see updateAuthHeader for the variant that also runs [maybeCleanOldTokens].
+   */
   @Transactional(readOnly = true)
   fun buildAuthHeader(
       user: OgiriUser,
@@ -691,6 +763,14 @@ open class OgiriTokenService<T : OgiriToken>(
     )
   }
 
+  /**
+   * Builds a refreshed [AuthHeader] and conditionally runs [maybeCleanOldTokens].
+   *
+   * Equivalent to [buildAuthHeader] plus a cleanup pass. Use [buildAuthHeader] directly when the
+   * caller manages cleanup separately.
+   *
+   * @param token Plain (unhashed) access-token value.
+   */
   @Transactional
   fun updateAuthHeader(
       user: OgiriUser,
@@ -703,6 +783,13 @@ open class OgiriTokenService<T : OgiriToken>(
     return authHeaders
   }
 
+  /**
+   * Returns `true` if the token for [user]/[client] should be rotated.
+   *
+   * Rotation is triggered when the token is missing or when [OgiriToken.tokenUpdatedAt] is older
+   * than [thresholdSeconds] ago. Passing `thresholdSeconds <= 0` always returns `true`
+   * (unconditional rotation).
+   */
   @Transactional(readOnly = true)
   fun shouldRotate(
       user: OgiriUser,
@@ -715,6 +802,18 @@ open class OgiriTokenService<T : OgiriToken>(
     return token.tokenUpdatedAt.isBefore(cutoff)
   }
 
+  /**
+   * Authenticates a user by email/password and issues a new APP token.
+   *
+   * On success:
+   * 1. Validates the password via BCrypt (constant-time comparison to prevent timing enumeration).
+   * 2. Sets the Spring [org.springframework.security.core.context.SecurityContext].
+   * 3. Creates a new APP token and appends auth headers to [response].
+   * 4. Calls [OgiriUserDirectory.recordSuccessfulLogin] and [OgiriAuditHook.onLoginSuccess].
+   *
+   * @throws [com.quantipixels.ogiri.security.core.SecurityServiceException] with code
+   *   `"error.auth.invalid_credentials"` for unknown users or wrong passwords.
+   */
   @Transactional
   fun verifyUser(
       request: HttpServletRequest,
@@ -756,6 +855,13 @@ open class OgiriTokenService<T : OgiriToken>(
     private const val DUMMY_HASH = "\$2a\$10\$dummyhashvalueforconstanttimecheck"
   }
 
+  /**
+   * Revokes the token for the client identified in the request's auth headers.
+   *
+   * Validates the access token before deleting. Silent no-op when the user is not found, the client
+   * header is absent, or the token does not match. On successful revocation cascades to all
+   * associated sub-tokens and appends (now-invalid) auth headers to [response].
+   */
   @Transactional
   fun revokeClient(
       userId: Long,
@@ -814,6 +920,13 @@ open class OgiriTokenService<T : OgiriToken>(
     response.appendAuthHeaders(authHeaders, properties.cookies)
   }
 
+  /**
+   * Attempts to decode a Base64-encoded JSON sub-bearer fragment into a [SubTokenHeader].
+   *
+   * [encodedPart] must be the raw Base64 segment — without a `Bearer ` prefix. Returns `null` on
+   * Base64 decoding failure, JSON parse error, or type cast error. All other exceptions are
+   * re-thrown.
+   */
   fun tryDecodeSubBearer(encodedPart: String): SubTokenHeader? {
     return try {
       val json = String(Base64.getDecoder().decode(encodedPart), Charsets.UTF_8)

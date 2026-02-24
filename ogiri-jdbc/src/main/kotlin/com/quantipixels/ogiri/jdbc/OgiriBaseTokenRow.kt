@@ -16,6 +16,24 @@ import com.quantipixels.ogiri.security.tokens.OgiriBaseToken
 import com.quantipixels.ogiri.security.tokens.OgiriTokenType
 import java.time.Instant
 
+/**
+ * Base JDBC token row with all required token fields as constructor parameters.
+ *
+ * Extend this class, add your custom fields, and implement [OgiriJdbcTokenRepository] to provide a
+ * [org.springframework.jdbc.core.RowMapper] that maps your table columns to the row class.
+ *
+ * Example:
+ * ```kotlin
+ * class MyTokenRow(
+ *     id: Long = 0,
+ *     userId: Long = 0,
+ *     client: String = "",
+ *     token: String = "",
+ *     expiryAt: Instant = Instant.now(),
+ *     val tenantId: String? = null,
+ * ) : OgiriBaseTokenRow(id, userId, client, token, expiryAt = expiryAt)
+ * ```
+ */
 open class OgiriBaseTokenRow(
     override var id: Long = 0,
     override var userId: Long = 0,

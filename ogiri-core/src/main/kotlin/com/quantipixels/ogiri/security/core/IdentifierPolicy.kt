@@ -14,11 +14,29 @@ package com.quantipixels.ogiri.security.core
 
 import java.security.SecureRandom
 
+/**
+ * Minimum character length for generated identifiers.
+ *
+ * Enforced by [DefaultIdentifierPolicy] on construction. Custom [IdentifierPolicy] implementations
+ * should respect this floor to maintain the library's security baseline.
+ */
 const val MIN_TOKEN_LENGTH = 32
 
+/**
+ * Strategy for generating and validating opaque string identifiers used as token values and client
+ * IDs.
+ *
+ * Implementations must produce cryptographically random strings of sufficient entropy.
+ * [DefaultIdentifierPolicy] uses [java.security.SecureRandom] over the URL-safe alphabet
+ * `A-Za-z0-9._-` with a minimum length of [MIN_TOKEN_LENGTH].
+ */
 interface IdentifierPolicy {
   fun generate(): String
 
+  /**
+   * Returns `true` if [value] is a non-blank string that conforms to this policy's identifier
+   * format. `null` and blank strings always return `false`.
+   */
   fun isValid(value: String?): Boolean
 }
 

@@ -181,7 +181,6 @@ fun HttpServletResponse.appendAuthHeaders(
     setHeader("Authorization", "Bearer $encoded")
   }
 
-  // Set secure cookies if enabled
   if (cookieConfig != null && cookieConfig.enabled) {
     appendAuthCookies(authHeaders, cookieConfig)
   }

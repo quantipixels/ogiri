@@ -15,6 +15,12 @@ package com.quantipixels.ogiri.security.core
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 
+/**
+ * Internal shared [ObjectMapper] used by ogiri-core for bearer-token JSON encoding/decoding.
+ *
+ * Consumers may reference [mapper] for compatible serialisation, but must not mutate it. Configured
+ * as a standard Kotlin-module-aware mapper with no custom serializers.
+ */
 object JsonCodec {
   val mapper: ObjectMapper = jacksonObjectMapper()
 }
