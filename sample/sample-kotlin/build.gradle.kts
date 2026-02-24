@@ -31,6 +31,7 @@ dependencies {
   implementation(project(":ogiri-jpa"))
   // ogiri-jpa transitively includes ogiri-core and spring-boot-starter-data-jpa
   implementation(project(":ogiri-jdbc"))
+  implementation(project(":ogiri-caffeine"))
   implementation("org.springframework.boot:spring-boot-starter-web")
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 
