@@ -137,12 +137,32 @@ See the [full Quickstart Guide](https://quantipixels.github.io/ogiri/quickstart/
 
 ## Development
 
-```bash
-./gradlew build          # Build and test
-./gradlew test           # Run tests only
-./gradlew spotlessApply  # Format code
+**Requirements:** Java 17 (Java 25 is not supported — Kotlin compiler and Spotless/google-java-format incompatibilities).
 
-# Enable git hooks (optional)
+**Kotlin/Java:**
+
+```bash
+./gradlew build                  # Build and test all modules
+./gradlew test                   # Run tests only
+./gradlew :ogiri-core:test       # Run core module tests only
+./gradlew spotlessApply          # Format code
+```
+
+**TypeScript client:**
+
+```bash
+cd ogiri-client
+pnpm install                     # Install dependencies
+pnpm build                       # Build for production
+pnpm test                        # Run tests
+pnpm test -- --coverage          # Run tests with coverage
+```
+
+> Always use `pnpm` (not `npm` or `yarn`) for TypeScript/Node.js operations in this repository.
+
+**Git hooks (optional):**
+
+```bash
 lefthook install
 ```
 
