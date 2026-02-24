@@ -36,10 +36,15 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+VERSION_FILE="$PROJECT_ROOT/.ogiri-version"
+
 if [ -n "$VERSION" ]; then
-  :
+  if [ ! -f "$VERSION_FILE" ]; then
+    echo -e "${RED}Error: .ogiri-version file not found${NC}"
+    exit 1
+  fi
+  CURRENT_VERSION=$(cat "$VERSION_FILE" | tr -d '\n' | tr -d ' ')
 else
-  VERSION_FILE="$PROJECT_ROOT/.ogiri-version"
   if [ ! -f "$VERSION_FILE" ]; then
     echo -e "${RED}Error: .ogiri-version file not found${NC}"
     exit 1
@@ -78,12 +83,22 @@ else
   echo "  2. Push tag to GitHub"
 fi
 echo "  3. Trigger automated release workflow"
+if [ -n "$CURRENT_VERSION" ] && [ "$VERSION" != "$CURRENT_VERSION" ]; then
+  echo "  (.ogiri-version will be updated: $CURRENT_VERSION → $VERSION)"
+else
+  echo "  (.ogiri-version is already set to $VERSION)"
+fi
 echo ""
 read -p "Continue? (y/N) " -n 1 -r
 echo
 if [[ ! $REPLY =~ ^[Yy]$ ]]; then
   echo -e "${YELLOW}Release cancelled${NC}"
   exit 0
+fi
+
+if [ -n "$CURRENT_VERSION" ] && [ "$VERSION" != "$CURRENT_VERSION" ]; then
+  echo "$VERSION" > "$VERSION_FILE"
+  echo -e "${GREEN}✓ .ogiri-version updated: $CURRENT_VERSION → $VERSION${NC}"
 fi
 
 echo -e "${YELLOW}Creating/updating tag...${NC}"
