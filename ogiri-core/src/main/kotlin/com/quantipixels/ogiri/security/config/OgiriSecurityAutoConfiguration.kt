@@ -145,7 +145,9 @@ class OgiriSecurityAutoConfiguration {
 
   /**
    * Creates a default OgiriTokenService configured with the provided collaborators for token
-   * management.
+   * management. Optional extension points ([OgiriAuditHook], [OgiriRateLimitHook],
+   * [OgiriTokenLookupCache]) are resolved via [ObjectProvider] and passed directly to the
+   * constructor — no separate no-op default beans are registered.
    *
    * @param repository Repository used to persist and retrieve tokens.
    * @param passwordEncoder Encoder used to hash or verify token secrets.
@@ -153,8 +155,10 @@ class OgiriSecurityAutoConfiguration {
    * @param identifierPolicy Policy responsible for generating token identifiers.
    * @param subTokenRegistry Registry of sub-token registrations used by the service.
    * @param properties Ogiri configuration properties influencing token behavior.
-   * @return An instance of OgiriTokenService configured with the given repository, encoder,
-   *   directory, identifier policy, sub-token registry, and properties.
+   * @param auditHook Optional audit hook; resolved from context when present.
+   * @param rateLimitHook Optional rate-limit hook; resolved from context when present.
+   * @param lookupCache Optional token lookup cache; resolved from context when present.
+   * @return An instance of OgiriTokenService configured with the given collaborators.
    */
   @Bean
   @ConditionalOnMissingBean(OgiriTokenService::class)
@@ -171,9 +175,9 @@ class OgiriSecurityAutoConfiguration {
       identifierPolicy: IdentifierPolicy,
       subTokenRegistry: OgiriSubTokenRegistry,
       properties: OgiriConfigurationProperties,
-      auditHookProvider: ObjectProvider<OgiriAuditHook>,
-      rateLimitHookProvider: ObjectProvider<OgiriRateLimitHook>,
-      lookupCacheProvider: ObjectProvider<OgiriTokenLookupCache<T>>,
+      auditHook: ObjectProvider<OgiriAuditHook>,
+      rateLimitHook: ObjectProvider<OgiriRateLimitHook>,
+      lookupCache: ObjectProvider<OgiriTokenLookupCache<T>>,
   ): OgiriTokenService<T> =
       OgiriTokenService(
           repository,
@@ -182,9 +186,9 @@ class OgiriSecurityAutoConfiguration {
           identifierPolicy,
           subTokenRegistry,
           properties,
-          auditHookProvider,
-          rateLimitHookProvider,
-          lookupCacheProvider,
+          auditHook = auditHook.getIfAvailable(),
+          rateLimitHook = rateLimitHook.getIfAvailable(),
+          lookupCache = lookupCache.getIfAvailable(),
       )
 
   /**

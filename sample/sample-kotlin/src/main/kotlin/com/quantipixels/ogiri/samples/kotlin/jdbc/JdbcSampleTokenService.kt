@@ -14,15 +14,13 @@ package com.quantipixels.ogiri.samples.kotlin.jdbc
 
 import com.quantipixels.ogiri.security.config.OgiriConfigurationProperties
 import com.quantipixels.ogiri.security.core.IdentifierPolicy
-import com.quantipixels.ogiri.security.spi.OgiriAuditHook
-import com.quantipixels.ogiri.security.spi.OgiriRateLimitHook
+import com.quantipixels.ogiri.security.spi.OgiriTokenLookupCache
 import com.quantipixels.ogiri.security.spi.OgiriUserDirectory
 import com.quantipixels.ogiri.security.tokens.OgiriSubTokenRegistry
 import com.quantipixels.ogiri.security.tokens.OgiriTokenRepository
 import com.quantipixels.ogiri.security.tokens.OgiriTokenService
 import com.quantipixels.ogiri.security.tokens.OgiriTokenType
 import java.time.Instant
-import org.springframework.beans.factory.ObjectProvider
 import org.springframework.context.annotation.Profile
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -45,8 +43,7 @@ class JdbcSampleTokenService(
     identifierPolicy: IdentifierPolicy,
     subTokenRegistry: OgiriSubTokenRegistry,
     properties: OgiriConfigurationProperties,
-    auditHookProvider: ObjectProvider<OgiriAuditHook>,
-    rateLimitHookProvider: ObjectProvider<OgiriRateLimitHook>,
+    lookupCache: OgiriTokenLookupCache<JdbcSampleToken>? = null,
 ) :
     OgiriTokenService<JdbcSampleToken>(
         tokenRepository,
@@ -55,8 +52,7 @@ class JdbcSampleTokenService(
         identifierPolicy,
         subTokenRegistry,
         properties,
-        auditHookProvider,
-        rateLimitHookProvider,
+        lookupCache = lookupCache,
     ) {
 
   override fun tokenFactory(
