@@ -59,11 +59,11 @@ Caches the result of BCrypt comparisons to avoid repeated hashing for the same t
 Caches full token entities to eliminate repeated DB reads on every authenticated request.
 Disabled by default. Requires `ogiri-caffeine` or `ogiri-redis` on the classpath.
 
-| Property                      | Default | Description                                          |
-| ----------------------------- | ------- | ---------------------------------------------------- |
-| `ogiri.lookup.type`           | (none)  | `caffeine` or `redis` — absent means no lookup cache |
-| `ogiri.lookup.max-size`       | `10000` | Max cached entities (Caffeine only)                  |
-| `ogiri.lookup.expiry-minutes` | `5`     | Cache entry TTL in minutes (both Caffeine and Redis) |
+| Property                      | Default | Description                                                             |
+| ----------------------------- | ------- | ----------------------------------------------------------------------- |
+| `ogiri.lookup.type`           | (none)  | `caffeine` or `redis` (case-insensitive) — absent means no lookup cache |
+| `ogiri.lookup.max-size`       | `10000` | Max cached entities (Caffeine only)                                     |
+| `ogiri.lookup.expiry-minutes` | `5`     | Cache entry TTL in minutes (both Caffeine and Redis)                    |
 
 ## Token Lookup Cache
 
@@ -264,11 +264,12 @@ ogiri:
 
 The library logs warnings at startup for potentially insecure configurations:
 
-| Configuration                          | Warning                                                |
-| -------------------------------------- | ------------------------------------------------------ |
-| `ogiri.auth.rotate-stale-seconds=3600` | Token rotation disabled; consider using default (3600) |
-| `ogiri.cookies.secure=false`           | Enable for HTTPS deployments                           |
-| `ogiri.cookies.http-only=false`        | Enable to prevent XSS cookie theft                     |
+| Configuration                       | Warning                                                          |
+| ----------------------------------- | ---------------------------------------------------------------- |
+| `ogiri.auth.rotate-stale-seconds=0` | Time-based rotation disabled; consider setting to 3600 or higher |
+| `ogiri.cookies.secure=false`        | Enable for HTTPS deployments                                     |
+| `ogiri.cookies.http-only=false`     | Enable to prevent XSS cookie theft                               |
+| `ogiri.lookup.type=<unknown>`       | Unrecognized value; no lookup cache will be activated            |
 
 These warnings are informational and do not prevent the application from starting. They help identify security misconfigurations in production environments.
 
@@ -292,19 +293,23 @@ class CustomConfig(private val properties: OgiriConfigurationProperties) {
     ogiriUserDirectory: OgiriUserDirectory,
     identifierPolicy: IdentifierPolicy,
     subTokenRegistry: OgiriSubTokenRegistry,
-    auditHookProvider: ObjectProvider<OgiriAuditHook>,
-    rateLimitHookProvider: ObjectProvider<OgiriRateLimitHook>,
-  ): OgiriTokenService<MyToken> =
-    MyCustomTokenService(
+    auditHook: ObjectProvider<OgiriAuditHook>,
+    rateLimitHook: ObjectProvider<OgiriRateLimitHook>,
+    lookupCache: ObjectProvider<OgiriTokenLookupCache<MyToken>>,
+  ): OgiriTokenService<MyToken> {
+    val service = MyCustomTokenService(
       tokenRepository,
       passwordEncoder,
       ogiriUserDirectory,
       identifierPolicy,
       subTokenRegistry,
       properties,
-      auditHookProvider,
-      rateLimitHookProvider,
     )
+    auditHook.ifAvailable { service.setAuditHook(it) }
+    rateLimitHook.ifAvailable { service.setRateLimitHook(it) }
+    lookupCache.ifAvailable { service.setLookupCache(it) }
+    return service
+  }
 }
 ```
 

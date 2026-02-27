@@ -316,6 +316,51 @@ class OgiriTokenServiceHookTest {
 
       assertTrue(calls.any { it == "subCreated:1:parent-client:chat" })
     }
+
+    @Test
+    fun `revokeSubToken calls onSubTokenRevoked`() {
+      val calls = mutableListOf<String>()
+      val auditHook =
+          object : OgiriAuditHook {
+            override fun onSubTokenRevoked(userId: Long, subTokenName: String) {
+              calls.add("subRevoked:$userId:$subTokenName")
+            }
+          }
+      val registry =
+          DefaultOgiriSubTokenRegistry(
+              listOf(
+                  object : OgiriSubTokenRegistration {
+                    override val name = "device"
+                    override val includeByDefault = true
+
+                    override fun clientIdFor(parentClientId: String) = "$parentClientId.device"
+
+                    override fun expiry(parentExpiry: Instant) = parentExpiry
+                  }))
+      val service = createService(auditHook = auditHook, registry = registry)
+      service.createNewAuthToken(user.getOgiriUserId(), "parent-client")
+
+      service.revokeSubToken(user.getOgiriUserId(), "device")
+
+      assertEquals(1, calls.size)
+      assertEquals("subRevoked:1:device", calls[0])
+    }
+
+    @Test
+    fun `revokeSubToken does not call onSubTokenRevoked when no tokens found`() {
+      val calls = mutableListOf<String>()
+      val auditHook =
+          object : OgiriAuditHook {
+            override fun onSubTokenRevoked(userId: Long, subTokenName: String) {
+              calls.add("subRevoked:$userId:$subTokenName")
+            }
+          }
+      val service = createService(auditHook = auditHook)
+
+      service.revokeSubToken(user.getOgiriUserId(), "nonexistent")
+
+      assertTrue(calls.isEmpty())
+    }
   }
 
   @Nested
@@ -402,6 +447,84 @@ class OgiriTokenServiceHookTest {
       assertEquals(2, calls.size)
       assertEquals("beforeLogin:testuser@example.com", calls[0])
       assertEquals("beforeTokenCreation:1", calls[1])
+    }
+
+    @Test
+    fun `renewSubToken(request) calls beforeSubTokenRenewal`() {
+      val calls = mutableListOf<String>()
+      val rateLimitHook =
+          object : OgiriRateLimitHook {
+            override fun beforeSubTokenRenewal(request: HttpServletRequest, userId: Long) {
+              calls.add("beforeSubTokenRenewal:$userId:${request.remoteAddr}")
+            }
+          }
+      val registry =
+          DefaultOgiriSubTokenRegistry(
+              listOf(
+                  object : OgiriSubTokenRegistration {
+                    override val name = "chat"
+                    override val includeByDefault = true
+
+                    override fun clientIdFor(parentClientId: String) = "$parentClientId.chat"
+
+                    override fun expiry(parentExpiry: Instant) = parentExpiry
+                  }))
+      val service = createService(rateLimitHook = rateLimitHook, registry = registry)
+
+      val headers = service.createNewAuthToken(user.getOgiriUserId(), "web")
+
+      val renewRequest =
+          MockHttpServletRequest().apply {
+            remoteAddr = "10.0.0.1"
+            addHeader("access-token", headers.accessToken)
+            addHeader("client", headers.client)
+            addHeader("uid", headers.uid)
+            addHeader("expiry", headers.expiry)
+          }
+      val renewResponse = MockHttpServletResponse()
+
+      service.renewSubToken(user.getOgiriUserId(), renewRequest, renewResponse, "chat")
+
+      assertEquals(1, calls.size)
+      assertEquals("beforeSubTokenRenewal:1:10.0.0.1", calls[0])
+    }
+
+    @Test
+    fun `beforeSubTokenRenewal throwing SecurityServiceException prevents sub-token renewal`() {
+      val rateLimitHook =
+          object : OgiriRateLimitHook {
+            override fun beforeSubTokenRenewal(request: HttpServletRequest, userId: Long) {
+              throw SecurityServiceException("error.auth.rate_limited")
+            }
+          }
+      val registry =
+          DefaultOgiriSubTokenRegistry(
+              listOf(
+                  object : OgiriSubTokenRegistration {
+                    override val name = "chat"
+                    override val includeByDefault = true
+
+                    override fun clientIdFor(parentClientId: String) = "$parentClientId.chat"
+
+                    override fun expiry(parentExpiry: Instant) = parentExpiry
+                  }))
+      val service = createService(rateLimitHook = rateLimitHook, registry = registry)
+      val headers = service.createNewAuthToken(user.getOgiriUserId(), "web")
+
+      val renewRequest =
+          MockHttpServletRequest().apply {
+            addHeader("access-token", headers.accessToken)
+            addHeader("client", headers.client)
+            addHeader("uid", headers.uid)
+            addHeader("expiry", headers.expiry)
+          }
+      val renewResponse = MockHttpServletResponse()
+
+      val exception =
+          assertThrows(SecurityServiceException::class.java) {
+            service.renewSubToken(user.getOgiriUserId(), renewRequest, renewResponse, "chat")
+          }
+      assertEquals("error.auth.rate_limited", exception.message)
     }
   }
 }

@@ -934,6 +934,7 @@ constructor(
       response: HttpServletResponse,
       name: String,
   ) {
+    rateLimitHook.beforeSubTokenRenewal(request, userId)
     val currentUser =
         userDirectory.findById(userId) ?: throw SecurityServiceException("user.not_found")
     val authHeader = request.extractAuthHeader()
@@ -1078,6 +1079,7 @@ constructor(
     if (tokens.isEmpty()) return false
 
     tokens.forEach { repository.delete(it) }
+    auditHook.onSubTokenRevoked(userId, subtypeName)
     return true
   }
 

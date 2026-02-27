@@ -93,11 +93,17 @@ val newHeaders = tokenService.renewSubToken(userId, "app", "device")
 newHeaders?.let { response.appendAuthHeaders(it) }
 ```
 
+Renewal is rate-limitable via `OgiriRateLimitHook.beforeSubTokenRenewal()`. Implement this hook
+to enforce per-user renewal throttles independently of APP token creation limits.
+
 ### Revoke
 
 ```kotlin
 tokenService.revokeSubToken(userId, "device")
 ```
+
+Revocation fires `OgiriAuditHook.onSubTokenRevoked(userId, subTokenName)` when at least one
+token is deleted. Implement this hook to emit revocation events to your SIEM or audit log.
 
 ## Custom Validation
 

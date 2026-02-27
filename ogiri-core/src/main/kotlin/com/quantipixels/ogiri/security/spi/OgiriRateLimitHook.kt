@@ -44,4 +44,18 @@ interface OgiriRateLimitHook {
    *   `"error.auth.rate_limited"` to reject the request.
    */
   fun beforeTokenCreation(request: HttpServletRequest, userId: Long) {}
+
+  /**
+   * Called before an existing sub-token is renewed for a user.
+   *
+   * Distinct from [beforeTokenCreation]: renewal replaces an existing sub-token rather than
+   * creating a fresh session. Implement to enforce sub-token rotation rate limits independently of
+   * APP token creation limits.
+   *
+   * @param request The current HTTP request (for IP, headers, etc.).
+   * @param userId The ID of the user requesting the sub-token renewal.
+   * @throws [com.quantipixels.ogiri.security.core.SecurityServiceException] with code
+   *   `"error.auth.rate_limited"` to reject the request.
+   */
+  fun beforeSubTokenRenewal(request: HttpServletRequest, userId: Long) {}
 }

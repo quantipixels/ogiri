@@ -62,4 +62,13 @@ interface OgiriAuditHook {
    * @param subTokenName The registration name of the sub-token (e.g., `"device"`, `"chat"`).
    */
   fun onSubTokenCreated(userId: Long, parentClient: String, subTokenName: String) {}
+
+  /**
+   * Called after all sub-tokens of a given type are revoked for a user.
+   *
+   * @param userId The user whose sub-tokens were revoked.
+   * @param subTokenName The registration name of the revoked sub-token type (e.g., `"device"`,
+   *   `"chat"`).
+   */
+  fun onSubTokenRevoked(userId: Long, subTokenName: String) {}
 }
