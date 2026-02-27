@@ -108,7 +108,28 @@ class MyRouteRegistry : OgiriRouteRegistry {
 }
 ```
 
-**3. Issue tokens on login:**
+**3. Extend `OgiriTokenService` with your token type:**
+
+```kotlin
+@Service
+class MyTokenService(
+    repository: MyTokenRepository,       // your concrete Spring Data repository
+    passwordEncoder: PasswordEncoder,
+    userDirectory: OgiriUserDirectory,
+    identifierPolicy: IdentifierPolicy,
+    subTokenRegistry: OgiriSubTokenRegistry,
+    properties: OgiriConfigurationProperties,
+) : OgiriTokenService<MyToken>(
+    repository, passwordEncoder, userDirectory,
+    identifierPolicy, subTokenRegistry, properties,
+) {
+  override fun tokenFactory(...): MyToken = MyToken().apply { /* set fields */ }
+}
+```
+
+Optional extension points (`OgiriAuditHook`, `OgiriRateLimitHook`, `OgiriTokenLookupCache`) are wired automatically via setter injection when the corresponding beans are present — no constructor changes needed.
+
+**4. Issue tokens on login:**
 
 ```kotlin
 @PostMapping("/api/auth/login")

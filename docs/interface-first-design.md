@@ -77,10 +77,10 @@ open class OgiriTokenService<T : OgiriToken>(
     private val identifierPolicy: IdentifierPolicy,
     private val subTokenRegistry: OgiriSubTokenRegistry,
     protected val properties: OgiriConfigurationProperties,
-    auditHookProvider: ObjectProvider<OgiriAuditHook>,
-    rateLimitHookProvider: ObjectProvider<OgiriRateLimitHook>,
 )
 ```
+
+Optional collaborators (`OgiriAuditHook`, `OgiriRateLimitHook`, `OgiriTokenLookupCache`) are wired post-construction via `setAuditHook()`, `setRateLimitHook()`, and `setLookupCache()`. Auto-configuration calls these setters automatically when the corresponding beans are present.
 
 Works with any `OgiriToken` implementation. No need to extend - just provide a token that implements the interface.
 
@@ -201,18 +201,15 @@ Extend `OgiriTokenService` and provide a custom token factory:
 ```kotlin
 @Service
 class MyTokenService(
-    repository: OgiriTokenRepository<MyToken>,
+    repository: MyTokenRepository,      // concrete subtype — Spring resolves via ResolvableType
     passwordEncoder: PasswordEncoder,
     userDirectory: OgiriUserDirectory,
     identifierPolicy: IdentifierPolicy,
     subTokenRegistry: OgiriSubTokenRegistry,
     properties: OgiriConfigurationProperties,
-    auditHookProvider: ObjectProvider<OgiriAuditHook>,
-    rateLimitHookProvider: ObjectProvider<OgiriRateLimitHook>,
 ) : OgiriTokenService<MyToken>(
     repository, passwordEncoder, userDirectory,
     identifierPolicy, subTokenRegistry, properties,
-    auditHookProvider, rateLimitHookProvider,
 ) {
     override fun tokenFactory(
         userId: Long,
@@ -336,18 +333,15 @@ interface UserTokenRepository : JpaRepository<UserToken, Long>, OgiriTokenReposi
 ```kotlin
 @Service
 class UserTokenService(
-    repository: OgiriTokenRepository<UserToken>,
+    repository: UserTokenRepository,    // concrete subtype — Spring resolves via ResolvableType
     passwordEncoder: PasswordEncoder,
     userDirectory: OgiriUserDirectory,
     identifierPolicy: IdentifierPolicy,
     subTokenRegistry: OgiriSubTokenRegistry,
     properties: OgiriConfigurationProperties,
-    auditHookProvider: ObjectProvider<OgiriAuditHook>,
-    rateLimitHookProvider: ObjectProvider<OgiriRateLimitHook>,
 ) : OgiriTokenService<UserToken>(
     repository, passwordEncoder, userDirectory,
     identifierPolicy, subTokenRegistry, properties,
-    auditHookProvider, rateLimitHookProvider,
 ) {
     override fun tokenFactory(
         userId: Long,

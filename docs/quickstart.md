@@ -267,7 +267,7 @@ Ogiri provides optional SPI hooks and cache modules you can opt into as Spring b
 - **`OgiriAuditHook`** — Callbacks on login success/failure, token rotation, and revocation (integrate with your SIEM)
 - **`OgiriRateLimitHook`** — Enforce rate limits before login and token creation (e.g., Bucket4j, Redis)
 
-Both default to no-ops if not provided.
+Both default to no-ops when no bean is present. When a bean is registered, the ogiri auto-configuration wires it into your `OgiriTokenService` via setter injection (`setAuditHook` / `setRateLimitHook`) automatically.
 
 **Token Lookup Cache** (eliminates per-request DB reads for the same user/client):
 

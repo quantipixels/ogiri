@@ -5,6 +5,63 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2026-02-27 (ogiri-security server)
+
+### Breaking Changes
+
+- **`OgiriTokenService` optional collaborators moved to setter injection** — the three optional constructor parameters (`auditHook`, `rateLimitHook`, `lookupCache`) and `@JvmOverloads` have been removed. The constructor now accepts only the six required collaborators. Optional collaborators are wired post-construction via `setAuditHook()`, `setRateLimitHook()`, and `setLookupCache()`.
+
+  **Before (v2.x):**
+
+  ```kotlin
+  class MyTokenService(
+      repository: OgiriTokenRepository<MyToken>,
+      ...,
+      lookupCache: OgiriTokenLookupCache<MyToken>? = null,
+  ) : OgiriTokenService<MyToken>(repository, ..., lookupCache = lookupCache)
+  ```
+
+  **After (v3.x):**
+
+  ```kotlin
+  // Concrete repository type works — Spring resolves via ResolvableType
+  class MyTokenService(
+      repository: MyTokenRepository,
+      passwordEncoder: PasswordEncoder,
+      userDirectory: OgiriUserDirectory,
+      identifierPolicy: IdentifierPolicy,
+      subTokenRegistry: OgiriSubTokenRegistry,
+      properties: OgiriConfigurationProperties,
+  ) : OgiriTokenService<MyToken>(
+      repository, passwordEncoder, userDirectory,
+      identifierPolicy, subTokenRegistry, properties,
+  )
+  ```
+
+  Optional beans (`OgiriAuditHook`, `OgiriRateLimitHook`, `OgiriTokenLookupCache`) are wired automatically by the ogiri auto-configuration via setter injection when the corresponding beans are present in the application context. To wire them explicitly in a `@Bean` factory:
+
+  ```kotlin
+  @Bean
+  fun myTokenService(...): MyTokenService {
+      val service = MyTokenService(repository, ...)
+      service.setLookupCache(myCache)
+      return service
+  }
+  ```
+
+### Added
+
+- **`NoOpOgiriAuditHook`** — public singleton object in `spi` package; default no-op for `OgiriAuditHook`. Useful for explicitly resetting the hook in tests (`service.setAuditHook(NoOpOgiriAuditHook)`).
+- **`NoOpOgiriRateLimitHook`** — public singleton object in `spi` package; default no-op for `OgiriRateLimitHook`.
+
+### Changed
+
+- `OgiriTokenService` — `open` setters `setAuditHook()`, `setRateLimitHook()`, `setLookupCache()` added for post-construction injection of optional collaborators, following the Spring Security 6.x `AuthorizationFilter` pattern
+- `OgiriSecurityAutoConfiguration` — factory method uses `ObjectProvider.ifAvailable { service.setX(it) }` after constructing the service
+- All sample services (Kotlin + Java, JPA + JDBC) updated to 6-arg constructors with concrete repository types
+
+---
+
 ## [2.1.0] - 2026-02-24 (ogiri-security server)
 
 ### Breaking Changes
