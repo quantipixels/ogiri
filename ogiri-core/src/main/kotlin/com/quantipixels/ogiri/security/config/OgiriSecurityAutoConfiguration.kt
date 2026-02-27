@@ -146,8 +146,8 @@ class OgiriSecurityAutoConfiguration {
   /**
    * Creates a default OgiriTokenService configured with the provided collaborators for token
    * management. Optional extension points ([OgiriAuditHook], [OgiriRateLimitHook],
-   * [OgiriTokenLookupCache]) are resolved via [ObjectProvider] and passed directly to the
-   * constructor — no separate no-op default beans are registered.
+   * [OgiriTokenLookupCache]) are resolved via [ObjectProvider] and wired via setter injection after
+   * construction, following the Spring Security [AuthorizationFilter] pattern.
    *
    * @param repository Repository used to persist and retrieve tokens.
    * @param passwordEncoder Encoder used to hash or verify token secrets.
@@ -155,9 +155,11 @@ class OgiriSecurityAutoConfiguration {
    * @param identifierPolicy Policy responsible for generating token identifiers.
    * @param subTokenRegistry Registry of sub-token registrations used by the service.
    * @param properties Ogiri configuration properties influencing token behavior.
-   * @param auditHook Optional audit hook; resolved from context when present.
-   * @param rateLimitHook Optional rate-limit hook; resolved from context when present.
-   * @param lookupCache Optional token lookup cache; resolved from context when present.
+   * @param auditHook Optional audit hook; resolved from context when present and wired via setter.
+   * @param rateLimitHook Optional rate-limit hook; resolved from context when present and wired via
+   *   setter.
+   * @param lookupCache Optional token lookup cache; resolved from context when present and wired
+   *   via setter.
    * @return An instance of OgiriTokenService configured with the given collaborators.
    */
   @Bean
@@ -178,18 +180,21 @@ class OgiriSecurityAutoConfiguration {
       auditHook: ObjectProvider<OgiriAuditHook>,
       rateLimitHook: ObjectProvider<OgiriRateLimitHook>,
       lookupCache: ObjectProvider<OgiriTokenLookupCache<T>>,
-  ): OgiriTokenService<T> =
-      OgiriTokenService(
-          repository,
-          passwordEncoder,
-          ogiriUserDirectory,
-          identifierPolicy,
-          subTokenRegistry,
-          properties,
-          auditHook = auditHook.getIfAvailable(),
-          rateLimitHook = rateLimitHook.getIfAvailable(),
-          lookupCache = lookupCache.getIfAvailable(),
-      )
+  ): OgiriTokenService<T> {
+    val service =
+        OgiriTokenService(
+            repository,
+            passwordEncoder,
+            ogiriUserDirectory,
+            identifierPolicy,
+            subTokenRegistry,
+            properties,
+        )
+    auditHook.ifAvailable { service.setAuditHook(it) }
+    rateLimitHook.ifAvailable { service.setRateLimitHook(it) }
+    lookupCache.ifAvailable { service.setLookupCache(it) }
+    return service
+  }
 
   /**
    * Creates a resolver that selects and exposes available OgiriTokenService instances.

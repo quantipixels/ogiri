@@ -13,17 +13,15 @@
 package com.quantipixels.ogiri.samples.java.service;
 
 import com.quantipixels.ogiri.samples.java.entity.SampleToken;
+import com.quantipixels.ogiri.samples.java.repository.SampleTokenRepository;
 import com.quantipixels.ogiri.security.config.OgiriConfigurationProperties;
 import com.quantipixels.ogiri.security.core.IdentifierPolicy;
-import com.quantipixels.ogiri.security.spi.OgiriTokenLookupCache;
 import com.quantipixels.ogiri.security.spi.OgiriUserDirectory;
 import com.quantipixels.ogiri.security.tokens.OgiriSubTokenRegistry;
-import com.quantipixels.ogiri.security.tokens.OgiriTokenRepository;
 import com.quantipixels.ogiri.security.tokens.OgiriTokenService;
 import com.quantipixels.ogiri.security.tokens.OgiriTokenType;
 import java.time.Instant;
 import org.springframework.context.annotation.Profile;
-import org.springframework.lang.Nullable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -33,30 +31,27 @@ import org.springframework.stereotype.Service;
  * <p>Demonstrates the minimal subclassing pattern: extend {@link OgiriTokenService}, inject the six
  * required collaborators, and override {@link #tokenFactory} to instantiate the custom token class.
  * Optional extension points (audit hook, rate-limit hook, lookup cache) are wired automatically by
- * Spring when present on the classpath and configured.
+ * the ogiri auto-configuration via setter injection when the corresponding beans are present in the
+ * application context.
  */
 @Service
 @Profile("!jdbc")
 public class SampleTokenService extends OgiriTokenService<SampleToken> {
 
   public SampleTokenService(
-      OgiriTokenRepository<SampleToken> tokenRepository,
+      SampleTokenRepository tokenRepository,
       PasswordEncoder passwordEncoder,
       OgiriUserDirectory userDirectory,
       IdentifierPolicy identifierPolicy,
       OgiriSubTokenRegistry subTokenRegistry,
-      OgiriConfigurationProperties properties,
-      @Nullable OgiriTokenLookupCache<SampleToken> lookupCache) {
+      OgiriConfigurationProperties properties) {
     super(
         tokenRepository,
         passwordEncoder,
         userDirectory,
         identifierPolicy,
         subTokenRegistry,
-        properties,
-        /* auditHook */ null,
-        /* rateLimitHook */ null,
-        lookupCache);
+        properties);
   }
 
   @Override

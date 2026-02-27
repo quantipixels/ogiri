@@ -24,6 +24,8 @@ import com.quantipixels.ogiri.security.core.SecurityServiceException
 import com.quantipixels.ogiri.security.core.SubTokenHeader
 import com.quantipixels.ogiri.security.core.appendAuthHeaders
 import com.quantipixels.ogiri.security.core.extractAuthHeader
+import com.quantipixels.ogiri.security.spi.NoOpOgiriAuditHook
+import com.quantipixels.ogiri.security.spi.NoOpOgiriRateLimitHook
 import com.quantipixels.ogiri.security.spi.OgiriAuditHook
 import com.quantipixels.ogiri.security.spi.OgiriRateLimitHook
 import com.quantipixels.ogiri.security.spi.OgiriTokenLookupCache
@@ -90,19 +92,17 @@ data class OgiriGeneratedTokens<T : OgiriToken>(
  * }
  * ```
  *
- * Optional extension points (all default to no-op):
- * - Supply an [OgiriAuditHook] to receive audit events.
- * - Supply an [OgiriRateLimitHook] to enforce rate limits.
- * - Add `ogiri-caffeine` or `ogiri-redis` and set `ogiri.lookup.type` to enable token caching.
+ * Optional extension points (all default to no-op / null):
+ * - Call [setAuditHook] to receive audit events.
+ * - Call [setRateLimitHook] to enforce rate limits.
+ * - Call [setLookupCache] to enable token caching (or add `ogiri-caffeine` / `ogiri-redis`).
  *
- * **Java callers:** use the full 9-argument constructor and pass `null` explicitly for any optional
- * parameter you do not need — Kotlin named-argument syntax is unavailable in Java.
+ * The auto-configuration wires these via `ObjectProvider.ifAvailable` after construction. Callers
+ * that extend this class directly simply call the setters on `this` before the service is first
+ * used.
  */
 @OgiriService
 open class OgiriTokenService<T : OgiriToken>
-// @JvmOverloads emits overloaded constructors for each trailing optional param so Java subclasses
-// can omit the optional hook/cache arguments without Kotlin named-argument syntax.
-@JvmOverloads
 constructor(
     private val repository: OgiriTokenRepository<T>,
     private val passwordEncoder: PasswordEncoder,
@@ -110,12 +110,29 @@ constructor(
     private val identifierPolicy: IdentifierPolicy,
     private val subTokenRegistry: OgiriSubTokenRegistry,
     protected val properties: OgiriConfigurationProperties,
-    auditHook: OgiriAuditHook? = null,
-    rateLimitHook: OgiriRateLimitHook? = null,
-    private val lookupCache: OgiriTokenLookupCache<T>? = null,
 ) {
-  private val auditHook: OgiriAuditHook = auditHook ?: object : OgiriAuditHook {}
-  private val rateLimitHook: OgiriRateLimitHook = rateLimitHook ?: object : OgiriRateLimitHook {}
+  private var auditHook: OgiriAuditHook = NoOpOgiriAuditHook
+  private var rateLimitHook: OgiriRateLimitHook = NoOpOgiriRateLimitHook
+  private var lookupCache: OgiriTokenLookupCache<T>? = null
+
+  /** Replaces the audit hook. Defaults to [NoOpOgiriAuditHook] when not called. */
+  open fun setAuditHook(hook: OgiriAuditHook) {
+    this.auditHook = hook
+  }
+
+  /** Replaces the rate-limit hook. Defaults to [NoOpOgiriRateLimitHook] when not called. */
+  open fun setRateLimitHook(hook: OgiriRateLimitHook) {
+    this.rateLimitHook = hook
+  }
+
+  /**
+   * Wires the lookup cache. When not called the service falls through to the repository on every
+   * read — identical behaviour to having no cache configured.
+   */
+  open fun setLookupCache(cache: OgiriTokenLookupCache<T>) {
+    this.lookupCache = cache
+  }
+
   private val maxClients: Long = properties.auth.maxClients
   private val batchGraceSeconds: Long = properties.auth.batchGraceSeconds
   private val tokenLifespanDays: Long = properties.auth.tokenLifespanDays

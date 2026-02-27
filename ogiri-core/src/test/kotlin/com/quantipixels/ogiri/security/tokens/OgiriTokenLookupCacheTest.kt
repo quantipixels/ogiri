@@ -96,40 +96,40 @@ class OgiriTokenLookupCacheTest {
       cache: OgiriTokenLookupCache<TestToken>? = null
   ): OgiriTokenService<TestToken> =
       object :
-          OgiriTokenService<TestToken>(
-              repository,
-              passwordEncoder,
-              userDirectory,
-              identifierPolicy,
-              DefaultOgiriSubTokenRegistry(emptyList()),
-              OgiriConfigurationProperties().apply {
-                auth.apply {
-                  maxClients = 24
-                  batchGraceSeconds = 5
-                  tokenLifespanDays = 14
-                }
-              },
-              lookupCache = cache,
-          ) {
-        override fun tokenFactory(
-            userId: Long,
-            client: String,
-            hashedToken: String,
-            tokenType: OgiriTokenType,
-            expiry: Instant,
-            tokenSubtype: String?,
-            plainTokenValue: String,
-        ): TestToken =
-            TestToken(
-                    userId = userId,
-                    client = client,
-                    token = hashedToken,
-                    tokenType = tokenType.name,
-                    expiryAt = expiry,
-                    tokenSubtype = tokenSubtype,
-                )
-                .apply { plainToken = plainTokenValue }
-      }
+              OgiriTokenService<TestToken>(
+                  repository,
+                  passwordEncoder,
+                  userDirectory,
+                  identifierPolicy,
+                  DefaultOgiriSubTokenRegistry(emptyList()),
+                  OgiriConfigurationProperties().apply {
+                    auth.apply {
+                      maxClients = 24
+                      batchGraceSeconds = 5
+                      tokenLifespanDays = 14
+                    }
+                  },
+              ) {
+            override fun tokenFactory(
+                userId: Long,
+                client: String,
+                hashedToken: String,
+                tokenType: OgiriTokenType,
+                expiry: Instant,
+                tokenSubtype: String?,
+                plainTokenValue: String,
+            ): TestToken =
+                TestToken(
+                        userId = userId,
+                        client = client,
+                        token = hashedToken,
+                        tokenType = tokenType.name,
+                        expiryAt = expiry,
+                        tokenSubtype = tokenSubtype,
+                    )
+                    .apply { plainToken = plainTokenValue }
+          }
+          .also { service -> cache?.let { service.setLookupCache(it) } }
 
   @BeforeEach
   fun setup() {

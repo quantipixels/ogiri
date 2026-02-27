@@ -83,15 +83,17 @@ class OgiriTokenServiceHookTest {
       registry: OgiriSubTokenRegistry = DefaultOgiriSubTokenRegistry(emptyList()),
   ): OgiriTokenService<TestToken> =
       TestTokenService(
-          repository = repository,
-          passwordEncoder = passwordEncoder,
-          userDirectory = userDirectory,
-          identifierPolicy = identifierPolicy,
-          subTokenRegistry = registry,
-          properties = defaultProperties(),
-          auditHook = auditHook,
-          rateLimitHook = rateLimitHook,
-      )
+              repository = repository,
+              passwordEncoder = passwordEncoder,
+              userDirectory = userDirectory,
+              identifierPolicy = identifierPolicy,
+              subTokenRegistry = registry,
+              properties = defaultProperties(),
+          )
+          .also { service ->
+            auditHook?.let { service.setAuditHook(it) }
+            rateLimitHook?.let { service.setRateLimitHook(it) }
+          }
 
   private inner class TestTokenService(
       repository: OgiriTokenRepository<TestToken>,
@@ -100,8 +102,6 @@ class OgiriTokenServiceHookTest {
       identifierPolicy: IdentifierPolicy,
       subTokenRegistry: OgiriSubTokenRegistry,
       properties: OgiriConfigurationProperties,
-      auditHook: OgiriAuditHook? = null,
-      rateLimitHook: OgiriRateLimitHook? = null,
   ) :
       OgiriTokenService<TestToken>(
           repository,
@@ -110,8 +110,7 @@ class OgiriTokenServiceHookTest {
           identifierPolicy,
           subTokenRegistry,
           properties,
-          auditHook = auditHook,
-          rateLimitHook = rateLimitHook) {
+      ) {
     override fun tokenFactory(
         userId: Long,
         client: String,

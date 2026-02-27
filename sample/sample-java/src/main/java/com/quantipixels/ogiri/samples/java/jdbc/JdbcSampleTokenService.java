@@ -14,15 +14,12 @@ package com.quantipixels.ogiri.samples.java.jdbc;
 
 import com.quantipixels.ogiri.security.config.OgiriConfigurationProperties;
 import com.quantipixels.ogiri.security.core.IdentifierPolicy;
-import com.quantipixels.ogiri.security.spi.OgiriTokenLookupCache;
 import com.quantipixels.ogiri.security.spi.OgiriUserDirectory;
 import com.quantipixels.ogiri.security.tokens.OgiriSubTokenRegistry;
-import com.quantipixels.ogiri.security.tokens.OgiriTokenRepository;
 import com.quantipixels.ogiri.security.tokens.OgiriTokenService;
 import com.quantipixels.ogiri.security.tokens.OgiriTokenType;
 import java.time.Instant;
 import org.springframework.context.annotation.Profile;
-import org.springframework.lang.Nullable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -33,6 +30,10 @@ import org.springframework.stereotype.Service;
  * com.quantipixels.ogiri.samples.java.service.SampleTokenService} is excluded via
  * {@code @Profile("!jdbc")}, so only one OgiriTokenService bean exists at runtime.
  *
+ * <p>Optional extension points (audit hook, rate-limit hook, lookup cache) are wired automatically
+ * by the ogiri auto-configuration via setter injection when the corresponding beans are present in
+ * the application context.
+ *
  * <p>Run with: {@code --spring.profiles.active=jdbc}
  */
 @Service
@@ -40,23 +41,19 @@ import org.springframework.stereotype.Service;
 public class JdbcSampleTokenService extends OgiriTokenService<JdbcSampleToken> {
 
   public JdbcSampleTokenService(
-      OgiriTokenRepository<JdbcSampleToken> tokenRepository,
+      JdbcSampleTokenRepository tokenRepository,
       PasswordEncoder passwordEncoder,
       OgiriUserDirectory userDirectory,
       IdentifierPolicy identifierPolicy,
       OgiriSubTokenRegistry subTokenRegistry,
-      OgiriConfigurationProperties properties,
-      @Nullable OgiriTokenLookupCache<JdbcSampleToken> lookupCache) {
+      OgiriConfigurationProperties properties) {
     super(
         tokenRepository,
         passwordEncoder,
         userDirectory,
         identifierPolicy,
         subTokenRegistry,
-        properties,
-        /* auditHook */ null,
-        /* rateLimitHook */ null,
-        lookupCache);
+        properties);
   }
 
   @Override

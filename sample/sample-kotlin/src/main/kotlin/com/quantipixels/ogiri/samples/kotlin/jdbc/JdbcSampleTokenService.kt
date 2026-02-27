@@ -14,10 +14,8 @@ package com.quantipixels.ogiri.samples.kotlin.jdbc
 
 import com.quantipixels.ogiri.security.config.OgiriConfigurationProperties
 import com.quantipixels.ogiri.security.core.IdentifierPolicy
-import com.quantipixels.ogiri.security.spi.OgiriTokenLookupCache
 import com.quantipixels.ogiri.security.spi.OgiriUserDirectory
 import com.quantipixels.ogiri.security.tokens.OgiriSubTokenRegistry
-import com.quantipixels.ogiri.security.tokens.OgiriTokenRepository
 import com.quantipixels.ogiri.security.tokens.OgiriTokenService
 import com.quantipixels.ogiri.security.tokens.OgiriTokenType
 import java.time.Instant
@@ -32,18 +30,22 @@ import org.springframework.stereotype.Service
  * [SampleTokenService] is excluded via @Profile("!jdbc"), so only one OgiriTokenService bean exists
  * at runtime.
  *
+ * Optional extension points ([com.quantipixels.ogiri.security.spi.OgiriAuditHook],
+ * [com.quantipixels.ogiri.security.spi.OgiriRateLimitHook],
+ * [com.quantipixels.ogiri.security.spi.OgiriTokenLookupCache]) are wired automatically by the ogiri
+ * auto-configuration via setter injection when the corresponding beans are present.
+ *
  * Run with: --spring.profiles.active=jdbc
  */
 @Service
 @Profile("jdbc")
 class JdbcSampleTokenService(
-    tokenRepository: OgiriTokenRepository<JdbcSampleToken>,
+    tokenRepository: JdbcSampleTokenRepository,
     passwordEncoder: PasswordEncoder,
     userDirectory: OgiriUserDirectory,
     identifierPolicy: IdentifierPolicy,
     subTokenRegistry: OgiriSubTokenRegistry,
     properties: OgiriConfigurationProperties,
-    lookupCache: OgiriTokenLookupCache<JdbcSampleToken>? = null,
 ) :
     OgiriTokenService<JdbcSampleToken>(
         tokenRepository,
@@ -52,7 +54,6 @@ class JdbcSampleTokenService(
         identifierPolicy,
         subTokenRegistry,
         properties,
-        lookupCache = lookupCache,
     ) {
 
   override fun tokenFactory(
