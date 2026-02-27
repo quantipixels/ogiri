@@ -17,10 +17,15 @@ import com.quantipixels.ogiri.security.config.OgiriConfigurationProperties
 import com.quantipixels.ogiri.security.spi.OgiriTokenLookupCache
 import com.quantipixels.ogiri.security.tokens.OgiriToken
 import org.springframework.boot.autoconfigure.AutoConfiguration
+import org.springframework.boot.autoconfigure.condition.ConditionMessage
+import org.springframework.boot.autoconfigure.condition.ConditionOutcome
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.boot.autoconfigure.condition.SpringBootCondition
 import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.ConditionContext
+import org.springframework.context.annotation.Conditional
+import org.springframework.core.type.AnnotatedTypeMetadata
 
 /**
  * Autoconfiguration for the Caffeine-backed [OgiriTokenLookupCache].
@@ -28,22 +33,42 @@ import org.springframework.context.annotation.Bean
  * Activates only when **all** of the following are true:
  * - `com.github.benmanes.caffeine.cache.Cache` is on the classpath (`ogiri-caffeine` dependency
  *   added)
- * - `ogiri.lookup.type=caffeine` is set in `application.yml` (explicit opt-in)
+ * - `ogiri.lookup.type=caffeine` is set in `application.yml` (case-insensitive, explicit opt-in)
  * - No `OgiriTokenLookupCache` bean is already registered (custom bean wins)
  */
 @AutoConfiguration
 @ConditionalOnClass(Cache::class)
 @ConditionalOnMissingBean(OgiriTokenLookupCache::class)
-@ConditionalOnProperty(
-    prefix = "ogiri.lookup",
-    name = ["type"],
-    havingValue = "caffeine",
-    matchIfMissing = false,
-)
+@Conditional(OgiriCaffeineAutoConfiguration.OnCaffeineType::class)
 class OgiriCaffeineAutoConfiguration {
 
   @Bean
   fun <T : OgiriToken> ogiriCaffeineTokenLookupCache(
       properties: OgiriConfigurationProperties
   ): OgiriTokenLookupCache<T> = CaffeineOgiriTokenLookupCache(properties)
+
+  internal class OnCaffeineType : SpringBootCondition() {
+    override fun getMatchOutcome(
+        context: ConditionContext,
+        metadata: AnnotatedTypeMetadata,
+    ): ConditionOutcome {
+      val normalized =
+          context.environment.getProperty("ogiri.lookup.type")?.trim()?.lowercase() ?: ""
+      return if (normalized == "caffeine") {
+        ConditionOutcome(
+            true,
+            ConditionMessage.forCondition("OgiriCaffeineType")
+                .found("property")
+                .items("ogiri.lookup.type=caffeine"),
+        )
+      } else {
+        ConditionOutcome(
+            false,
+            ConditionMessage.forCondition("OgiriCaffeineType")
+                .didNotFind("property with value 'caffeine'")
+                .items("ogiri.lookup.type"),
+        )
+      }
+    }
+  }
 }

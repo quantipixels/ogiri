@@ -16,10 +16,15 @@ import com.quantipixels.ogiri.security.config.OgiriConfigurationProperties
 import com.quantipixels.ogiri.security.spi.OgiriTokenLookupCache
 import com.quantipixels.ogiri.security.tokens.OgiriToken
 import org.springframework.boot.autoconfigure.AutoConfiguration
+import org.springframework.boot.autoconfigure.condition.ConditionMessage
+import org.springframework.boot.autoconfigure.condition.ConditionOutcome
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.boot.autoconfigure.condition.SpringBootCondition
 import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.ConditionContext
+import org.springframework.context.annotation.Conditional
+import org.springframework.core.type.AnnotatedTypeMetadata
 import org.springframework.data.redis.connection.RedisConnectionFactory
 
 /**
@@ -27,7 +32,7 @@ import org.springframework.data.redis.connection.RedisConnectionFactory
  *
  * Activates only when **all** of the following are true:
  * - `spring-boot-starter-data-redis` is on the classpath
- * - `ogiri.lookup.type=redis` is set in `application.yml` (explicit opt-in)
+ * - `ogiri.lookup.type=redis` is set in `application.yml` (case-insensitive, explicit opt-in)
  * - No `OgiriTokenLookupCache` bean is already registered (custom bean wins)
  *
  * The bean uses the application's existing [RedisConnectionFactory] — no extra Redis configuration
@@ -36,12 +41,7 @@ import org.springframework.data.redis.connection.RedisConnectionFactory
 @AutoConfiguration
 @ConditionalOnClass(RedisConnectionFactory::class)
 @ConditionalOnMissingBean(OgiriTokenLookupCache::class)
-@ConditionalOnProperty(
-    prefix = "ogiri.lookup",
-    name = ["type"],
-    havingValue = "redis",
-    matchIfMissing = false,
-)
+@Conditional(OgiriRedisAutoConfiguration.OnRedisType::class)
 class OgiriRedisAutoConfiguration {
 
   @Bean
@@ -49,4 +49,29 @@ class OgiriRedisAutoConfiguration {
       connectionFactory: RedisConnectionFactory,
       properties: OgiriConfigurationProperties,
   ): OgiriTokenLookupCache<T> = RedisOgiriTokenLookupCache(connectionFactory, properties)
+
+  internal class OnRedisType : SpringBootCondition() {
+    override fun getMatchOutcome(
+        context: ConditionContext,
+        metadata: AnnotatedTypeMetadata,
+    ): ConditionOutcome {
+      val normalized =
+          context.environment.getProperty("ogiri.lookup.type")?.trim()?.lowercase() ?: ""
+      return if (normalized == "redis") {
+        ConditionOutcome(
+            true,
+            ConditionMessage.forCondition("OgiriRedisType")
+                .found("property")
+                .items("ogiri.lookup.type=redis"),
+        )
+      } else {
+        ConditionOutcome(
+            false,
+            ConditionMessage.forCondition("OgiriRedisType")
+                .didNotFind("property with value 'redis'")
+                .items("ogiri.lookup.type"),
+        )
+      }
+    }
+  }
 }

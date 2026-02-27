@@ -86,6 +86,13 @@ tasks.jacocoTestReport {
  */
 jacoco { toolVersion = "0.8.11" }
 
+tasks.jacocoTestCoverageVerification {
+  dependsOn(tasks.test)
+  violationRules { rule { limit { minimum = "0.50".toBigDecimal() } } }
+}
+
+tasks.named("check") { dependsOn(tasks.jacocoTestCoverageVerification) }
+
 publishing {
   publications {
     create<MavenPublication>("mavenJava") {

@@ -77,6 +77,7 @@ open class OgiriConfigurationProperties {
 
   companion object {
     private val logger = LoggerFactory.getLogger(OgiriConfigurationProperties::class.java)
+    private val KNOWN_LOOKUP_TYPES = setOf("caffeine", "redis")
   }
 
   /**
@@ -100,6 +101,13 @@ open class OgiriConfigurationProperties {
       logger.warn(
           "ogiri.cookies.http-only=false exposes cookies to JavaScript. " +
               "Set to true to prevent XSS cookie theft.")
+    }
+    val rawLookupType = lookup.type.trim()
+    if (rawLookupType.isNotEmpty() && rawLookupType.lowercase() !in KNOWN_LOOKUP_TYPES) {
+      logger.warn(
+          "ogiri.lookup.type='{}' is not a recognized cache type. " +
+              "Expected 'caffeine' or 'redis' (lowercase). No lookup cache will be activated.",
+          rawLookupType)
     }
   }
 
