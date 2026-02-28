@@ -161,6 +161,39 @@ configuration model
 
 ---
 
+## R13: `ogiri-spring-starter` Convenience Starter
+
+Adopters currently need to declare multiple coordinates:
+
+```kotlin
+implementation("com.quantipixels.ogiri:ogiri-core:VERSION")
+implementation("com.quantipixels.ogiri:ogiri-jpa:VERSION")      // or ogiri-jdbc
+implementation("com.quantipixels.ogiri:ogiri-caffeine:VERSION") // or ogiri-redis
+```
+
+A single `ogiri-spring-starter` artifact would serve as a curated entry point following Spring Boot
+starter conventions:
+
+```kotlin
+implementation("com.quantipixels.ogiri:ogiri-spring-starter:VERSION")
+```
+
+- Pulls in `ogiri-core` unconditionally
+- Declares `ogiri-jpa`, `ogiri-jdbc`, `ogiri-caffeine`, and `ogiri-redis` as optional
+  `compileOnly`/`runtimeOnly` dependencies — the appropriate modules activate via their existing
+  `@ConditionalOnClass` auto-configurations when the backing library (Hibernate, Caffeine, etc.) is
+  present
+- Ships no new code — purely a dependency aggregator with a `AutoConfiguration.imports` entry
+
+Individual modules remain independently consumable for users who need precise control over their
+dependency graph.
+
+**Impact**: Reduces onboarding to a single dependency declaration; matches the mental model new
+adopters expect from the Spring Boot ecosystem
+**Effort**: Low — a new Gradle module with curated dependency declarations and no source code
+
+---
+
 ## Priority 2 — Expand the Perimeter
 
 These extend Ogiri into adjacent use-cases. Each requires more design work than Priority 1 items.

@@ -52,7 +52,7 @@ class DefaultIdentifierPolicy(
   private val random = SecureRandom()
   private val alphabet =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-".toCharArray()
-  private val validator = Regex("^[A-Za-z0-9._-]{1,64}$")
+  private val validator = Regex("^[A-Za-z0-9._-]{$MIN_TOKEN_LENGTH,${length.coerceAtLeast(64)}}$")
 
   /**
    * Generates an identifier of the configured length composed of characters from the allowed

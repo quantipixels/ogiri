@@ -12,11 +12,11 @@
  */
 package com.quantipixels.ogiri.security.web
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.quantipixels.ogiri.security.config.OgiriConfigurationProperties
 import com.quantipixels.ogiri.security.core.ACCESS_TOKEN
 import com.quantipixels.ogiri.security.core.CLIENT
 import com.quantipixels.ogiri.security.core.EXPIRY
+import com.quantipixels.ogiri.security.core.JsonCodec
 import com.quantipixels.ogiri.security.core.UID
 import jakarta.servlet.http.Cookie
 import jakarta.servlet.http.HttpServletRequest
@@ -34,7 +34,7 @@ class OgiriAuthenticationEntryPoint(
     private val properties: OgiriConfigurationProperties,
 ) : AuthenticationEntryPoint {
   private val logger = LoggerFactory.getLogger(OgiriAuthenticationEntryPoint::class.java)
-  private val mapper = jacksonObjectMapper()
+  private val mapper = JsonCodec.mapper
 
   companion object {
     private val DEFAULT_MESSAGES =

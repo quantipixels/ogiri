@@ -6,6 +6,7 @@ plugins {
   id("io.spring.dependency-management") version libs.versions.dependencyManagement.get()
   id("org.owasp.dependencycheck") version "12.1.9"
   jacoco
+  `java-test-fixtures`
   `maven-publish`
   signing
 }
@@ -61,6 +62,10 @@ dependencies {
     exclude(module = "mockito-core")
   }
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+  testFixturesImplementation("org.springframework.boot:spring-boot-starter-test") {
+    exclude(module = "mockito-core")
+  }
 }
 
 /**
@@ -95,6 +100,13 @@ tasks.jacocoTestCoverageVerification {
 }
 
 tasks.named("check") { dependsOn(tasks.jacocoTestCoverageVerification) }
+
+// Suppress test fixtures from the published Maven POM — they are an internal test aid.
+val java = components["java"] as org.gradle.api.component.AdhocComponentWithVariants
+
+java.withVariantsFromConfiguration(configurations["testFixturesApiElements"]) { skip() }
+
+java.withVariantsFromConfiguration(configurations["testFixturesRuntimeElements"]) { skip() }
 
 publishing {
   publications {

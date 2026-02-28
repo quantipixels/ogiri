@@ -203,8 +203,7 @@ constructor(
   /**
    * Check if a plain token matches a hashed token, using cache to avoid repeated BCrypt operations.
    *
-   * Implements timing attack protection by ensuring a minimum delay to mask cache hit vs miss
-   * timing. Cache keys are hashed to prevent plaintext token extraction from memory dumps.
+   * Cache keys are hashed to prevent plaintext token extraction from memory dumps.
    *
    * @param tokenHash The BCrypt-hashed token from the database
    * @param token The plaintext token to validate
@@ -215,18 +214,7 @@ constructor(
       token: String,
   ): Boolean {
     val key = "${tokenHash.length}:${sha256(tokenHash)}:${token.length}:${sha256(token)}"
-    val startTime = System.nanoTime()
-
-    val result = tokenEqualityCache.get(key) { passwordEncoder.matches(token, tokenHash) }
-
-    // Ensure minimum 100ms to mask cache hit vs miss timing
-    val elapsed = System.nanoTime() - startTime
-    val minDelayNanos = 100_000_000L // 100ms
-    if (elapsed < minDelayNanos) {
-      Thread.sleep((minDelayNanos - elapsed) / 1_000_000)
-    }
-
-    return result
+    return tokenEqualityCache.get(key) { passwordEncoder.matches(token, tokenHash) }
   }
 
   /**
@@ -235,10 +223,11 @@ constructor(
    * @param input The string to hash
    * @return Hex-encoded SHA-256 hash
    */
-  private fun sha256(input: String): String {
-    val digest = java.security.MessageDigest.getInstance("SHA-256")
-    return digest.digest(input.toByteArray()).fold("") { str, byte -> str + "%02x".format(byte) }
-  }
+  private fun sha256(input: String): String =
+      SHA256.get().let { md ->
+        md.reset()
+        md.digest(input.toByteArray()).joinToString("") { "%02x".format(it) }
+      }
 
   /**
    * Factory function for creating new token instances.
@@ -383,7 +372,8 @@ constructor(
     var deleted: Int
     do {
       val expired = repository.fetchTopExpiredBefore(now, batchSize)
-      expired.forEach { repository.delete(it) }
+      val ids = expired.map { it.id }
+      if (ids.isNotEmpty()) repository.deleteByIdIn(ids)
       deleted = expired.size
       totalDeleted += deleted
     } while (deleted == batchSize)
@@ -651,13 +641,16 @@ constructor(
     val (appTokens, subTokens) =
         tokens.partition { OgiriTokenType.of(it.tokenType) == OgiriTokenType.APP }
 
-    cleanOrphanedSubTokens(subTokens, appTokens)
+    cleanOrphanedSubTokens(user.getOgiriUserId(), subTokens, appTokens)
     enforceMaxClientsLimit(user, appTokens)
   }
 
-  private fun cleanOrphanedSubTokens(subTokens: List<T>, appTokens: List<T>) {
+  private fun cleanOrphanedSubTokens(userId: Long, subTokens: List<T>, appTokens: List<T>) {
     val expectedSubClients = expectedSubClientsFor(appTokens.clientIds(), cachedRegistrations)
-    subTokens.filterOutClientIds(expectedSubClients).forEach { repository.delete(it) }
+    val orphans = subTokens.filterOutClientIds(expectedSubClients)
+    if (orphans.isNotEmpty()) {
+      deleteToken(userId, orphans.map { it.client })
+    }
   }
 
   private fun enforceMaxClientsLimit(user: OgiriUser, appTokens: List<T>) {
@@ -669,7 +662,7 @@ constructor(
             compareBy<OgiriToken> { it.lastUsedAt ?: it.updatedAt }.thenBy { it.updatedAt },
         )
     val remove = sorted.take(toRemoveCount)
-    remove.forEach { repository.delete(it) }
+    deleteToken(user.getOgiriUserId(), remove.map { it.client })
     val removeSubClients = expectedSubClientsFor(remove.clientIds(), cachedRegistrations)
     deleteToken(user.getOgiriUserId(), removeSubClients)
   }
@@ -798,7 +791,7 @@ constructor(
         accessToken = token,
         client = client,
         uid = user.username,
-        expiry = appToken?.expiryAt.toString(),
+        expiry = appToken?.expiryAt?.toString(),
         kind = OgiriTokenType.APP.label,
         subTokens = filteredSubHeaders.ifEmpty { null },
     )
@@ -859,22 +852,22 @@ constructor(
   fun verifyUser(
       request: HttpServletRequest,
       response: HttpServletResponse,
-      email: String,
+      identifier: String,
       password: String,
   ) {
-    rateLimitHook.beforeLogin(request, email)
+    rateLimitHook.beforeLogin(request, identifier)
 
-    val user = userDirectory.findByEmail(email)
+    val user = userDirectory.findByEmail(identifier)
     val clientIp = request.remoteAddr
 
     if (user == null) {
       // Constant-time dummy comparison to prevent timing enumeration
       passwordEncoder.matches(password, DUMMY_HASH)
-      auditHook.onLoginFailure(email, "user_not_found", clientIp)
+      auditHook.onLoginFailure(identifier, "user_not_found", clientIp)
       throw SecurityServiceException("error.auth.invalid_credentials")
     }
     if (!passwordEncoder.matches(password, user.password)) {
-      auditHook.onLoginFailure(email, "invalid_password", clientIp)
+      auditHook.onLoginFailure(identifier, "invalid_password", clientIp)
       throw SecurityServiceException("error.auth.invalid_credentials")
     }
 
@@ -894,6 +887,9 @@ constructor(
 
     // Pre-computed BCrypt hash for timing normalization
     private const val DUMMY_HASH = "\$2a\$10\$dummyhashvalueforconstanttimecheck"
+
+    private val SHA256: ThreadLocal<java.security.MessageDigest> =
+        ThreadLocal.withInitial { java.security.MessageDigest.getInstance("SHA-256") }
   }
 
   /**
@@ -1049,7 +1045,7 @@ constructor(
       userId: Long,
       subtype: String,
   ): OgiriToken? {
-    val registration = cachedRegistrations.find { it.name == subtype } ?: return null
+    if (cachedRegistrations.none { it.name == subtype }) return null
 
     return repository
         .findByUserIdAndTokenSubtypeOrderByUpdatedAtDesc(userId, subtype)
@@ -1078,7 +1074,7 @@ constructor(
 
     if (tokens.isEmpty()) return false
 
-    tokens.forEach { repository.delete(it) }
+    deleteToken(userId, tokens.map { it.client })
     auditHook.onSubTokenRevoked(userId, subtypeName)
     return true
   }

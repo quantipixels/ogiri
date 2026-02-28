@@ -147,8 +147,9 @@ class OgiriTokenAuthenticationFilterTest {
     val fixture = newFilter()
 
     // Issue a token using the same TokenService used by the filter
+    val clientId = identifierPolicy.generate()
     val headers: AuthHeader =
-        fixture.tokenService.createNewAuthToken(user.getOgiriUserId(), "clientA")
+        fixture.tokenService.createNewAuthToken(user.getOgiriUserId(), clientId)
 
     val request = MockHttpServletRequest("GET", "/api/secure")
     request.addHeader("access-token", headers.accessToken!!)
@@ -162,7 +163,7 @@ class OgiriTokenAuthenticationFilterTest {
     fixture.filter.doFilter(request, response, chain)
 
     val issuedToken =
-        fixture.repository.findByUserIdAndClient(user.getOgiriUserId(), "clientA").orElse(null)
+        fixture.repository.findByUserIdAndClient(user.getOgiriUserId(), clientId).orElse(null)
 
     // Authentication should be present
     assertNotNull(SecurityContextHolder.getContext().authentication)

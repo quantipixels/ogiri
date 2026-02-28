@@ -56,11 +56,8 @@ open class OgiriTokenAuthenticationFilter(
     private val identifierPolicy: IdentifierPolicy,
     private val properties: OgiriConfigurationProperties,
 ) : OncePerRequestFilter() {
-  private val rotateOnWriteOnly: Boolean
-    get() = properties.auth.rotateOnWriteOnly
-
-  private val rotateStaleSeconds: Long
-    get() = properties.auth.rotateStaleSeconds
+  private val rotateOnWriteOnly: Boolean = properties.auth.rotateOnWriteOnly
+  private val rotateStaleSeconds: Long = properties.auth.rotateStaleSeconds
 
   /**
    * Authenticate the incoming HTTP request, populate the SecurityContext, and append refreshed auth
@@ -184,8 +181,12 @@ open class OgiriTokenAuthenticationFilter(
     if (!headerToken.isValid()) return null
 
     val requestStartedAt = Instant.now()
-    val client = headerToken.client?.also { validateIdentifier(it, "error.auth.bad_client_id") }!!
-    val uid = headerToken.uid?.also { validateIdentifier(it, "error.auth.bad_uid") }!!
+    val client =
+        headerToken.client?.also { validateIdentifier(it, "error.auth.bad_client_id") }
+            ?: throw BadCredentialsException("error.auth.bad_client_id")
+    val uid =
+        headerToken.uid?.takeIf { it.isNotBlank() }
+            ?: throw BadCredentialsException("error.auth.bad_uid")
     ensureAppToken(headerToken.kind)
 
     val user =
@@ -257,18 +258,7 @@ open class OgiriTokenAuthenticationFilter(
     }
   }
 
-  /**
-   * Validate an identifier string against the configured IdentifierPolicy.
-   *
-   * @param value The identifier to validate (e.g., client or uid).
-   * @param errorCode The error code/message to use when throwing on invalid input.
-   * @throws org.springframework.security.authentication.BadCredentialsException if the identifier
-   *   is invalid.
-   */
-  private fun validateIdentifier(
-      value: String,
-      errorCode: String,
-  ) {
+  private fun validateIdentifier(value: String, errorCode: String) {
     if (!identifierPolicy.isValid(value)) throw BadCredentialsException(errorCode)
   }
 

@@ -234,6 +234,19 @@ interface OgiriTokenRepository<T : OgiriToken> {
   fun countByUserId(userId: Long): Long
 
   /**
+   * Delete tokens by their primary key IDs.
+   *
+   * Used for batch cleanup to issue a single bulk `DELETE WHERE id IN (...)` instead of N
+   * individual statements. The default falls back to per-entity deletion; database-backed
+   * implementations should override for efficiency.
+   *
+   * @param ids Collection of token primary key IDs to delete.
+   */
+  fun deleteByIdIn(ids: Collection<Long>) {
+    ids.forEach { deleteById(it) }
+  }
+
+  /**
    * Delete all expired tokens before cutoff.
    *
    * Spring Data auto-generates a DELETE query from the method name. For custom implementations,
