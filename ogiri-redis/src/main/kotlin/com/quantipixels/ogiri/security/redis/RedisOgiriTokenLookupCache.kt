@@ -13,6 +13,7 @@
 package com.quantipixels.ogiri.security.redis
 
 import com.quantipixels.ogiri.security.config.OgiriConfigurationProperties
+import com.quantipixels.ogiri.security.spi.OgiriCacheKey
 import com.quantipixels.ogiri.security.spi.OgiriTokenLookupCache
 import com.quantipixels.ogiri.security.tokens.OgiriToken
 import java.time.Duration
@@ -51,27 +52,16 @@ class RedisOgiriTokenLookupCache<T : OgiriToken>(
 
   private val ttl: Duration = Duration.ofMinutes(properties.lookup.expiryMinutes)
 
-  @Suppress("UNCHECKED_CAST")
-  private val template: RedisTemplate<String, T> =
-      (RedisTemplate<String, Any>().also { t ->
-        t.connectionFactory = connectionFactory
-        t.keySerializer = StringRedisSerializer()
-        t.valueSerializer = GenericJackson2JsonRedisSerializer()
-        t.afterPropertiesSet()
-      } as RedisTemplate<String, T>)
-
-  private fun key(userId: Long, client: String) = "ogiri:token:$userId:$client"
-
-  private fun keyPrefix(userId: Long) = "ogiri:token:$userId:"
+  private val template: RedisTemplate<String, T> = buildTemplate(connectionFactory)
 
   override fun get(userId: Long, client: String): T? =
-      template.opsForValue().get(key(userId, client))
+      template.opsForValue().get(OgiriCacheKey.key(userId, client))
 
   override fun put(userId: Long, client: String, token: T) =
-      template.opsForValue().set(key(userId, client), token, ttl)
+      template.opsForValue().set(OgiriCacheKey.key(userId, client), token, ttl)
 
   override fun evict(userId: Long, client: String) {
-    template.delete(key(userId, client))
+    template.delete(OgiriCacheKey.key(userId, client))
   }
 
   /**
@@ -81,7 +71,7 @@ class RedisOgiriTokenLookupCache<T : OgiriToken>(
    * datasets.
    */
   override fun evictAll(userId: Long) {
-    val prefix = keyPrefix(userId)
+    val prefix = OgiriCacheKey.prefix(userId)
     val options = ScanOptions.scanOptions().match("$prefix*").count(100).build()
     val keysToDelete = mutableListOf<String>()
     template.execute { connection ->
@@ -92,5 +82,18 @@ class RedisOgiriTokenLookupCache<T : OgiriToken>(
     if (keysToDelete.isNotEmpty()) {
       template.delete(keysToDelete)
     }
+  }
+
+  companion object {
+    @Suppress("UNCHECKED_CAST")
+    private fun <T : OgiriToken> buildTemplate(
+        connectionFactory: RedisConnectionFactory,
+    ): RedisTemplate<String, T> =
+        (RedisTemplate<String, Any>().also { t ->
+          t.connectionFactory = connectionFactory
+          t.keySerializer = StringRedisSerializer()
+          t.valueSerializer = GenericJackson2JsonRedisSerializer()
+          t.afterPropertiesSet()
+        } as RedisTemplate<String, T>)
   }
 }

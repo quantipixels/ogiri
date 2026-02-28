@@ -15,6 +15,7 @@ package com.quantipixels.ogiri.security.caffeine
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.quantipixels.ogiri.security.config.OgiriConfigurationProperties
+import com.quantipixels.ogiri.security.spi.OgiriCacheKey
 import com.quantipixels.ogiri.security.spi.OgiriTokenLookupCache
 import com.quantipixels.ogiri.security.tokens.OgiriToken
 import java.util.concurrent.TimeUnit
@@ -45,16 +46,17 @@ class CaffeineOgiriTokenLookupCache<T : OgiriToken>(
           .expireAfterWrite(properties.lookup.expiryMinutes, TimeUnit.MINUTES)
           .build()
 
-  private fun key(userId: Long, client: String) = "$userId:$client"
+  override fun get(userId: Long, client: String): T? =
+      cache.getIfPresent(OgiriCacheKey.key(userId, client))
 
-  override fun get(userId: Long, client: String): T? = cache.getIfPresent(key(userId, client))
+  override fun put(userId: Long, client: String, token: T) =
+      cache.put(OgiriCacheKey.key(userId, client), token)
 
-  override fun put(userId: Long, client: String, token: T) = cache.put(key(userId, client), token)
-
-  override fun evict(userId: Long, client: String) = cache.invalidate(key(userId, client))
+  override fun evict(userId: Long, client: String) =
+      cache.invalidate(OgiriCacheKey.key(userId, client))
 
   override fun evictAll(userId: Long) {
-    val keys = cache.asMap().keys.filter { it.startsWith("$userId:") }
+    val keys = cache.asMap().keys.filter { it.startsWith(OgiriCacheKey.prefix(userId)) }.toList()
     cache.invalidateAll(keys)
   }
 }

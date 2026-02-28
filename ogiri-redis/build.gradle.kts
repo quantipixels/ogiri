@@ -36,6 +36,7 @@ dependencies {
   compileOnly("org.springframework.boot:spring-boot-starter-data-redis")
   implementation("org.springframework.boot:spring-boot-autoconfigure")
 
+  testImplementation(testFixtures(project(":ogiri-core")))
   testImplementation("org.springframework.boot:spring-boot-starter-test") {
     exclude(module = "mockito-core")
   }

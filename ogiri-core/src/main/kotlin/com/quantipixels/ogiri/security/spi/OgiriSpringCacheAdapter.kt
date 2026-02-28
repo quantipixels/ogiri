@@ -14,6 +14,7 @@ package com.quantipixels.ogiri.security.spi
 
 import com.quantipixels.ogiri.security.tokens.OgiriToken
 import org.slf4j.LoggerFactory
+import org.springframework.cache.Cache
 import org.springframework.cache.CacheManager
 
 /**
@@ -54,27 +55,25 @@ import org.springframework.cache.CacheManager
  * @param cacheName The name of the cache to use; must be listed in `spring.cache.cache-names`.
  */
 class OgiriSpringCacheAdapter<T : OgiriToken>(
-    private val cacheManager: CacheManager,
+    cacheManager: CacheManager,
     private val cacheName: String,
 ) : OgiriTokenLookupCache<T> {
 
-  private val cache by lazy {
-    cacheManager.getCache(cacheName)
-        ?: throw IllegalStateException(
-            "Cache '$cacheName' not found in CacheManager. " +
-                "Ensure spring.cache.cache-names includes '$cacheName' " +
-                "or set ogiri.cache.cache-name to a cache that exists.")
-  }
-
-  private fun key(userId: Long, client: String) = "$userId:$client"
+  private val cache: Cache =
+      cacheManager.getCache(cacheName)
+          ?: throw IllegalStateException(
+              "Cache '$cacheName' not found in CacheManager. " +
+                  "Ensure spring.cache.cache-names includes '$cacheName' " +
+                  "or set ogiri.cache.cache-name to a cache that exists.")
 
   override fun get(userId: Long, client: String): T? =
-      @Suppress("UNCHECKED_CAST") cache.get(key(userId, client))?.get() as? T
+      @Suppress("UNCHECKED_CAST") cache.get(OgiriCacheKey.key(userId, client))?.get() as? T
 
-  override fun put(userId: Long, client: String, token: T) = cache.put(key(userId, client), token)
+  override fun put(userId: Long, client: String, token: T) =
+      cache.put(OgiriCacheKey.key(userId, client), token)
 
   override fun evict(userId: Long, client: String) {
-    cache.evict(key(userId, client))
+    cache.evict(OgiriCacheKey.key(userId, client))
   }
 
   override fun evictAll(userId: Long) {
