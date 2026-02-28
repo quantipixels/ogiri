@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, auth } from "./client";
-import type { OgiriTokens } from "ogiri-security-client";
 
 interface LoginRequest {
     username: string;
@@ -8,22 +7,19 @@ interface LoginRequest {
 }
 
 interface LoginResponse {
-    "access-token": string;
+    accessToken: string;
     client: string;
     uid: string;
     expiry: string;
-    "token-type": string;
-}
-
-interface User {
-    id: string;
-    username: string;
-    email: string;
+    message: string;
 }
 
 interface DemoInfo {
+    authenticated: boolean;
+    principal: string;
+    authorities: string[];
+    authMethod: string;
     message: string;
-    timestamp: string;
 }
 
 export function useLogin() {
@@ -34,15 +30,10 @@ export function useLogin() {
             const response = await api.post<LoginResponse>("/api/auth/login", credentials);
             return response.data;
         },
-        onSuccess: (data) => {
-            const tokens: OgiriTokens = {
-                accessToken: data["access-token"],
-                client: data.client,
-                uid: data.uid,
-                expiry: data.expiry,
-                tokenType: data["token-type"],
-            };
-            auth.setTokens(tokens);
+        onSuccess: () => {
+            // Tokens are extracted from response headers by the axios interceptor.
+            // No need to call auth.setTokens() here — doing so would fire a
+            // redundant notify() causing an extra React re-render.
             queryClient.invalidateQueries();
         },
     });
@@ -62,14 +53,11 @@ export function useLogout() {
     });
 }
 
-export function useProfile() {
-    return useQuery<User>({
-        queryKey: ["me"],
-        queryFn: async () => {
-            const response = await api.get<User>("/api/me");
-            return response.data;
+export function useExpireToken() {
+    return useMutation({
+        mutationFn: async () => {
+            await api.post("/api/test/expire-token");
         },
-        enabled: auth.isAuthenticated(),
     });
 }
 

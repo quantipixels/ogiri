@@ -1,5 +1,13 @@
 import { http, HttpResponse } from "msw";
-import { findUser, findUserByUid, createSession, validateSession, rotateTokens, deleteSession } from "./db";
+import {
+    findUser,
+    findUserByUid,
+    createSession,
+    validateSession,
+    rotateTokens,
+    deleteSession,
+    expireSession,
+} from "./db";
 
 export const handlers = [
     // POST /api/auth/login
@@ -42,43 +50,17 @@ export const handlers = [
         return HttpResponse.json({ message: "Logged out" }, { status: 200 });
     }),
 
-    // GET /api/me
-    http.get("/api/me", ({ request }) => {
-        const accessToken = request.headers.get("access-token");
+    // POST /api/test/expire-token
+    http.post("/api/test/expire-token", ({ request }) => {
         const client = request.headers.get("client");
-
-        if (!client || !accessToken) {
-            return HttpResponse.json({ error: "Unauthorized" }, { status: 401 });
+        if (!client) {
+            return HttpResponse.json({ error: "Missing client header" }, { status: 400 });
         }
-
-        const session = validateSession(client, accessToken);
-        if (!session) {
-            return HttpResponse.json({ error: "Unauthorized" }, { status: 401 });
+        const expired = expireSession(client);
+        if (!expired) {
+            return HttpResponse.json({ error: "Session not found" }, { status: 404 });
         }
-
-        const user = findUserByUid(session.uid);
-        if (!user) {
-            return HttpResponse.json({ error: "User not found" }, { status: 404 });
-        }
-
-        const rotated = rotateTokens(client);
-        const headers: Record<string, string> = {};
-        if (rotated) {
-            headers["access-token"] = rotated["access-token"];
-            headers.client = rotated.client;
-            headers.uid = rotated.uid;
-            headers.expiry = rotated.expiry;
-            headers["token-type"] = rotated["token-type"];
-        }
-
-        return HttpResponse.json(
-            {
-                id: user.id,
-                username: user.username,
-                email: user.email,
-            },
-            { status: 200, headers },
-        );
+        return HttpResponse.json({ message: "Token expired" }, { status: 200 });
     }),
 
     // GET /api/demo/info
@@ -95,6 +77,8 @@ export const handlers = [
             return HttpResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
+        const user = findUserByUid(session.uid);
+
         const rotated = rotateTokens(client);
         const headers: Record<string, string> = {};
         if (rotated) {
@@ -107,8 +91,11 @@ export const handlers = [
 
         return HttpResponse.json(
             {
-                message: "This is demo info from the mock API",
-                timestamp: new Date().toISOString(),
+                authenticated: true,
+                principal: user?.username ?? session.uid,
+                authorities: ["ROLE_USER"],
+                authMethod: "Header",
+                message: "This endpoint accepts authentication via headers, cookies, or Bearer token",
             },
             { status: 200, headers },
         );

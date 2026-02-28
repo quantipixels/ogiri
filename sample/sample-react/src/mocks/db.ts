@@ -22,8 +22,10 @@ const users: MockUser[] = [
 // Session storage keyed by client ID
 const sessions = new Map<string, MockSession>();
 
-export function findUser(username: string, password: string): MockUser | undefined {
-    return users.find((u) => u.username === username && u.password === password);
+export function findUser(usernameOrEmail: string, password: string): MockUser | undefined {
+    return users.find(
+        (u) => (u.username === usernameOrEmail || u.email === usernameOrEmail) && u.password === password,
+    );
 }
 
 export function findUserByUid(uid: string): MockUser | undefined {
@@ -44,7 +46,7 @@ export function createSession(user: MockUser): {
     const token = generateToken();
     const client = generateToken();
     const uid = user.id.toString();
-    const expiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(); // 7 days
+    const expiry = new Date(Date.now() + 60 * 1000).toISOString(); // 1 minute
     const tokenType = "Bearer";
 
     sessions.set(client, {
@@ -111,4 +113,12 @@ export function rotateTokens(clientId: string): {
 
 export function deleteSession(clientId: string): void {
     sessions.delete(clientId);
+}
+
+export function expireSession(clientId: string): boolean {
+    const session = sessions.get(clientId);
+    if (!session) return false;
+    session.expiry = new Date(0).toISOString();
+    sessions.set(clientId, session);
+    return true;
 }

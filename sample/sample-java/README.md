@@ -6,7 +6,7 @@ A complete example demonstrating how to integrate the **ogiri** token-based auth
 
 This sample application showcases:
 
-- Token-based authentication with JWT-like tokens
+- Token-based authentication with rotating tokens
 - Token rotation and batch grace windows
 - Sub-token management (extensible for device-specific tokens, etc.)
 - User authentication with Spring Security
@@ -149,16 +149,17 @@ curl http://localhost:48080/api/demo/bearer \
 
 ### Available Endpoints
 
-| Endpoint            | Method | Auth | Description              |
-| ------------------- | ------ | ---- | ------------------------ |
-| `/api/health`       | GET    | No   | Health check             |
-| `/api/me`           | GET    | Yes  | Current user info        |
-| `/api/auth/login`   | POST   | No   | Login and get tokens     |
-| `/api/auth/logout`  | POST   | Yes  | Logout and revoke tokens |
-| `/api/demo/headers` | GET    | Yes  | Test header-based auth   |
-| `/api/demo/cookies` | GET    | Yes  | Test cookie-based auth   |
-| `/api/demo/bearer`  | GET    | Yes  | Test Bearer token auth   |
-| `/api/demo/info`    | GET    | Yes  | General auth info        |
+| Endpoint                 | Method | Auth | Description                          |
+| ------------------------ | ------ | ---- | ------------------------------------ |
+| `/api/health`            | GET    | No   | Health check                         |
+| `/api/me`                | GET    | Yes  | Current user info                    |
+| `/api/auth/login`        | POST   | No   | Login and get tokens                 |
+| `/api/auth/logout`       | POST   | Yes  | Logout and revoke tokens             |
+| `/api/demo/headers`      | GET    | Yes  | Test header-based auth               |
+| `/api/demo/cookies`      | GET    | Yes  | Test cookie-based auth               |
+| `/api/demo/bearer`       | GET    | Yes  | Test Bearer token auth               |
+| `/api/demo/info`         | GET    | Yes  | General auth info                    |
+| `/api/test/expire-token` | POST   | Yes  | Backdate token expiry (dev/test use) |
 
 ### Test Users
 
@@ -224,6 +225,10 @@ curl -X POST http://localhost:48080/api/auth/logout \
 ### Service
 
 - **SampleTokenService** - Extends ogiri `OgiriTokenService` with custom token factory
+
+### Test Utilities
+
+- **TestController** - Exposes `POST /api/test/expire-token` to backdate the current session's expiry, enabling the full expiry → 401 → redirect flow without waiting for a real TTL (`@Profile("!jdbc")`)
 
 ## Development
 

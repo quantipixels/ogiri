@@ -6,7 +6,7 @@ A complete example demonstrating how to integrate the **ogiri** token-based auth
 
 This sample application showcases:
 
-- Token-based authentication with JWT-like tokens
+- Token-based authentication with rotating tokens
 - Token rotation and batch grace windows
 - Sub-token management (extensible for device-specific tokens, etc.)
 - User authentication with Spring Security
@@ -136,7 +136,7 @@ curl http://localhost:48081/api/demo/headers \
 
 ```bash
 # Login with cookie storage
-curl -X POST http://localhost:8080/api/auth/login \
+curl -X POST http://localhost:48081/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username":"user1","password":"password"}' \
   -c cookies.txt
@@ -155,16 +155,17 @@ curl http://localhost:48081/api/demo/bearer \
 
 ### Available Endpoints
 
-| Endpoint            | Method | Auth | Description              |
-| ------------------- | ------ | ---- | ------------------------ |
-| `/api/health`       | GET    | No   | Health check             |
-| `/api/me`           | GET    | Yes  | Current user info        |
-| `/api/auth/login`   | POST   | No   | Login and get tokens     |
-| `/api/auth/logout`  | POST   | Yes  | Logout and revoke tokens |
-| `/api/demo/headers` | GET    | Yes  | Test header-based auth   |
-| `/api/demo/cookies` | GET    | Yes  | Test cookie-based auth   |
-| `/api/demo/bearer`  | GET    | Yes  | Test Bearer token auth   |
-| `/api/demo/info`    | GET    | Yes  | General auth info        |
+| Endpoint                 | Method | Auth | Description                          |
+| ------------------------ | ------ | ---- | ------------------------------------ |
+| `/api/health`            | GET    | No   | Health check                         |
+| `/api/me`                | GET    | Yes  | Current user info                    |
+| `/api/auth/login`        | POST   | No   | Login and get tokens                 |
+| `/api/auth/logout`       | POST   | Yes  | Logout and revoke tokens             |
+| `/api/demo/headers`      | GET    | Yes  | Test header-based auth               |
+| `/api/demo/cookies`      | GET    | Yes  | Test cookie-based auth               |
+| `/api/demo/bearer`       | GET    | Yes  | Test Bearer token auth               |
+| `/api/demo/info`         | GET    | Yes  | General auth info                    |
+| `/api/test/expire-token` | POST   | Yes  | Backdate token expiry (dev/test use) |
 
 ### Test Users
 
@@ -179,7 +180,7 @@ The sample includes two pre-configured users:
 
 ```bash
 # 1. Login and save response headers
-curl -X POST http://localhost:8080/api/auth/login \
+curl -X POST http://localhost:48081/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username":"user1","password":"password"}' \
   -v 2>&1 | grep -E "< (access-token|client|uid|expiry|Authorization):"
@@ -230,6 +231,10 @@ curl -X POST http://localhost:48081/api/auth/logout \
 ### Service
 
 - **SampleTokenService** - Extends ogiri `OgiriTokenService` with custom token factory
+
+### Test Utilities
+
+- **TestController** - Exposes `POST /api/test/expire-token` to backdate the current session's expiry, enabling the full expiry → 401 → redirect flow without waiting for a real TTL (`@Profile("!jdbc")`)
 
 ## Development
 
@@ -348,7 +353,7 @@ fun deviceToken(): OgiriSubTokenRegistration = object : OgiriSubTokenRegistratio
 
 - Data is lost when the application stops (normal for in-memory)
 - To persist data, switch to PostgreSQL following the setup steps above
-- Access the H2 console at `http://localhost:8080/h2-console` to browse the schema
+- Access the H2 console at `http://localhost:48081/h2-console` to browse the schema
 
 ### Database Connection Issues (PostgreSQL)
 
