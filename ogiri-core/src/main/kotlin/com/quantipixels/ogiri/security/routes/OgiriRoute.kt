@@ -97,16 +97,7 @@ class OgiriRoute(
         rateLimitPermitsPerMinute: Long? = null,
     ) = OgiriRoute(HttpMethod.GET, path, rateLimit, useAuth, rateLimitPermitsPerMinute)
 
-    /**
-     * Creates an OgiriRoute configured for HTTP POST using the given path and options.
-     *
-     * @param path The route path; must start with '/'.
-     * @param rateLimit Whether rate limiting is applied.
-     * @param useAuth Whether authentication is required.
-     * @param rateLimitPermitsPerMinute Optional rate limit quota (permits per minute); when null
-     *   the default quota is used.
-     * @return An OgiriRoute configured for the POST method with the provided path and options.
-     */
+    /** Create an OgiriRoute for HTTP POST. Parameters are identical to [get]. */
     fun post(
         path: String,
         rateLimit: Boolean = true,
@@ -114,15 +105,7 @@ class OgiriRoute(
         rateLimitPermitsPerMinute: Long? = null,
     ) = OgiriRoute(HttpMethod.POST, path, rateLimit, useAuth, rateLimitPermitsPerMinute)
 
-    /**
-     * Create an OgiriRoute configured for HTTP PUT requests.
-     *
-     * @param path The route path; must start with '/'.
-     * @param rateLimit Whether to apply rate limiting for this route.
-     * @param useAuth Whether authentication is required for this route.
-     * @param rateLimitPermitsPerMinute Optional rate limit quota in permits per minute.
-     * @return An OgiriRoute for the PUT method targeting `path` with the specified options.
-     */
+    /** Create an OgiriRoute for HTTP PUT. Parameters are identical to [get]. */
     fun put(
         path: String,
         rateLimit: Boolean = true,
@@ -130,17 +113,7 @@ class OgiriRoute(
         rateLimitPermitsPerMinute: Long? = null,
     ) = OgiriRoute(HttpMethod.PUT, path, rateLimit, useAuth, rateLimitPermitsPerMinute)
 
-    /**
-     * Creates an OgiriRoute configured for the HTTP PATCH method.
-     *
-     * @param path Route path; must start with `/` and may contain path variables like `{id}` or
-     *   `:id`.
-     * @param rateLimit Whether rate limiting is enabled for this route.
-     * @param useAuth Whether authentication is required for this route.
-     * @param rateLimitPermitsPerMinute Optional explicit permits-per-minute quota for rate
-     *   limiting.
-     * @return An OgiriRoute instance using the PATCH method with the given settings.
-     */
+    /** Create an OgiriRoute for HTTP PATCH. Parameters are identical to [get]. */
     fun patch(
         path: String,
         rateLimit: Boolean = true,
@@ -148,15 +121,7 @@ class OgiriRoute(
         rateLimitPermitsPerMinute: Long? = null,
     ) = OgiriRoute(HttpMethod.PATCH, path, rateLimit, useAuth, rateLimitPermitsPerMinute)
 
-    /**
-     * Create an OgiriRoute for HTTP DELETE with the given path and options.
-     *
-     * @param path Route path; must start with '/'.
-     * @param rateLimit Whether rate limiting is applied.
-     * @param useAuth Whether authentication is required.
-     * @param rateLimitPermitsPerMinute Optional rate limit quota (permits per minute).
-     * @return An OgiriRoute configured with HTTP DELETE and the provided options.
-     */
+    /** Create an OgiriRoute for HTTP DELETE. Parameters are identical to [get]. */
     fun delete(
         path: String,
         rateLimit: Boolean = true,

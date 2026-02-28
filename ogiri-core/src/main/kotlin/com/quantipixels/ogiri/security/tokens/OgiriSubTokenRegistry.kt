@@ -10,15 +10,13 @@
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  */
-package com.quantipixels.ogiri.security.routes
+package com.quantipixels.ogiri.security.tokens
 
-/** Contracts for modules/apps to expose their routes to security filters. */
-interface OgiriRouteRegistry {
+interface OgiriSubTokenRegistry {
   /**
-   * Exposes the module's HTTP routes for discovery by the application.
+   * Retrieve the registered sub-token registrations.
    *
-   * @return A list of OgiriRoute instances representing the routes provided by the implementing
-   *   module.
+   * @return A `List<OgiriSubTokenRegistration>` containing all registrations in registration order.
    */
-  fun routes(): List<OgiriRoute>
+  fun registrations(): List<OgiriSubTokenRegistration>
 }

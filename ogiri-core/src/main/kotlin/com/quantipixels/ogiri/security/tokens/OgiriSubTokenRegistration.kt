@@ -63,26 +63,3 @@ interface OgiriSubTokenRegistration {
    */
   fun validate(plainToken: String): Boolean = true
 }
-
-interface OgiriSubTokenRegistry {
-  /**
-   * Retrieve the registered sub-token registrations.
-   *
-   * @return A `List<OgiriSubTokenRegistration>` containing all registrations in registration order.
-   */
-  fun registrations(): List<OgiriSubTokenRegistration>
-}
-
-/**
- * Simple registry implementation backed by a provided list of [OgiriSubTokenRegistration] beans.
- */
-class DefaultOgiriSubTokenRegistry(
-    private val registrations: List<OgiriSubTokenRegistration> = emptyList(),
-) : OgiriSubTokenRegistry {
-  /**
-   * Provides the list of registered Ogiri sub-token registrations.
-   *
-   * @return The list of `OgiriSubTokenRegistration` instances held by this registry.
-   */
-  override fun registrations(): List<OgiriSubTokenRegistration> = registrations
-}

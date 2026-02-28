@@ -72,16 +72,5 @@ enum class OgiriTokenType(val label: String) {
       return entries.firstOrNull { it.label.equals(label, ignoreCase = true) }
           ?: throw IllegalArgumentException("Invalid token type label: $label")
     }
-
-    /**
-     * Resolve an OgiriTokenType from an optional label, defaulting to APP when no match is found.
-     *
-     * @param label The token type label (case-insensitive, expected "app" or "sub"), or null.
-     * @return The matching OgiriTokenType, or APP when `label` is null or does not match any known
-     *   type.
-     */
-    private fun ofNullable(label: String?): OgiriTokenType =
-        label?.let { value -> entries.firstOrNull { it.label.equals(value, ignoreCase = true) } }
-            ?: APP
   }
 }

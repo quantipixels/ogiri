@@ -140,7 +140,7 @@ class OgiriSecurityAutoConfiguration {
    * @return a DefaultOgiriSubTokenRegistry containing the registrations provided by `registrations`
    */
   @Bean
-  @ConditionalOnMissingBean(DefaultOgiriSubTokenRegistry::class)
+  @ConditionalOnMissingBean(OgiriSubTokenRegistry::class)
   fun subTokenRegistry(
       registrations: ObjectProvider<OgiriSubTokenRegistration>
   ): DefaultOgiriSubTokenRegistry =
@@ -233,7 +233,7 @@ class OgiriSecurityAutoConfiguration {
    *   implementations.
    */
   @Bean
-  @ConditionalOnMissingBean(DefaultOgiriTokenServiceResolver::class)
+  @ConditionalOnMissingBean(OgiriTokenServiceResolver::class)
   fun ogiriTokenServiceResolver(
       tokenServices: Map<String, OgiriTokenService<*>>,
       properties: OgiriConfigurationProperties,
