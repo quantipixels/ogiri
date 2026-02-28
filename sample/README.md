@@ -1,125 +1,165 @@
 # Sample Applications
 
-Minimal Spring Boot applications demonstrating ogiri integration.
+Minimal applications demonstrating Ogiri token auth integration.
 
 ## Available Samples
 
-| Sample | Language  | Path             |
-| ------ | --------- | ---------------- |
-| Java   | Pure Java | `sample-java/`   |
-| Kotlin | Kotlin    | `sample-kotlin/` |
+| Sample | Language   | Path             | Port  |
+| ------ | ---------- | ---------------- | ----- |
+| Java   | Pure Java  | `sample-java/`   | 48080 |
+| Kotlin | Kotlin     | `sample-kotlin/` | 48081 |
+| React  | TypeScript | `sample-react/`  | 5173  |
 
-Both samples implement the same functionality:
+Both server samples implement the same functionality:
 
-- `OgiriUserDirectory` - In-memory user directory
-- `OgiriRouteRegistry` - Public route declarations
-- `OgiriTokenRepository` - JPA token persistence
-- Login/logout endpoints
-- Demo endpoints for testing all three auth methods (headers, cookies, Bearer token)
-- Health and authenticated endpoints
+- `OgiriUserDirectory` — in-memory user directory
+- `OgiriRouteRegistry` — public route declarations
+- `OgiriTokenRepository` — JPA token persistence (H2 in-memory)
+- Login / logout endpoints
+- Demo endpoints for all three auth methods (headers, cookies, Bearer token)
 
 ## Prerequisites
 
 - Java 17+
-- PostgreSQL on `localhost:5432`
+
+No external database required — both server samples use H2 in-memory.
 
 ## Quick Start
 
-### 1. Start PostgreSQL
+### Spring Boot servers
 
 ```bash
-# Docker
-docker run --name ogiri-db -e POSTGRES_PASSWORD=postgres -d -p 5432:5432 postgres:15
-docker exec ogiri-db createdb -U postgres ogiri_sample
-
-# Or native
-createdb ogiri_sample
-```
-
-### 2. Import Schema
-
-```bash
-psql -U postgres -d ogiri_sample < ../ogiri-core/src/main/resources/ogiri/db/ogiri-user-tokens.sql
-```
-
-### 3. Run Sample
-
-```bash
-# Kotlin
+# Kotlin (port 48081)
 ./gradlew :sample:sample-kotlin:bootRun
 
-# Java
+# Java (port 48080)
 ./gradlew :sample:sample-java:bootRun
 ```
 
-### 4. Test Endpoints
+### React sample (standalone with mock)
+
+```bash
+cd sample-react
+pnpm install
+pnpm dev        # http://localhost:5173
+```
+
+### React + Kotlin (full stack)
+
+```bash
+cd sample-react
+./run-live.sh kotlin --ui
+# → starts Spring Boot on :48081
+# → starts Vite on :5173, /api/* proxied to :48081
+# → open http://localhost:5173
+```
+
+### React + Java (full stack)
+
+```bash
+cd sample-react
+./run-live.sh java --ui
+# → starts Spring Boot on :48080
+# → starts Vite on :5173, /api/* proxied to :48080
+# → open http://localhost:5173
+```
+
+### Integration tests only (no UI)
+
+```bash
+cd sample-react
+./run-live.sh kotlin   # or java
+```
+
+## Default Credentials
+
+Login accepts **email** (not username):
+
+| Email               | Password   |
+| ------------------- | ---------- |
+| `user1@example.com` | `password` |
+| `user2@example.com` | `password` |
+
+## Test Endpoints
 
 ```bash
 # Health check (public)
-curl http://localhost:8080/api/health
+curl http://localhost:48081/api/health
 
-# Login to get tokens
-curl -X POST http://localhost:8080/api/auth/login \
+# Login
+curl -X POST http://localhost:48081/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"user1","password":"password"}' \
+  -d '{"username":"user1@example.com","password":"password"}' \
   -v
 
-# Test with headers (extract tokens from login response)
-curl http://localhost:8080/api/demo/headers \
+# Authenticated request (extract tokens from login response headers)
+curl http://localhost:48081/api/demo/info \
   -H "access-token: <token>" \
   -H "client: <client>" \
   -H "uid: <uid>" \
   -H "expiry: <expiry>"
 
-# Test with cookies
-curl -X POST http://localhost:8080/api/auth/login \
+# Cookie-based auth
+curl -X POST http://localhost:48081/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"user1","password":"password"}' \
+  -d '{"username":"user1@example.com","password":"password"}' \
   -c cookies.txt
 
-curl http://localhost:8080/api/demo/cookies -b cookies.txt
+curl http://localhost:48081/api/demo/cookies -b cookies.txt
 
-# Test with Bearer token (extract Authorization header from login)
-curl http://localhost:8080/api/demo/bearer \
+# Bearer token auth (Authorization header from login response)
+curl http://localhost:48081/api/demo/bearer \
   -H "Authorization: Bearer <base64-encoded-json>"
 
 # Logout
-curl -X POST http://localhost:8080/api/auth/logout \
+curl -X POST http://localhost:48081/api/auth/logout \
   -H "access-token: <token>" \
   -H "client: <client>" \
   -H "uid: <uid>" \
   -H "expiry: <expiry>"
 ```
+
+Replace `48081` with `48080` for the Java sample.
 
 ## Project Structure
 
 ```text
 sample-kotlin/
-├── src/main/kotlin/
-│   └── com/quantipixels/ogiri/samples/kotlin/
-│       ├── Application.kt
-│       ├── config/SecurityConfig.kt
-│       ├── security/
-│       │   ├── SampleOgiriUserDirectory.kt
-│       │   └── SampleRouteRegistry.kt
-│       ├── repository/SampleTokenRepository.kt
-│       └── controller/HealthController.kt
+├── src/main/kotlin/.../
+│   ├── Application.kt
+│   ├── config/SecurityConfig.kt
+│   ├── security/
+│   │   ├── SampleOgiriUserDirectory.kt
+│   │   └── SampleRouteRegistry.kt
+│   ├── repository/SampleTokenRepository.kt
+│   └── controller/
+│       ├── AuthController.kt
+│       ├── DemoController.kt
+│       └── HealthController.kt
 └── src/main/resources/application.yml
+
+sample-react/
+├── src/
+│   ├── lib/
+│   │   ├── auth.ts              # OgiriAuth — copy into your project
+│   │   └── axios-ogiri.ts       # axios interceptors — copy alongside auth.ts
+│   ├── api/client.ts            # axios instance wired to OgiriAuth
+│   ├── auth/AuthProvider.tsx    # React context + useSyncExternalStore
+│   └── mocks/                   # MSW handlers replicating the Ogiri protocol
+└── run-live.sh                  # Start server → run tests or UI → teardown
 ```
 
 ## Authentication Methods
 
-Both samples demonstrate **three authentication methods**:
+All three methods are functionally equivalent. The filter extracts auth from headers first, then cookies, then Bearer tokens.
 
-1. **HTTP Headers** - Send auth tokens in request headers
-2. **Secure Cookies** - Use HTTPOnly cookies for web browsers
-3. **Bearer Token** - Standard OAuth2-style Authorization header
+1. **HTTP Headers** — `access-token`, `client`, `uid`, `expiry` request headers
+2. **Secure Cookies** — HTTPOnly cookies, set automatically by the server on login
+3. **Bearer Token** — `Authorization: Bearer <base64-json>` header
 
-All three methods work identically from the server's perspective. The library extracts authentication from headers first, falling back to cookies, then to Bearer tokens.
+## Server Configuration
 
-## Configuration
-
-Kotlin sample (H2 in-memory):
+Both samples use H2 in-memory with these Ogiri defaults:
 
 ```yaml
 ogiri:
@@ -127,37 +167,18 @@ ogiri:
     register-filter: true
   auth:
     batch-grace-seconds: 30
-    rotate-on-write-only: false
     rotate-stale-seconds: 3600
   cookies:
     enabled: true
-    secure: false # false for localhost testing
-    http-only: true
-    same-site: Lax
-```
-
-Java sample (PostgreSQL):
-
-```yaml
-ogiri:
-  security:
-    register-filter: true
-  auth:
-    max-clients: 24
-    batch-grace-seconds: 30
-    token-lifespan-days: 14
-    rotate-stale-seconds: 3600
-  cookies:
-    enabled: true
-    secure: false
+    secure: false # false for localhost; set true in production (HTTPS)
     http-only: true
     same-site: Lax
 ```
 
 ## Using as Template
 
-1. Copy sample directory structure
-2. Replace in-memory `OgiriUserDirectory` with database lookups
+1. Copy the sample directory structure
+2. Replace `SampleOgiriUserDirectory` with database lookups
 3. Configure your database connection
 4. Add your business logic endpoints
 

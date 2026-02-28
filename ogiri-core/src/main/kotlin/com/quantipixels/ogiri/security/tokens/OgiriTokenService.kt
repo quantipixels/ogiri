@@ -382,7 +382,7 @@ constructor(
     var totalDeleted = 0
     var deleted: Int
     do {
-      val expired = repository.findByExpiryAtBefore(now).take(batchSize)
+      val expired = repository.fetchTopExpiredBefore(now, batchSize)
       expired.forEach { repository.delete(it) }
       deleted = expired.size
       totalDeleted += deleted

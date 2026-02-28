@@ -58,6 +58,7 @@ nav:
       - Database Integration: database.md
       - Sub-tokens: sub-tokens.md
       - Authentication Flow: authentication.md
+      - React Integration: react-integration.md
   - Contributing:
       - Development Guide: development.md
       - Security Policy: security.md

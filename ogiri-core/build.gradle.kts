@@ -23,7 +23,10 @@ java {
 }
 
 kotlin {
-  compilerOptions { jvmTarget.set(JvmTarget.JVM_17) }
+  compilerOptions {
+    jvmTarget.set(JvmTarget.JVM_17)
+    freeCompilerArgs.add("-Xjvm-default=all")
+  }
   jvmToolchain(17)
 }
 

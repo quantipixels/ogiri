@@ -335,6 +335,66 @@ class OgiriJdbcTokenRepositoryTest {
     assertThat(subs).allMatch { it.tokenType == "sub" }
   }
 
+  @Test
+  fun `fetchTopExpiredBefore returns at most limit expired tokens`() {
+    val past = Instant.now().minusSeconds(1)
+    val future = Instant.now().plusSeconds(3600)
+    repeat(5) { i ->
+      repo.save(
+          OgiriBaseTokenRow(
+              userId = 70L,
+              client = "c$i",
+              token = "h$i",
+              tokenType = "app",
+              expiryAt = past.minusSeconds(i.toLong()),
+          ))
+    }
+    repo.save(
+        OgiriBaseTokenRow(
+            userId = 70L,
+            client = "future",
+            token = "hf",
+            tokenType = "app",
+            expiryAt = future,
+        ))
+
+    val batch = repo.fetchTopExpiredBefore(Instant.now(), 3)
+
+    assertThat(batch).hasSize(3)
+    assertThat(batch).allMatch { it.expiryAt.isBefore(Instant.now()) }
+  }
+
+  @Test
+  fun `fetchTopExpiredBefore returns only expired tokens when fewer than limit exist for user`() {
+    val past = Instant.now().minusSeconds(1)
+    val future = Instant.now().plusSeconds(3600)
+    repeat(2) { i ->
+      repo.save(
+          OgiriBaseTokenRow(
+              userId = 71L,
+              client = "c$i",
+              token = "h$i",
+              tokenType = "app",
+              expiryAt = past,
+          ))
+    }
+    repo.save(
+        OgiriBaseTokenRow(
+            userId = 71L,
+            client = "future-71",
+            token = "hf71",
+            tokenType = "app",
+            expiryAt = future,
+        ))
+
+    val batch = repo.fetchTopExpiredBefore(Instant.now(), 100)
+
+    // Our two expired tokens must be present; the future token must not be
+    assertThat(batch.filter { it.userId == 71L }).hasSize(2)
+    assertThat(batch.none { it.userId == 71L && it.client == "future-71" }).isTrue()
+    assertThat(batch.size).isLessThanOrEqualTo(100)
+  }
+
   // Slice 5 — Delete operations
 
   @Test

@@ -78,7 +78,11 @@ abstract class OgiriJdbcTokenRepository<T : OgiriBaseToken>(
           .param("createdAt", token.createdAt)
           .param("updatedAt", token.updatedAt)
           .update(keyHolder)
-      token.id = (keyHolder.keys!!["ID"] as Number).toLong()
+      token.id =
+          keyHolder.keys!!
+              .entries
+              .first { it.key.equals("id", ignoreCase = true) }
+              .let { (_, v) -> (v as Number).toLong() }
       return token
     } else {
       val now = Instant.now()
@@ -155,6 +159,15 @@ abstract class OgiriJdbcTokenRepository<T : OgiriBaseToken>(
       jdbcClient
           .sql("SELECT * FROM ${tableName()} WHERE expiry_at < :cutoff")
           .param("cutoff", cutoff)
+          .query(rowMapper())
+          .list()
+
+  override fun fetchTopExpiredBefore(cutoff: Instant, limit: Int): List<T> =
+      jdbcClient
+          .sql(
+              "SELECT * FROM ${tableName()} WHERE expiry_at < :cutoff ORDER BY expiry_at LIMIT :limit")
+          .param("cutoff", cutoff)
+          .param("limit", limit)
           .query(rowMapper())
           .list()
 

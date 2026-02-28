@@ -151,6 +151,29 @@ interface OgiriTokenRepository<T : OgiriToken> {
   fun findByExpiryAtBefore(cutoff: Instant): List<T>
 
   /**
+   * Find at most [limit] tokens that expired before [cutoff], ordered by expiry time ascending.
+   *
+   * Used by [com.quantipixels.ogiri.security.tokens.OgiriTokenService.cleanupExpiredTokensBatched]
+   * to avoid loading the full set of expired tokens on every batch iteration. Implementations
+   * backed by a relational database should override this with a native `LIMIT` clause for
+   * efficiency; the default delegates to [findByExpiryAtBefore] and trims in memory.
+   *
+   * Example override (Spring Data JPA):
+   * ```kotlin
+   * fun fetchTopExpiredBefore(cutoff: Instant, limit: Int): List<T> =
+   *     entityManager.createQuery(
+   *         "SELECT t FROM Token t WHERE t.expiryAt < :cutoff ORDER BY t.expiryAt", Token::class.java
+   *     ).setParameter("cutoff", cutoff).setMaxResults(limit).resultList
+   * ```
+   *
+   * @param cutoff Instant used as the expiry threshold.
+   * @param limit Maximum number of tokens to return.
+   * @return Up to [limit] tokens ordered by ascending expiry, or an empty list if none are found.
+   */
+  fun fetchTopExpiredBefore(cutoff: Instant, limit: Int): List<T> =
+      findByExpiryAtBefore(cutoff).take(limit)
+
+  /**
    * Find all tokens of a specific type (e.g., "app", "sub").
    *
    * Used for prefix-less token lookups.

@@ -15,9 +15,11 @@ const queryClient = new QueryClient({
 });
 
 async function main() {
-    // Start MSW in development
-    const { worker } = await import("./mocks/browser");
-    await worker.start({ onUnhandledRequest: "bypass" });
+    // Skip MSW when proxying to a real backend (VITE_API_TARGET set)
+    if (!import.meta.env.VITE_API_TARGET) {
+        const { worker } = await import("./mocks/browser");
+        await worker.start({ onUnhandledRequest: "bypass" });
+    }
 
     createRoot(document.getElementById("root")!).render(
         <StrictMode>

@@ -475,5 +475,33 @@ open class OgiriConfigurationProperties {
      * Default: 60 (1 hour)
      */
     @field:Min(1) var expiryMinutes: Long = 60
+
+    /**
+     * Enable the Spring [org.springframework.cache.CacheManager] bridge for token entity lookups.
+     *
+     * When `true`, ogiri wraps the existing `CacheManager` bean as an [OgiriTokenLookupCache].
+     * Consumers configure their cache provider (Redis, Ehcache, Hazelcast) entirely through
+     * standard Spring Boot properties — no ogiri-specific dependency is required.
+     *
+     * Requires a `CacheManager` bean to be present in the application context (e.g., via
+     * `spring.cache.type=redis`).
+     *
+     * **Note:** [org.springframework.cache.Cache]-level eviction does not support pattern-based
+     * user-wide eviction. `evictAll(userId)` is a no-op on this tier; stale entries expire via the
+     * configured TTL. For immediate user-wide eviction, provide a custom [OgiriTokenLookupCache]
+     * bean (Tier 1).
+     *
+     * Default: false
+     */
+    var useSpringCacheManager: Boolean = false
+
+    /**
+     * Name of the Spring cache to use when [useSpringCacheManager] is `true`.
+     *
+     * Must match one of the names declared in `spring.cache.cache-names`.
+     *
+     * Default: "ogiri-token-lookup"
+     */
+    var cacheName: String = "ogiri-token-lookup"
   }
 }

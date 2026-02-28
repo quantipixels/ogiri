@@ -1,6 +1,6 @@
 import { createContext, useCallback, useMemo, useSyncExternalStore, type ReactNode } from "react";
 import { auth } from "../api/client";
-import type { OgiriTokens } from "ogiri-security-client";
+import type { OgiriTokens } from "../lib/auth";
 
 interface AuthContextValue {
     isAuthenticated: boolean;

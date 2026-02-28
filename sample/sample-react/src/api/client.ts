@@ -1,5 +1,5 @@
-import { OgiriAuth, LocalStorageTokenStorage } from "ogiri-security-client";
-import { createAxiosInterceptors } from "ogiri-security-client/axios";
+import { OgiriAuth, LocalStorageTokenStorage } from "../lib/auth";
+import { createAxiosInterceptors } from "../lib/axios-ogiri";
 import axios from "axios";
 
 export const auth = new OgiriAuth({

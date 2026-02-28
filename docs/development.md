@@ -33,21 +33,25 @@ Requires PostgreSQL on `localhost:5432`. See [sample/README.md](../sample/README
 
 ```text
 ogiri/
-├── ogiri-core/                      # Main library (published to Maven Central)
-│   ├── src/main/kotlin/             # Source code
-│   │   └── com/quantipixels/ogiri/security/
-│   │       ├── core/                # AuthHeader, JsonCodec, exceptions
-│       ├── tokens/                  # OgiriTokenService, OgiriTokenRepository, OgiriBaseToken, OgiriToken
-│       ├── web/                     # OgiriTokenAuthenticationFilter
-│       ├── spi/                     # OgiriUserDirectory, OgiriUser
-│       ├── helpers/                 # AuthenticationBypassDecider, SecurityHelpers
-│       ├── routes/                  # OgiriRouteRegistry, OgiriRoute
-│       └── config/                  # OgiriSecurityAutoConfiguration
+├── ogiri-core/                      # Core library: interfaces, filter, token service
+│   ├── src/main/kotlin/com/quantipixels/ogiri/security/
+│   │   ├── core/                    # AuthHeader, JsonCodec, exceptions
+│   │   ├── tokens/                  # OgiriTokenService, OgiriTokenRepository, OgiriToken
+│   │   ├── web/                     # OgiriTokenAuthenticationFilter
+│   │   ├── spi/                     # OgiriUserDirectory, OgiriAuditHook, OgiriRateLimitHook
+│   │   ├── helpers/                 # AuthenticationBypassDecider, SecurityHelpers
+│   │   ├── routes/                  # OgiriRouteRegistry, OgiriRoute
+│   │   └── config/                  # OgiriSecurityAutoConfiguration
 │   ├── src/test/kotlin/             # JUnit 5 tests
-│   └── src/main/resources/ogiri/db/ # Bundled SQL schemas
+│   └── src/main/resources/ogiri/db/ # Bundled SQL schemas (PostgreSQL, MySQL, H2)
+├── ogiri-jpa/                       # JPA adapter: OgiriBaseTokenEntity, JPA auto-configuration
+├── ogiri-jdbc/                      # JDBC adapter: OgiriBaseTokenRow, OgiriJdbcTokenRepository
+├── ogiri-caffeine/                  # Caffeine token lookup cache module
+├── ogiri-redis/                     # Redis token lookup cache module
 ├── sample/
-│   ├── sample-java/                 # Pure Java example
-│   └── sample-kotlin/               # Kotlin example
+│   ├── sample-java/                 # Pure Java example (port 48080)
+│   ├── sample-kotlin/               # Kotlin example (port 48081)
+│   └── sample-react/                # React + TypeScript example (port 5173)
 ├── docs/                            # Documentation (MkDocs)
 └── .github/workflows/               # CI/CD pipelines
 ```

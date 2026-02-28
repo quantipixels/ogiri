@@ -49,10 +49,12 @@ All ogiri properties are prefixed with `ogiri`.
 
 Caches the result of BCrypt comparisons to avoid repeated hashing for the same token.
 
-| Property                     | Default | Description                  |
-| ---------------------------- | ------- | ---------------------------- |
-| `ogiri.cache.max-size`       | `10000` | Max cached token comparisons |
-| `ogiri.cache.expiry-minutes` | `60`    | Cache entry TTL in minutes   |
+| Property                               | Default              | Description                                                               |
+| -------------------------------------- | -------------------- | ------------------------------------------------------------------------- |
+| `ogiri.cache.max-size`                 | `10000`              | Max cached token comparisons                                              |
+| `ogiri.cache.expiry-minutes`           | `60`                 | Cache entry TTL in minutes                                                |
+| `ogiri.cache.use-spring-cache-manager` | `false`              | Bridge an existing `CacheManager` bean as the token lookup cache (Tier 2) |
+| `ogiri.cache.cache-name`               | `ogiri-token-lookup` | Name of the Spring cache to use when `use-spring-cache-manager` is `true` |
 
 ### Token Lookup Cache
 
@@ -73,11 +75,15 @@ read for the same user/client within the configured TTL window.
 
 ### Choosing a Backend
 
-| Module           | Property value   | Best for                                         |
-| ---------------- | ---------------- | ------------------------------------------------ |
-| `ogiri-caffeine` | `type: caffeine` | Single-instance deployments, zero infrastructure |
-| `ogiri-redis`    | `type: redis`    | Multi-instance / containerised deployments       |
-| (neither)        | (absent)         | Default: every request hits the database         |
+| Option                         | How to activate                              | Best for                                                                                              |
+| ------------------------------ | -------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `ogiri-caffeine`               | `ogiri.lookup.type: caffeine`                | Single-instance deployments, zero infrastructure                                                      |
+| `ogiri-redis`                  | `ogiri.lookup.type: redis`                   | Multi-instance / containerised deployments                                                            |
+| Spring CacheManager bridge     | `ogiri.cache.use-spring-cache-manager: true` | Apps that already have a `CacheManager` (Ehcache, Hazelcast, etc.) and don't want an extra dependency |
+| Custom `OgiriTokenLookupCache` | Provide a `@Bean`                            | Full control — required when `evictAll` must work immediately                                         |
+| (none)                         | (absent)                                     | Default: every request hits the database                                                              |
+
+Priority when multiple options are available: custom bean → `ogiri-caffeine`/`ogiri-redis` → Spring CacheManager bridge. The first registered bean wins; the rest are suppressed by `@ConditionalOnMissingBean`.
 
 !!! warning "Multi-instance deployments"
 Caffeine is **per-JVM**. If you run multiple application instances, token revocations
@@ -89,23 +95,26 @@ when running more than one instance.
 Add the dependency (Caffeine is included, no extra peer dep needed):
 
 === "Gradle (Kotlin DSL)"
-`kotlin
+
+    ```kotlin
     implementation("com.quantipixels.ogiri:ogiri-caffeine:{{ config.extra.ogiri_version }}")
-    `
+    ```
 
 === "Gradle (Groovy)"
-`groovy
+
+    ```groovy
     implementation 'com.quantipixels.ogiri:ogiri-caffeine:{{ config.extra.ogiri_version }}'
-    `
+    ```
 
 === "Maven"
-`xml
+
+    ```xml
     <dependency>
       <groupId>com.quantipixels.ogiri</groupId>
       <artifactId>ogiri-caffeine</artifactId>
       <version>{{ config.extra.ogiri_version }}</version>
     </dependency>
-    `
+    ```
 
 Activate in `application.yml`:
 
@@ -122,19 +131,22 @@ ogiri:
 Add both the Ogiri Redis module **and** the Spring Data Redis starter (peer dependency):
 
 === "Gradle (Kotlin DSL)"
-`kotlin
+
+    ```kotlin
     implementation("com.quantipixels.ogiri:ogiri-redis:{{ config.extra.ogiri_version }}")
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
-    `
+    ```
 
 === "Gradle (Groovy)"
-`groovy
+
+    ```groovy
     implementation 'com.quantipixels.ogiri:ogiri-redis:{{ config.extra.ogiri_version }}'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-    `
+    ```
 
 === "Maven"
-`xml
+
+    ```xml
     <dependency>
       <groupId>com.quantipixels.ogiri</groupId>
       <artifactId>ogiri-redis</artifactId>
@@ -144,7 +156,7 @@ Add both the Ogiri Redis module **and** the Spring Data Redis starter (peer depe
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-data-redis</artifactId>
     </dependency>
-    `
+    ```
 
 Activate in `application.yml` (your existing `spring.data.redis.*` config is reused automatically):
 
@@ -160,6 +172,44 @@ ogiri:
     type: redis
     expiry-minutes: 5
 ```
+
+### Spring CacheManager Bridge
+
+If your application already has a `CacheManager` bean configured — through Ehcache, Hazelcast,
+JCache, Infinispan, or simply `spring.cache.type=redis` — you can reuse it as the Ogiri token
+lookup cache without adding `ogiri-caffeine` or `ogiri-redis`.
+
+Enable the bridge in `application.yml`:
+
+```yaml
+spring:
+  cache:
+    cache-names: ogiri-token-lookup # must declare the cache name explicitly
+    redis: # example: Redis-backed CacheManager
+      time-to-live: 300000 # 5 minutes in ms
+
+ogiri:
+  cache:
+    use-spring-cache-manager: true
+    cache-name: ogiri-token-lookup # must match a name in spring.cache.cache-names
+```
+
+**Backend compatibility** — any `CacheManager` implementation works. Ogiri only calls
+`Cache.get()`, `Cache.put()`, and `Cache.evict()`, which are supported by all backends.
+
+!!! warning "evictAll is a no-op on this tier"
+Spring's `Cache` interface has no pattern-based eviction. When all sessions for a user
+are revoked (e.g. "log out everywhere"), `evictAll(userId)` logs a `WARN` and returns
+without clearing the cache. Stale entries expire when the TTL elapses. For immediate
+user-wide eviction, use `ogiri-redis` or provide a custom `OgiriTokenLookupCache` bean.
+
+!!! failure "Cache name not declared"
+If `ogiri.cache.cache-name` does not appear in `spring.cache.cache-names`, the adapter
+throws `IllegalStateException` on first cache access. Backends that auto-create caches
+on demand (Caffeine, simple in-memory) do not require the name to be pre-declared.
+
+The bridge is inactive when `ogiri-caffeine` or `ogiri-redis` is on the classpath — the
+dedicated module takes precedence via `@ConditionalOnMissingBean`.
 
 ### Custom Cache
 

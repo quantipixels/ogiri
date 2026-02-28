@@ -7,8 +7,8 @@ export function LoginPage() {
     const { isAuthenticated } = useAuth();
     const navigate = useNavigate();
     const login = useLogin();
-    const [username, setUsername] = useState("");
-    const [password, setPassword] = useState("");
+    const [username, setUsername] = useState("user1@example.com");
+    const [password, setPassword] = useState("password");
 
     if (isAuthenticated) {
         return <Navigate to="/dashboard" replace />;
@@ -31,13 +31,13 @@ export function LoginPage() {
                 <p>Login to see token rotation in action</p>
                 <form onSubmit={handleSubmit}>
                     <div className="field">
-                        <label htmlFor="username">Username</label>
+                        <label htmlFor="username">Email</label>
                         <input
                             id="username"
                             type="text"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
-                            placeholder="user1"
+                            placeholder="user1@example.com"
                             required
                         />
                     </div>
@@ -57,7 +57,7 @@ export function LoginPage() {
                         {login.isPending ? "Logging in..." : "Login"}
                     </button>
                 </form>
-                <p className="hint">Try user1 / password or user2 / password</p>
+                <p className="hint">Try user1@example.com / password or user2@example.com / password</p>
             </div>
         </div>
     );

@@ -19,6 +19,7 @@ import com.quantipixels.ogiri.security.routes.OgiriRouteCatalog
 import com.quantipixels.ogiri.security.routes.OgiriRouteRegistry
 import com.quantipixels.ogiri.security.spi.OgiriAuditHook
 import com.quantipixels.ogiri.security.spi.OgiriRateLimitHook
+import com.quantipixels.ogiri.security.spi.OgiriSpringCacheAdapter
 import com.quantipixels.ogiri.security.spi.OgiriTokenLookupCache
 import com.quantipixels.ogiri.security.spi.OgiriUserDirectory
 import com.quantipixels.ogiri.security.tokens.DefaultOgiriSubTokenRegistry
@@ -35,10 +36,12 @@ import com.quantipixels.ogiri.security.web.OgiriTokenAuthenticationFilter
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.ObjectProvider
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.cache.CacheManager
 import org.springframework.context.MessageSource
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -142,6 +145,29 @@ class OgiriSecurityAutoConfiguration {
       registrations: ObjectProvider<OgiriSubTokenRegistration>
   ): DefaultOgiriSubTokenRegistry =
       DefaultOgiriSubTokenRegistry(registrations.orderedStream().toList())
+
+  /**
+   * Tier 2 cache: bridges an existing Spring [CacheManager] into the [OgiriTokenLookupCache] SPI.
+   *
+   * Activated when:
+   * - No custom [OgiriTokenLookupCache] bean is present (consumer Tier 1 takes precedence)
+   * - A [CacheManager] bean is available (e.g., `spring.cache.type=redis`)
+   * - `ogiri.cache.use-spring-cache-manager=true`
+   *
+   * @see OgiriSpringCacheAdapter for evictAll limitations on this tier.
+   */
+  @Bean
+  @ConditionalOnMissingBean(OgiriTokenLookupCache::class)
+  @ConditionalOnBean(CacheManager::class)
+  @ConditionalOnProperty(
+      prefix = "ogiri.cache",
+      name = ["use-spring-cache-manager"],
+      havingValue = "true",
+  )
+  fun <T : OgiriToken> ogiriSpringCacheAdapter(
+      cacheManager: CacheManager,
+      properties: OgiriConfigurationProperties,
+  ): OgiriTokenLookupCache<T> = OgiriSpringCacheAdapter(cacheManager, properties.cache.cacheName)
 
   /**
    * Creates a default OgiriTokenService configured with the provided collaborators for token

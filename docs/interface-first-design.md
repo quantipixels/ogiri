@@ -155,40 +155,57 @@ data class MyToken(
 
 ### Using Spring Data JPA
 
+Most `OgiriTokenRepository` methods match Spring Data's derived query naming conventions —
+they are generated automatically. Only methods that need custom SQL require `@Query`:
+
 ```kotlin
 @Repository
 interface MyTokenRepository : JpaRepository<MyToken, Long>, OgiriTokenRepository<MyToken> {
-    override fun findByUserIdOrderByUpdatedAtDesc(userId: Long): List<MyToken> =
-        findByUserIdOrderByUpdatedAtDescOrderByUpdatedAtDesc(userId)
 
-    fun findByUserIdOrderByUpdatedAtDescOrderByUpdatedAtDesc(userId: Long): List<MyToken>
+    // Spring Data auto-generates from the method name — no override needed:
+    // findByUserIdOrderByUpdatedAtDesc(userId)
+    // findByUserIdAndClient(userId, client) → Optional<T>
+    // findByUserIdAndClientIn(userId, clients) → List<T>
+    // findByExpiryAtBefore(cutoff) → List<T>
 
-    @Query("SELECT t FROM MyToken t WHERE t.userId = :userId AND t.client = :client")
-    override fun findByUserIdAndClient(
-        @Param("userId") userId: Long,
-        @Param("client") clientId: String
-    ): MyToken?
+    // Use @Query for methods that need custom SQL:
+    @Query("SELECT COUNT(t) FROM MyToken t WHERE t.userId = :userId")
+    override fun countByUserId(userId: Long): Long
 
-    // ... implement other OgiriTokenRepository methods
+    @Transactional @Modifying
+    @Query("DELETE FROM MyToken t WHERE t.userId = ?1 AND t.client = ?2")
+    override fun deleteByUserIdAndClient(userId: Long, client: String)
+
+    @Transactional @Modifying
+    @Query("DELETE FROM MyToken t WHERE t.expiryAt < ?1")
+    override fun deleteByExpiryAtBefore(cutoff: Instant): Int
 }
 ```
 
+See [Database Integration](database.md#quick-start-with-jpa-recommended) for the full setup.
+
 ### Using Plain JDBC
+
+For lightweight SQL without Hibernate, use `ogiri-jdbc` which provides `OgiriJdbcTokenRepository` —
+an abstract class that auto-implements all 15 repository methods. You only implement `tableName()`
+and `rowMapper()`. See [Database Integration](database.md#quick-start-with-jdbc) for the full setup.
+
+For a fully custom JDBC implementation:
 
 ```kotlin
 @Repository
-class MyTokenRepository(private val jdbcTemplate: JdbcTemplate) : OgiriTokenRepository<MyToken> {
-    override fun save(token: MyToken): MyToken {
+class MyTokenRepository(private val jdbcClient: JdbcClient) : OgiriTokenRepository<MyToken> {
+    override fun <S : MyToken> save(token: S): S {
         // INSERT or UPDATE logic
         return token
     }
 
-    override fun findById(id: Long): MyToken? {
+    override fun findById(id: Long): Optional<MyToken> {
         // SELECT logic
-        return null
+        return Optional.empty()
     }
 
-    // ... implement other methods
+    // ... implement remaining methods
 }
 ```
 

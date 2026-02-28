@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { OgiriTokens } from "ogiri-security-client";
+import type { OgiriTokens } from "../lib/auth";
 
 interface Props {
     tokens: OgiriTokens | null;
