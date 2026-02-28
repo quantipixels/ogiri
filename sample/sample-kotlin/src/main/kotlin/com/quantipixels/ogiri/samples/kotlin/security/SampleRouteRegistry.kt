@@ -29,7 +29,5 @@ class SampleRouteRegistry : OgiriRouteRegistry {
           OgiriRoute(HttpMethod.POST, "/api/auth/login", rateLimit = true, useAuth = false),
           OgiriRoute(HttpMethod.GET, "/api/health", rateLimit = true, useAuth = false),
           OgiriRoute(HttpMethod.GET, "/api/docs/**", rateLimit = true, useAuth = false),
-          // Note: /api/auth/logout and /api/demo/** endpoints require authentication,
-          // so they are NOT listed here. Only public routes should be registered.
       )
 }

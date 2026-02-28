@@ -17,6 +17,7 @@ import com.quantipixels.ogiri.security.spi.OgiriUserDirectory;
 import com.quantipixels.ogiri.security.tokens.OgiriTokenService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -71,14 +72,8 @@ public class AuthController {
       HttpServletRequest httpRequest,
       HttpServletResponse httpResponse) {
     try {
-      // Verify credentials using tokenService.verifyUser
-      tokenService.verifyUser(
-          httpRequest,
-          httpResponse,
-          request.username(), // Using username as email for this sample
-          request.password());
+      tokenService.verifyUser(httpRequest, httpResponse, request.username(), request.password());
 
-      // Extract response headers set by verifyUser
       String accessToken = httpResponse.getHeader("access-token");
       String client = httpResponse.getHeader("client");
       String uid = httpResponse.getHeader("uid");
@@ -119,13 +114,13 @@ public class AuthController {
    * @return Logout confirmation message
    */
   @PostMapping("/logout")
-  public ResponseEntity<java.util.Map<String, String>> logout(
+  public ResponseEntity<Map<String, String>> logout(
       Authentication authentication,
       HttpServletRequest httpRequest,
       HttpServletResponse httpResponse) {
     if (authentication == null || !authentication.isAuthenticated()) {
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-          .body(java.util.Map.of("message", "Not authenticated"));
+          .body(Map.of("message", "Not authenticated"));
     }
 
     try {
@@ -133,10 +128,10 @@ public class AuthController {
       if (user != null) {
         tokenService.revokeClient(user.getOgiriUserId(), httpRequest, httpResponse);
       }
-      return ResponseEntity.ok(java.util.Map.of("message", "Logout successful"));
+      return ResponseEntity.ok(Map.of("message", "Logout successful"));
     } catch (Exception e) {
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-          .body(java.util.Map.of("message", "Logout failed: " + e.getMessage()));
+          .body(Map.of("message", "Logout failed: " + e.getMessage()));
     }
   }
 

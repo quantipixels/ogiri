@@ -31,7 +31,6 @@ class SampleOgiriUserDirectory(private val passwordEncoder: PasswordEncoder) : O
   private val usersById = mutableMapOf<Long, SampleUser>()
 
   init {
-    // Passwords are BCrypt encoded for secure storage
     val encodedPassword = passwordEncoder.encode("password")
     val user1 = SampleUser(1L, "user1", encodedPassword, "user1@example.com")
     val user2 = SampleUser(2L, "user2", encodedPassword, "user2@example.com")

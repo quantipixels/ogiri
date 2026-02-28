@@ -21,19 +21,8 @@ import jakarta.persistence.UniqueConstraint;
 /**
  * Sample JPA Token entity extending OgiriBaseTokenEntity.
  *
- * <p>By extending OgiriBaseTokenEntity, all 15+ token fields with proper JPA annotations are
- * inherited automatically:
- *
- * <ul>
- *   <li>id (auto-generated)
- *   <li>userId, client, token, tokenType
- *   <li>expiryAt, tokenUpdatedAt, createdAt, updatedAt
- *   <li>previousToken, lastToken, tokenSubtype
- *   <li>lastUsedAt
- *   <li>plainToken (transient, not persisted)
- * </ul>
- *
- * <p>Users only need to add @Entity, @Table with indexes and constraints.
+ * <p>All token fields and JPA annotations are inherited from OgiriBaseTokenEntity. This class only
+ * needs {@code @Entity} and {@code @Table} with indexes and constraints.
  */
 @Entity
 @Table(
@@ -47,10 +36,4 @@ import jakarta.persistence.UniqueConstraint;
           name = "uk_user_tokens_user_client",
           columnNames = {"user_id", "client"}),
     })
-public class SampleToken extends OgiriBaseTokenEntity {
-
-  /** Default constructor for JPA. */
-  public SampleToken() {
-    super();
-  }
-}
+public class SampleToken extends OgiriBaseTokenEntity {}

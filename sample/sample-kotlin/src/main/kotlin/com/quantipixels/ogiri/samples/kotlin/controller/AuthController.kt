@@ -20,7 +20,6 @@ import jakarta.servlet.http.HttpServletResponse
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.Authentication
-import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -36,7 +35,6 @@ import org.springframework.web.bind.annotation.RestController
 class AuthController(
     private val tokenService: OgiriTokenService<*>,
     private val userDirectory: OgiriUserDirectory,
-    private val passwordEncoder: PasswordEncoder,
 ) {
   /**
    * Login endpoint that validates credentials and returns authentication tokens.
@@ -71,15 +69,13 @@ class AuthController(
       httpResponse: HttpServletResponse,
   ): ResponseEntity<AuthResponse> {
     return try {
-      // Verify credentials using tokenService.verifyUser
       tokenService.verifyUser(
           httpRequest,
           httpResponse,
-          request.username, // Using username as email for this sample
+          request.username,
           request.password,
       )
 
-      // Extract response headers set by verifyUser
       val accessToken = httpResponse.getHeader("access-token")
       val client = httpResponse.getHeader("client")
       val uid = httpResponse.getHeader("uid")

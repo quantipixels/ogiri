@@ -26,18 +26,11 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 
 /**
- * Sample TokenService implementation for the Kotlin example app.
+ * Sample TokenService for the Kotlin example app.
  *
- * This service demonstrates how users should extend OgiriTokenService and override the
- * tokenFactory() method to instantiate their custom Token class.
- *
- * Since SampleToken extends OgiriBaseTokenEntity, it inherits all fields. The tokenFactory() simply
- * creates a new instance and sets the required properties.
- *
- * Optional extension points ([com.quantipixels.ogiri.security.spi.OgiriAuditHook],
- * [com.quantipixels.ogiri.security.spi.OgiriRateLimitHook],
- * [com.quantipixels.ogiri.security.spi.OgiriTokenLookupCache]) are wired automatically by the ogiri
- * auto-configuration via setter injection when the corresponding beans are present.
+ * Extends OgiriTokenService and overrides [tokenFactory] to instantiate [SampleToken]. Optional
+ * extension points (audit hook, rate-limit hook, lookup cache) are wired automatically by the ogiri
+ * auto-configuration via setter injection.
  */
 @Service
 @Profile("!jdbc")
@@ -58,12 +51,6 @@ class SampleTokenService(
         properties,
     ) {
 
-  /**
-   * Factory method for creating SampleToken instances.
-   *
-   * Since SampleToken extends OgiriBaseTokenEntity, all fields are inherited and can be set via
-   * property assignment.
-   */
   override fun tokenFactory(
       userId: Long,
       client: String,

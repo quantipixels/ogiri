@@ -16,6 +16,7 @@ import com.quantipixels.ogiri.security.spi.OgiriUser;
 import com.quantipixels.ogiri.security.spi.OgiriUserDirectory;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -35,7 +36,6 @@ public class SampleOgiriUserDirectory implements OgiriUserDirectory {
   private final Map<String, SampleUser> usersByUsername = new HashMap<>();
 
   public SampleOgiriUserDirectory(PasswordEncoder passwordEncoder) {
-    // Passwords are BCrypt encoded for secure storage
     String encodedPassword = passwordEncoder.encode("password");
     SampleUser user1 = new SampleUser(1L, "user1", encodedPassword, "user1@example.com");
     SampleUser user2 = new SampleUser(2L, "user2", encodedPassword, "user2@example.com");
@@ -73,9 +73,9 @@ public class SampleOgiriUserDirectory implements OgiriUserDirectory {
     // In a real application, update user last_login_at timestamp
   }
 
-  /** Sample user implementation */
+  /** Sample user implementation. */
   public static class SampleUser implements OgiriUser {
-    private final long userId; // Property for Kotlin interface
+    private final long userId;
     private final String username;
     private final String password;
     private final String email;
@@ -87,18 +87,13 @@ public class SampleOgiriUserDirectory implements OgiriUserDirectory {
       this.email = email;
     }
 
-    // Kotlin property getter for OgiriUser interface
-    public long getUserId() {
-      return userId;
-    }
-
     public String getEmail() {
       return email;
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-      return java.util.Collections.singleton(new SimpleGrantedAuthority("ROLE_USER"));
+      return List.of(new SimpleGrantedAuthority("ROLE_USER"));
     }
 
     @Override

@@ -168,9 +168,11 @@ class FullCycleHttpTest {
             : token0;
 
     // ── 3. Backdate the token's expiryAt in the DB ────────────────────────────────
-    var sessionToken = tokenRepository.findByUserIdAndClient(Long.parseLong(uid), client);
-    assertTrue(sessionToken.isPresent(), "Session must exist in the DB");
-    var entity = sessionToken.get();
+    var entity =
+        tokenRepository.findAll().stream()
+            .filter(t -> client.equals(t.getClient()))
+            .findFirst()
+            .orElseThrow(() -> new AssertionError("Session must exist in the DB"));
     entity.setExpiryAt(Instant.now().minusSeconds(3600));
     tokenRepository.save(entity);
 

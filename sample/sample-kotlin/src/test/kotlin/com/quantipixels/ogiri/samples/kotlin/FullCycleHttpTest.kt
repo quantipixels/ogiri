@@ -178,9 +178,8 @@ class FullCycleHttpTest {
 
     // ── 3. Backdate the token's expiryAt in the DB ────────────────────────────────
     val entity =
-        tokenRepository.findByUserIdAndClient(uid.toLong(), client).orElseThrow {
-          AssertionError("Session must exist in the DB")
-        }
+        tokenRepository.findAll().firstOrNull { it.client == client }
+            ?: throw AssertionError("Session must exist in the DB")
     entity.expiryAt = Instant.now().minusSeconds(3600)
     tokenRepository.save(entity)
 
