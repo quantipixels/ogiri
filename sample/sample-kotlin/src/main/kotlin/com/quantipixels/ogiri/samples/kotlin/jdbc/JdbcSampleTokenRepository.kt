@@ -38,7 +38,7 @@ class JdbcSampleTokenRepository(jdbcClient: JdbcClient) :
     JdbcSampleToken().apply {
       id = rs.getLong("id")
       userId = rs.getLong("user_id")
-      client = rs.getString("client_id")
+      client = rs.getString("client")
       token = rs.getString("token_hash")
       tokenType = rs.getString("token_type")
       tokenSubtype = rs.getString("token_subtype")

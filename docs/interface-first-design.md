@@ -96,7 +96,7 @@ For complete control over your token structure:
 data class MyToken(
     @Id @GeneratedValue override val id: Long = 0,
     @Column(name = "user_id") override val userId: Long,
-    @Column(name = "client_id") override val client: String,
+    @Column(name = "client") override val client: String,
     @Column(name = "token_hash") override var token: String,
     @Column(name = "token_type") override val tokenType: String,
     @Column(name = "expiry_at") override var expiryAt: Instant,
@@ -134,7 +134,7 @@ For straightforward implementations:
 data class MyToken(
     @Id @GeneratedValue override val id: Long = 0,
     @Column(name = "user_id") override val userId: Long,
-    @Column(name = "client_id") override val client: String,
+    @Column(name = "client") override val client: String,
     @Column(name = "token_hash") override var token: String,
     @Column(name = "token_type") override val tokenType: String,
     @Column(name = "expiry_at") override var expiryAt: Instant,
@@ -288,7 +288,7 @@ class MyTokenService(
         Index(name = "idx_tokens_expiry", columnList = "expiry_at")
     ],
     uniqueConstraints = [
-        UniqueConstraint(name = "uk_tokens_user_client", columnNames = ["user_id", "client_id"])
+        UniqueConstraint(name = "uk_tokens_user_client", columnNames = ["user_id", "client"])
     ]
 )
 data class UserToken(
@@ -298,7 +298,7 @@ data class UserToken(
     @Column(name = "user_id", nullable = false)
     override val userId: Long,
 
-    @Column(name = "client_id", nullable = false)
+    @Column(name = "client", nullable = false)
     override val client: String,
 
     @Column(name = "token_hash", nullable = false)

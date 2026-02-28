@@ -26,6 +26,13 @@ import org.springframework.jdbc.support.GeneratedKeyHolder
  * Provides all standard query and mutation operations using ANSI SQL with named parameters. Column
  * names are fixed (see [OgiriBaseTokenRow]). Insert vs. update is detected by `id == 0L`.
  *
+ * ## Timestamp behaviour
+ *
+ * On **INSERT**, both `created_at` and `updated_at` are stamped from the token object, which the
+ * caller must initialise before calling [save]. On **UPDATE**, `updated_at` is overwritten with
+ * `Instant.now()` inside [save]; `created_at` is never updated. This mirrors JPA's
+ * `@CreationTimestamp` / `@PreUpdate` semantics.
+ *
  * Subclasses must implement:
  * - [tableName]: unqualified table name (e.g., `"tokens"`)
  * - [rowMapper]: maps all token columns to a [OgiriBaseToken] subtype
@@ -53,7 +60,7 @@ abstract class OgiriJdbcTokenRepository<T : OgiriBaseToken>(
 
   /**
    * Maps a [java.sql.ResultSet] row to an instance of [T]. Must read all columns defined on
-   * [OgiriBaseTokenRow] (`id`, `user_id`, `client_id`, `token_hash`, `token_type`, `token_subtype`,
+   * [OgiriBaseTokenRow] (`id`, `user_id`, `client`, `token_hash`, `token_type`, `token_subtype`,
    * `expiry_at`, `previous_token_hash`, `last_token_hash`, `token_updated_at`, `last_used_at`,
    * `created_at`, `updated_at`).
    */
@@ -64,7 +71,7 @@ abstract class OgiriJdbcTokenRepository<T : OgiriBaseToken>(
       val keyHolder = GeneratedKeyHolder()
       jdbcClient
           .sql(
-              "INSERT INTO ${tableName()} (user_id, client_id, token_hash, token_type, token_subtype, expiry_at, previous_token_hash, last_token_hash, token_updated_at, last_used_at, created_at, updated_at) VALUES (:userId, :client, :token, :tokenType, :tokenSubtype, :expiryAt, :previousToken, :lastToken, :tokenUpdatedAt, :lastUsedAt, :createdAt, :updatedAt)")
+              "INSERT INTO ${tableName()} (user_id, client, token_hash, token_type, token_subtype, expiry_at, previous_token_hash, last_token_hash, token_updated_at, last_used_at, created_at, updated_at) VALUES (:userId, :client, :token, :tokenType, :tokenSubtype, :expiryAt, :previousToken, :lastToken, :tokenUpdatedAt, :lastUsedAt, :createdAt, :updatedAt)")
           .param("userId", token.userId)
           .param("client", token.client)
           .param("token", token.token)
@@ -78,11 +85,13 @@ abstract class OgiriJdbcTokenRepository<T : OgiriBaseToken>(
           .param("createdAt", token.createdAt)
           .param("updatedAt", token.updatedAt)
           .update(keyHolder)
+      val keys =
+          keyHolder.keys ?: error("No generated keys returned for INSERT into ${tableName()}")
       token.id =
-          keyHolder.keys!!
-              .entries
-              .first { it.key.equals("id", ignoreCase = true) }
-              .let { (_, v) -> (v as Number).toLong() }
+          keys.entries
+              .firstOrNull { it.key.equals("id", ignoreCase = true) }
+              ?.let { (_, v) -> (v as Number).toLong() }
+              ?: error("Generated keys map for ${tableName()} contains no 'id' entry: $keys")
       return token
     } else {
       val now = Instant.now()
@@ -127,7 +136,7 @@ abstract class OgiriJdbcTokenRepository<T : OgiriBaseToken>(
 
   override fun findByUserIdAndClient(userId: Long, client: String): Optional<T> =
       jdbcClient
-          .sql("SELECT * FROM ${tableName()} WHERE user_id = :userId AND client_id = :client")
+          .sql("SELECT * FROM ${tableName()} WHERE user_id = :userId AND client = :client")
           .param("userId", userId)
           .param("client", client)
           .query(rowMapper())
@@ -136,7 +145,7 @@ abstract class OgiriJdbcTokenRepository<T : OgiriBaseToken>(
   override fun findByUserIdAndClientIn(userId: Long, clients: Collection<String>): List<T> {
     if (clients.isEmpty()) return emptyList()
     return jdbcClient
-        .sql("SELECT * FROM ${tableName()} WHERE user_id = :userId AND client_id IN (:clients)")
+        .sql("SELECT * FROM ${tableName()} WHERE user_id = :userId AND client IN (:clients)")
         .param("userId", userId)
         .param("clients", clients)
         .query(rowMapper())
@@ -180,7 +189,7 @@ abstract class OgiriJdbcTokenRepository<T : OgiriBaseToken>(
 
   override fun deleteByUserIdAndClient(userId: Long, client: String) {
     jdbcClient
-        .sql("DELETE FROM ${tableName()} WHERE user_id = :userId AND client_id = :client")
+        .sql("DELETE FROM ${tableName()} WHERE user_id = :userId AND client = :client")
         .param("userId", userId)
         .param("client", client)
         .update()
@@ -189,7 +198,7 @@ abstract class OgiriJdbcTokenRepository<T : OgiriBaseToken>(
   override fun deleteByUserIdAndClientIn(userId: Long, clients: Collection<String>) {
     if (clients.isEmpty()) return
     jdbcClient
-        .sql("DELETE FROM ${tableName()} WHERE user_id = :userId AND client_id IN (:clients)")
+        .sql("DELETE FROM ${tableName()} WHERE user_id = :userId AND client IN (:clients)")
         .param("userId", userId)
         .param("clients", clients)
         .update()
@@ -214,4 +223,9 @@ abstract class OgiriJdbcTokenRepository<T : OgiriBaseToken>(
           .sql("DELETE FROM ${tableName()} WHERE expiry_at < :cutoff")
           .param("cutoff", cutoff)
           .update()
+
+  override fun deleteByIdIn(ids: Collection<Long>) {
+    if (ids.isEmpty()) return
+    jdbcClient.sql("DELETE FROM ${tableName()} WHERE id IN (:ids)").param("ids", ids).update()
+  }
 }

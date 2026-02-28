@@ -5,7 +5,7 @@ CREATE
         IF NOT EXISTS user_tokens(
             id BIGSERIAL PRIMARY KEY,
             user_id BIGINT NOT NULL,
-            client_id VARCHAR(255) NOT NULL,
+            client VARCHAR(255) NOT NULL,
             token_hash VARCHAR(255) NOT NULL,
             token_type VARCHAR(20) NOT NULL,
             token_subtype VARCHAR(64),
@@ -22,7 +22,7 @@ CREATE
     UNIQUE INDEX IF NOT EXISTS uk_user_tokens_user_client ON
     user_tokens(
         user_id,
-        client_id
+        client
     );
 
 CREATE

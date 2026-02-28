@@ -30,7 +30,7 @@ import java.time.Instant
  *     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
  *     override val id: Long = 0,
  *     @Column(name = "user_id") override val userId: Long,
- *     @Column(name = "client_id") override val client: String,
+ *     @Column(name = "client") override val client: String,
  *     @Column(name = "token_hash") override var token: String,
  *     @Column(name = "token_type") override val tokenType: String = "app",
  *     @Column(name = "expiry_at") override var expiryAt: Instant,

@@ -272,7 +272,7 @@ Extend `OgiriJdbcTokenRepository<T>` and implement two methods:
             MyToken().apply {
                 id = rs.getLong("id")
                 userId = rs.getLong("user_id")
-                client = rs.getString("client_id")
+                client = rs.getString("client")
                 token = rs.getString("token_hash")
                 tokenType = rs.getString("token_type")
                 tokenSubtype = rs.getString("token_subtype")
@@ -307,7 +307,7 @@ Extend `OgiriJdbcTokenRepository<T>` and implement two methods:
                 MyToken t = new MyToken();
                 t.setId(rs.getLong("id"));
                 t.setUserId(rs.getLong("user_id"));
-                t.setClient(rs.getString("client_id"));
+                t.setClient(rs.getString("client"));
                 t.setToken(rs.getString("token_hash"));
                 t.setTokenType(rs.getString("token_type"));
                 t.setTokenSubtype(rs.getString("token_subtype"));
@@ -562,7 +562,7 @@ spring:
 CREATE TABLE user_tokens (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL,
-    client_id VARCHAR(255) NOT NULL,
+    client VARCHAR(255) NOT NULL,
     token_hash VARCHAR(255) NOT NULL,
     token_type VARCHAR(20) NOT NULL,
     token_subtype VARCHAR(64),
@@ -575,7 +575,7 @@ CREATE TABLE user_tokens (
     updated_at TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE UNIQUE INDEX uk_user_tokens_user_client ON user_tokens (user_id, client_id);
+CREATE UNIQUE INDEX uk_user_tokens_user_client ON user_tokens (user_id, client);
 CREATE INDEX idx_user_tokens_user_id ON user_tokens (user_id);
 CREATE INDEX idx_user_tokens_expiry ON user_tokens (expiry_at);
 CREATE INDEX idx_user_tokens_user_subtype ON user_tokens (user_id, token_subtype);
@@ -587,7 +587,7 @@ CREATE INDEX idx_user_tokens_user_subtype ON user_tokens (user_id, token_subtype
 | ------------------------------ | ------------------------ | ----------------------- |
 | `idx_user_tokens_user_id`      | `user_id`                | User token lookups      |
 | `idx_user_tokens_expiry`       | `expiry_at`              | Cleanup job performance |
-| `uk_user_tokens_user_client`   | `user_id, client_id`     | Unique token lookup     |
+| `uk_user_tokens_user_client`   | `user_id, client`        | Unique token lookup     |
 | `idx_user_tokens_user_subtype` | `user_id, token_subtype` | Sub-token queries       |
 
 ## Repository Methods

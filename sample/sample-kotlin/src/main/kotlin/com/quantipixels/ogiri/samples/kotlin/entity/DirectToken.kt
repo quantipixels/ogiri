@@ -49,14 +49,14 @@ import org.hibernate.annotations.UpdateTimestamp
         [
             UniqueConstraint(
                 name = "uk_direct_tokens_user_client",
-                columnNames = ["user_id", "client_id"],
+                columnNames = ["user_id", "client"],
             ),
         ],
 )
 data class DirectToken(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY) override val id: Long = 0,
     @Column(name = "user_id", nullable = false) override val userId: Long = 0,
-    @Column(name = "client_id", nullable = false) override val client: String = "",
+    @Column(name = "client", nullable = false) override val client: String = "",
     @Column(name = "token_hash", nullable = false) override var token: String = "",
     @Column(name = "token_type", nullable = false) override val tokenType: String = "app",
     @Column(name = "expiry_at", nullable = false) override var expiryAt: Instant = Instant.now(),

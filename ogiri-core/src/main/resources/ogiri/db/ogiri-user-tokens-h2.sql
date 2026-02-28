@@ -5,7 +5,7 @@ CREATE
         IF NOT EXISTS user_tokens(
             id BIGINT AUTO_INCREMENT PRIMARY KEY,
             user_id BIGINT NOT NULL,
-            client_id VARCHAR(255) NOT NULL,
+            client VARCHAR(255) NOT NULL,
             token_hash VARCHAR(255) NOT NULL,
             token_type VARCHAR(20) NOT NULL,
             token_subtype VARCHAR(64),
@@ -18,7 +18,7 @@ CREATE
             updated_at TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
             UNIQUE(
                 user_id,
-                client_id
+                client
             )
         );
 

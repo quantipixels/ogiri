@@ -50,7 +50,7 @@ public class JdbcSampleTokenRepository extends OgiriJdbcTokenRepository<JdbcSamp
       JdbcSampleToken token = new JdbcSampleToken();
       token.setId(rs.getLong("id"));
       token.setUserId(rs.getLong("user_id"));
-      token.setClient(rs.getString("client_id"));
+      token.setClient(rs.getString("client"));
       token.setToken(rs.getString("token_hash"));
       token.setTokenType(rs.getString("token_type"));
       token.setTokenSubtype(rs.getString("token_subtype"));

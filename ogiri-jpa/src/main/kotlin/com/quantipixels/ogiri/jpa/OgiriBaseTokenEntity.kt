@@ -82,7 +82,7 @@ abstract class OgiriBaseTokenEntity : OgiriBaseToken() {
   /** Timestamp when token was created. Auto-populated by Hibernate on insert. */
   @CreationTimestamp
   @Column(name = "created_at", nullable = false, updatable = false)
-  override var createdAt: Instant = Instant.now()
+  override var createdAt: Instant = Instant.EPOCH
 
   /** Timestamp when token was last updated. Auto-updated on any modification. */
   @Column(name = "updated_at", nullable = false) override var updatedAt: Instant = Instant.now()
@@ -121,7 +121,4 @@ abstract class OgiriBaseTokenEntity : OgiriBaseToken() {
   fun updateTimestamp() {
     updatedAt = Instant.now()
   }
-
-  override fun toString(): String =
-      "Token(id=$id, userId=$userId, client=$client, tokenType=$tokenType, expiryAt=$expiryAt)"
 }

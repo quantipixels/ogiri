@@ -5,7 +5,7 @@ CREATE
         IF NOT EXISTS user_tokens(
             id BIGINT AUTO_INCREMENT PRIMARY KEY,
             user_id BIGINT NOT NULL,
-            client_id VARCHAR(255) NOT NULL,
+            client VARCHAR(255) NOT NULL,
             token_hash VARCHAR(255) NOT NULL,
             token_type VARCHAR(20) NOT NULL,
             token_subtype VARCHAR(64),
@@ -20,7 +20,7 @@ CREATE
                 CURRENT_TIMESTAMP,
                 UNIQUE KEY uk_user_tokens_user_client(
                     user_id,
-                    client_id
+                    client
                 ),
                 INDEX idx_user_tokens_user_id(user_id),
                 INDEX idx_user_tokens_expiry(expiry_at),

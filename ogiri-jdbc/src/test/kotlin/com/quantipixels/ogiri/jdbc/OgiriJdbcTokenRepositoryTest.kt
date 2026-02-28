@@ -39,7 +39,7 @@ class OgiriJdbcTokenRepositoryTest {
           OgiriBaseTokenRow(
                   id = rs.getLong("id"),
                   userId = rs.getLong("user_id"),
-                  client = rs.getString("client_id"),
+                  client = rs.getString("client"),
                   token = rs.getString("token_hash"),
                   tokenType = rs.getString("token_type"),
                   expiryAt = rs.getTimestamp("expiry_at").toInstant(),

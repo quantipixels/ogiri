@@ -28,7 +28,7 @@ import java.time.Instant
  * data class JpaToken(
  *   @Id @GeneratedValue override val id: Long = 0,
  *   @Column(name = "user_id") override val userId: Long,
- *   @Column(name = "client_id") override val client: String,
+ *   @Column(name = "client") override val client: String,
  *   @Column(name = "token_hash") override var token: String,
  *   // ... remaining fields
  * ) : OgiriBaseToken()

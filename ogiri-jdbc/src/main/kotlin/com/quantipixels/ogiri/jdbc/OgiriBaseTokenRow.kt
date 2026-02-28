@@ -44,10 +44,4 @@ open class OgiriBaseTokenRow(
     override var createdAt: Instant = Instant.now(),
     override var updatedAt: Instant = Instant.now(),
     override var tokenUpdatedAt: Instant = Instant.now(),
-) : OgiriBaseToken() {
-  override var tokenSubtype: String? = null
-  override var lastToken: String? = null
-  override var previousToken: String? = null
-  override var lastUsedAt: Instant? = null
-  override var plainToken: String? = null
-}
+) : OgiriBaseToken()
