@@ -12,10 +12,7 @@
  */
 package com.quantipixels.ogiri.security.redis
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator
 import com.quantipixels.ogiri.security.config.OgiriConfigurationProperties
 import com.quantipixels.ogiri.security.spi.OgiriCacheKey
 import com.quantipixels.ogiri.security.spi.OgiriTokenLookupCache
@@ -89,18 +86,6 @@ class RedisOgiriTokenLookupCache<T : OgiriToken>(
   }
 
   companion object {
-    private val objectMapper: ObjectMapper by lazy {
-      ObjectMapper().apply {
-        findAndRegisterModules()
-        disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-        activateDefaultTyping(
-            LaissezFaireSubTypeValidator.instance,
-            ObjectMapper.DefaultTyping.NON_FINAL,
-            JsonTypeInfo.As.PROPERTY,
-        )
-      }
-    }
-
     @Suppress("UNCHECKED_CAST")
     private fun <T : OgiriToken> buildTemplate(
         connectionFactory: RedisConnectionFactory,
@@ -108,7 +93,11 @@ class RedisOgiriTokenLookupCache<T : OgiriToken>(
         (RedisTemplate<String, Any>().also { t ->
           t.connectionFactory = connectionFactory
           t.keySerializer = StringRedisSerializer()
-          t.valueSerializer = GenericJackson2JsonRedisSerializer(objectMapper)
+          t.valueSerializer =
+              GenericJackson2JsonRedisSerializer().configure { mapper ->
+                mapper.findAndRegisterModules()
+                mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+              }
           t.afterPropertiesSet()
         } as RedisTemplate<String, T>)
   }
