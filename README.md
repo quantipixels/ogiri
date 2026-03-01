@@ -67,18 +67,6 @@ implementation("com.quantipixels.ogiri:ogiri-redis:VERSION")    // distributed
 
 **Requirements:** Java 17+, Spring Boot 3.5+
 
-### Client (TypeScript/JavaScript)
-
-**TypeScript/JavaScript client for browser and Node.js:**
-
-```bash
-npm install ogiri-security-client
-# or
-pnpm add ogiri-security-client
-```
-
-The TypeScript client handles token storage, automatic rotation, and request interception. See [ogiri-client/](ogiri-client/) for usage examples and API documentation.
-
 ## Quick Start
 
 **1. Implement user directory:**
@@ -168,18 +156,6 @@ See the [full Quickstart Guide](https://quantipixels.github.io/ogiri/quickstart/
 ./gradlew :ogiri-core:test       # Run core module tests only
 ./gradlew spotlessApply          # Format code
 ```
-
-**TypeScript client:**
-
-```bash
-cd ogiri-client
-pnpm install                     # Install dependencies
-pnpm build                       # Build for production
-pnpm test                        # Run tests
-pnpm test -- --coverage          # Run tests with coverage
-```
-
-> Always use `pnpm` (not `npm` or `yarn`) for TypeScript/Node.js operations in this repository.
 
 **Git hooks (optional):**
 

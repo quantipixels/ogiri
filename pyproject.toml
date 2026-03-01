@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ogiri-docs"
-version = "0.1.0"
+version = "3.0.1"
 description = "Documentation for Ogiri Security"
 requires-python = ">=3.9"
 dependencies = [
