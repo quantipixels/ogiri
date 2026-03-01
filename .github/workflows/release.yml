@@ -76,53 +76,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  publish-npm:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: read
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-        with:
-          persist-credentials: false
-
-      - name: Extract version from tag
-        id: version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-
-      - name: Setup Node.js 20
-        uses: actions/setup-node@v6
-        with:
-          node-version: 20
-          cache: "pnpm"
-          cache-dependency-path: ogiri-client/pnpm-lock.yaml
-          registry-url: "https://registry.npmjs.org"
-
-      - name: Sync version from tag
-        working-directory: ogiri-client
-        run: npm pkg set version="${{ steps.version.outputs.VERSION }}"
-
-      - name: Install dependencies
-        working-directory: ogiri-client
-        run: pnpm install --frozen-lockfile
-
-      - name: Build
-        working-directory: ogiri-client
-        run: pnpm build
-
-      - name: Publish to npm
-        working-directory: ogiri-client
-        run: pnpm publish --no-git-checks --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
   publish:
     runs-on: ubuntu-latest
     timeout-minutes: 30

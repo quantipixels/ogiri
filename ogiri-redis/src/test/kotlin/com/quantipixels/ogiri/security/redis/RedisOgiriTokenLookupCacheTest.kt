@@ -12,10 +12,9 @@
  */
 package com.quantipixels.ogiri.security.redis
 
+import com.quantipixels.ogiri.security.OgiriStubToken
 import com.quantipixels.ogiri.security.config.OgiriConfigurationProperties
-import com.quantipixels.ogiri.security.tokens.OgiriToken
 import com.redis.testcontainers.RedisContainer
-import java.time.Instant
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
@@ -34,25 +33,7 @@ class RedisOgiriTokenLookupCacheTest {
     @Container val redis: RedisContainer = RedisContainer("redis:7-alpine")
   }
 
-  private lateinit var cache: RedisOgiriTokenLookupCache<StubToken>
-
-  /** Minimal OgiriToken implementation for cache unit tests. */
-  data class StubToken(
-      override var id: Long = 1L,
-      override var userId: Long = 1L,
-      override var client: String = "client",
-      override var token: String = "hash",
-      override var tokenType: String = "APP",
-      override var expiryAt: Instant = Instant.now().plusSeconds(3600),
-      override var createdAt: Instant = Instant.now(),
-      override var updatedAt: Instant = Instant.now(),
-      override var tokenUpdatedAt: Instant = Instant.now(),
-      override var tokenSubtype: String? = null,
-      override var lastToken: String? = null,
-      override var previousToken: String? = null,
-      override var lastUsedAt: Instant? = null,
-      override var plainToken: String? = null,
-  ) : OgiriToken
+  private lateinit var cache: RedisOgiriTokenLookupCache<OgiriStubToken>
 
   private fun defaultProperties() =
       OgiriConfigurationProperties().apply {
@@ -80,7 +61,7 @@ class RedisOgiriTokenLookupCacheTest {
 
     @Test
     fun `put then get returns the stored token`() {
-      val token = StubToken(userId = 1L, client = "client-a")
+      val token = OgiriStubToken(userId = 1L, client = "client-a")
       cache.put(1L, "client-a", token)
       val retrieved = cache.get(1L, "client-a")
       assertNotNull(retrieved)
@@ -89,14 +70,14 @@ class RedisOgiriTokenLookupCacheTest {
 
     @Test
     fun `put overwrites existing entry`() {
-      cache.put(1L, "c", StubToken(token = "hash1"))
-      cache.put(1L, "c", StubToken(token = "hash2"))
+      cache.put(1L, "c", OgiriStubToken(token = "hash1"))
+      cache.put(1L, "c", OgiriStubToken(token = "hash2"))
       assertEquals("hash2", cache.get(1L, "c")?.token)
     }
 
     @Test
     fun `different users do not share entries`() {
-      cache.put(1L, "shared", StubToken(userId = 1L))
+      cache.put(1L, "shared", OgiriStubToken(userId = 1L))
       assertNull(cache.get(2L, "shared"))
     }
   }
@@ -105,15 +86,15 @@ class RedisOgiriTokenLookupCacheTest {
   inner class Eviction {
     @Test
     fun `evict removes single entry`() {
-      cache.put(1L, "to-evict", StubToken())
+      cache.put(1L, "to-evict", OgiriStubToken())
       cache.evict(1L, "to-evict")
       assertNull(cache.get(1L, "to-evict"))
     }
 
     @Test
     fun `evict does not affect other entries`() {
-      cache.put(1L, "keep", StubToken(client = "keep"))
-      cache.put(1L, "remove", StubToken(client = "remove"))
+      cache.put(1L, "keep", OgiriStubToken(client = "keep"))
+      cache.put(1L, "remove", OgiriStubToken(client = "remove"))
       cache.evict(1L, "remove")
       assertNotNull(cache.get(1L, "keep"))
       assertNull(cache.get(1L, "remove"))
@@ -121,9 +102,9 @@ class RedisOgiriTokenLookupCacheTest {
 
     @Test
     fun `evictAll removes all entries for a user`() {
-      cache.put(1L, "c1", StubToken(client = "c1"))
-      cache.put(1L, "c2", StubToken(client = "c2"))
-      cache.put(2L, "c1", StubToken(userId = 2L, client = "c1"))
+      cache.put(1L, "c1", OgiriStubToken(client = "c1"))
+      cache.put(1L, "c2", OgiriStubToken(client = "c2"))
+      cache.put(2L, "c1", OgiriStubToken(userId = 2L, client = "c1"))
 
       cache.evictAll(1L)
 

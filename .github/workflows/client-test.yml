@@ -77,8 +77,4 @@ jobs:
             echo "Build failed: dist/index.d.ts not found"
             exit 1
           fi
-          if [ ! -f dist/axios/index.js ]; then
-            echo "Build failed: dist/axios/index.js not found"
-            exit 1
-          fi
           echo "Build artifacts verified"
