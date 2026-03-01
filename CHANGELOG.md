@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.1] - 2026-03-01 (ogiri-security server)
+
+### Fixed
+
+- **Redis deserialization (`InvalidTypeIdException`)** — `OgiriRedisCache` now registers `JavaTimeModule` via `configure {}` instead of replacing the ObjectMapper's built-in polymorphic type resolver. The custom mapper previously cleared the default typing configuration, causing Jackson to fail when deserialising cached token objects.
+
+### Removed
+
+- **`ogiri-client` TypeScript package** — the package was already retired (`"private": true`, README marked "Retired"). Auth primitives are fully inlined in `sample/sample-react/src/lib/auth.ts`. The package directory, its CI workflow (`client-test.yml`), and the workspace entry have been deleted.
+
+### Internal
+
+- Removed `publish-npm` job and stale client artifact check from `release.yml`
+- Removed `client-test.yml` GitHub Actions workflow
+- Removed `ogiri-client` from `pnpm-workspace.yaml` and Dependabot config
+- Removed `NPM_TOKEN` secret from `docs/development.md`
+
+---
+
 ## [3.0.0] - 2026-02-27 (ogiri-security server)
 
 ### Breaking Changes
