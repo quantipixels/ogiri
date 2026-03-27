@@ -4,7 +4,7 @@ plugins {
   kotlin("jvm")
   kotlin("plugin.spring")
   id("io.spring.dependency-management") version libs.versions.dependencyManagement.get()
-  id("org.owasp.dependencycheck") version "12.1.9"
+  id("org.owasp.dependencycheck") version "12.2.0"
   jacoco
   `java-test-fixtures`
   `maven-publish`
