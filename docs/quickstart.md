@@ -258,6 +258,41 @@ uid: 123
 expiry: 2025-12-25T00:00:00Z
 ```
 
+## Route Authorization
+
+Ògiri handles **authentication** — verifying who the caller is — but it does not configure **authorization** — which routes they may access.
+
+The `ogiriSecurityFilterChain` bean deliberately omits `authorizeHttpRequests()`. Without it, Spring Security's default behaviour leaves all routes open to unauthenticated requests. You must define your own `SecurityFilterChain` bean to close them:
+
+=== "Kotlin"
+
+    ```kotlin
+    @Bean
+    fun appSecurityFilterChain(http: HttpSecurity): SecurityFilterChain =
+        http
+            .authorizeHttpRequests { auth ->
+                auth.requestMatchers("/api/auth/**").permitAll()
+                auth.anyRequest().authenticated()
+            }
+            .build()
+    ```
+
+=== "Java"
+
+    ```java
+    @Bean
+    public SecurityFilterChain appSecurityFilterChain(HttpSecurity http) throws Exception {
+        return http
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/auth/**").permitAll()
+                .anyRequest().authenticated()
+            )
+            .build();
+    }
+    ```
+
+Spring Security applies multiple `SecurityFilterChain` beans in order; this bean adds your authorization rules without replacing Ògiri's authentication filter.
+
 ## Optional: SPI Hooks
 
 Ogiri provides optional SPI hooks and cache modules you can opt into as Spring beans or extra dependencies.

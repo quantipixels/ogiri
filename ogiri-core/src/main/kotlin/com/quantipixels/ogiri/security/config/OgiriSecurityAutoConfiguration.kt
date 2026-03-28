@@ -312,14 +312,21 @@ class OgiriSecurityAutoConfiguration {
   /**
    * Configures a stateless SecurityFilterChain that applies Ogiri token authentication.
    *
-   * This chain disables CSRF, enforces stateless session management, delegates authentication
-   * failures to the provided entry point, and inserts the Ogiri token authentication filter before
-   * the UsernamePasswordAuthenticationFilter. Callers must configure authorization rules (for
-   * example via authorizeHttpRequests) if route access restrictions are required.
+   * This chain configures:
+   * - CSRF (disabled by default; enabled automatically when `ogiri.cookies.same-site=None`)
+   * - Stateless session management
+   * - Authentication failure delegation to the provided entry point
+   * - Ogiri token authentication filter inserted before UsernamePasswordAuthenticationFilter
    *
-   * @return A SecurityFilterChain that enforces token-based authentication, disables CSRF, uses
+   * **This bean does NOT call `authorizeHttpRequests()`.** Ogiri handles authentication (verifying
+   * who the caller is) but not authorization (which routes they may access). Without an
+   * `authorizeHttpRequests()` call, Spring Security's default behaviour applies — all routes are
+   * open to unauthenticated requests. Consumers MUST define their own `SecurityFilterChain` bean
+   * with `authorizeHttpRequests()` rules to restrict access.
+   *
+   * @return A SecurityFilterChain that enforces token-based authentication, configures CSRF and
    *   stateless sessions, and delegates authentication failures to the provided
-   *   AuthenticationEntryPoint.
+   *   AuthenticationEntryPoint. Route authorization rules are not configured.
    */
   @Bean(name = ["ogiriSecurityFilterChain"])
   @ConditionalOnMissingBean(name = ["ogiriSecurityFilterChain"])

@@ -6,6 +6,7 @@ plugins {
   id("io.spring.dependency-management") version libs.versions.dependencyManagement.get()
   `maven-publish`
   signing
+  jacoco
 }
 
 group = "com.quantipixels.ogiri"
@@ -40,7 +41,29 @@ dependencies {
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
-tasks.withType<Test> { useJUnitPlatform() }
+tasks.withType<Test> {
+  useJUnitPlatform()
+  finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.jacocoTestReport {
+  dependsOn(tasks.test)
+  reports {
+    xml.required = true
+    csv.required = false
+    html.required = true
+  }
+}
+
+jacoco { toolVersion = libs.versions.jacoco.get() }
+
+// Coverage baseline: 85%. Raise this as tests are added.
+tasks.jacocoTestCoverageVerification {
+  dependsOn(tasks.test)
+  violationRules { rule { limit { minimum = "0.85".toBigDecimal() } } }
+}
+
+tasks.named("check") { dependsOn(tasks.jacocoTestCoverageVerification) }
 
 publishing {
   publications {

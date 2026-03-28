@@ -59,6 +59,7 @@ allprojects {
           ".claude/**",
           ".ai-toolkit/**",
           "plans/**",
+          "thoughts/**",
           "**/pnpm-lock.yaml",
           "pnpm-workspace.yaml",
           "sample/sample-react/**")

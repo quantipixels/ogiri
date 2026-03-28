@@ -30,6 +30,15 @@ dependencyManagement {
   }
 }
 
+configurations.all {
+  resolutionStrategy.eachDependency {
+    if (requested.group == "org.testcontainers") {
+      useVersion("1.20.4")
+      because("Docker Desktop 29.x dropped API v1.24 support; pinned to a known-compatible release")
+    }
+  }
+}
+
 dependencies {
   api(project(":ogiri-core"))
   // Spring Data Redis is an optional peer dependency — consumers must add it themselves.
@@ -49,6 +58,9 @@ dependencies {
 
 tasks.withType<Test> {
   useJUnitPlatform()
+  // Docker Desktop 4.61+ (engine 29.x) requires minimum API v1.44.
+  // docker-java defaults to v1.24 which returns 400; override to a supported version.
+  environment("DOCKER_API_VERSION", "1.44")
   finalizedBy(tasks.jacocoTestReport)
 }
 
@@ -63,10 +75,11 @@ tasks.jacocoTestReport {
 
 jacoco { toolVersion = libs.versions.jacoco.get() }
 
-// Coverage baseline: 37% (current). Raise this as tests are added.
+// Coverage baseline: 95% (raised after Redis integration tests enabled). Raise this as tests are
+// added.
 tasks.jacocoTestCoverageVerification {
   dependsOn(tasks.test)
-  violationRules { rule { limit { minimum = "0.37".toBigDecimal() } } }
+  violationRules { rule { limit { minimum = "0.95".toBigDecimal() } } }
 }
 
 tasks.named("check") { dependsOn(tasks.jacocoTestCoverageVerification) }

@@ -12,13 +12,11 @@
  */
 package com.quantipixels.ogiri.security.tokens
 
-import com.fasterxml.jackson.core.JsonProcessingException
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.quantipixels.ogiri.security.config.OgiriConfigurationProperties
 import com.quantipixels.ogiri.security.core.AuthHeader
 import com.quantipixels.ogiri.security.core.IdentifierPolicy
-import com.quantipixels.ogiri.security.core.JsonCodec
 import com.quantipixels.ogiri.security.core.OgiriService
 import com.quantipixels.ogiri.security.core.SecurityServiceException
 import com.quantipixels.ogiri.security.core.SubTokenHeader
@@ -35,7 +33,6 @@ import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import java.time.Instant
 import java.time.temporal.ChronoUnit
-import java.util.Base64
 import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
@@ -116,9 +113,19 @@ constructor(
   private var rateLimitHook: OgiriRateLimitHook = NoOpOgiriRateLimitHook
   private var lookupCache: OgiriTokenLookupCache<T>? = null
 
+  private val subTokenService = SubTokenService(subTokenRegistry, repository, userDirectory)
+
+  init {
+    subTokenService.lookupToken = ::lookupToken
+    subTokenService.createOrUpdateToken = ::createOrUpdateToken
+    subTokenService.deleteToken = { userId, clients -> deleteToken(userId, clients) }
+    subTokenService.doesTokenMatch = ::doesTokenMatch
+  }
+
   /** Replaces the audit hook. Defaults to [NoOpOgiriAuditHook] when not called. */
   open fun setAuditHook(hook: OgiriAuditHook) {
     this.auditHook = hook
+    subTokenService.setAuditHook(hook)
   }
 
   /** Replaces the rate-limit hook. Defaults to [NoOpOgiriRateLimitHook] when not called. */
@@ -191,15 +198,8 @@ constructor(
       client: String,
   ): String = "$userId:$client"
 
-  /**
-   * Cached sub-token registrations.
-   *
-   * Registrations are retrieved once at first access and cached for the service's lifetime,
-   * avoiding repeated calls to [OgiriSubTokenRegistry.registrations].
-   */
-  private val cachedRegistrations: List<OgiriSubTokenRegistration> by lazy {
-    subTokenRegistry.registrations()
-  }
+  private val cachedRegistrations: List<OgiriSubTokenRegistration>
+    get() = subTokenService.cachedRegistrations
 
   /**
    * Check if a plain token matches a hashed token, using cache to avoid repeated BCrypt operations.
@@ -450,7 +450,7 @@ constructor(
   private fun clientForSubToken(
       reg: OgiriSubTokenRegistration,
       parentClient: String,
-  ): String = reg.clientIdFor(parentClient)
+  ): String = subTokenService.clientForSubToken(reg, parentClient)
 
   @Transactional
   @JvmOverloads
@@ -537,37 +537,9 @@ constructor(
       parentClient: String,
       requestedNames: Collection<String>?,
       forceNew: Boolean,
-  ): Map<String, T> {
-    val registrations =
-        cachedRegistrations.filter {
-          requestedNames?.let { names -> it.name in names } ?: it.includeByDefault
-        }
-    val results = mutableMapOf<String, T>()
-    val parentToken = lookupToken(user.getOgiriUserId(), parentClient)
-    val parentExpiry =
-        parentToken?.expiryAt ?: Instant.now().plus(tokenLifespanDays, ChronoUnit.DAYS)
-    registrations.forEach { reg ->
-      val subClient = clientForSubToken(reg, parentClient)
-      val expiry = reg.expiry(parentExpiry)
-      val existing =
-          if (!forceNew && !reg.forceNew) lookupToken(user.getOgiriUserId(), subClient) else null
-      val token =
-          existing
-              ?: createOrUpdateToken(
-                  user = user,
-                  client = subClient,
-                  expiry = expiry,
-                  tokenType = OgiriTokenType.SUB,
-                  tokenSubtype = reg.name,
-              )
-      results[reg.name] = token
-
-      if (existing == null) {
-        auditHook.onSubTokenCreated(user.getOgiriUserId(), parentClient, reg.name)
-      }
-    }
-    return results
-  }
+  ): Map<String, T> =
+      subTokenService.issueSubTokens(
+          user, parentClient, requestedNames, forceNew, tokenLifespanDays)
 
   /**
    * Create a new authentication token for a user and client.
@@ -969,33 +941,7 @@ constructor(
    * re-thrown.
    */
   fun tryDecodeSubBearer(encodedPart: String): SubTokenHeader? =
-      try {
-        val json = String(Base64.getDecoder().decode(encodedPart), Charsets.UTF_8)
-        JsonCodec.mapper.readValue(json, Map::class.java)?.let { map ->
-          @Suppress("UNCHECKED_CAST") val values = map as Map<String, Any?>
-          SubTokenHeader(
-              client = values["client"] as? String,
-              token = values["token"] as? String,
-              expiry = values["expiry"] as? String,
-          )
-        }
-      } catch (e: Exception) {
-        when (e) {
-          is IllegalArgumentException,
-          is JsonProcessingException,
-          is ClassCastException -> {
-            logger.trace(
-                "Sub-bearer decode failed (input length={}): {}", encodedPart.length, e.message)
-            null
-          }
-          else -> throw e
-        }
-      }
-
-  private fun tokenMatches(
-      token: T,
-      plain: String,
-  ): Boolean = !token.expiryAt.isBefore(Instant.now()) && doesTokenMatch(token.token, plain)
+      subTokenService.tryDecodeSubBearer(encodedPart)
 
   /**
    * Validate a sub-token for a user.
@@ -1008,29 +954,7 @@ constructor(
       username: String,
       subTokenName: String,
       rawOrBearer: String,
-  ): Boolean {
-    val user = userDirectory.findByUsername(username) ?: return false
-    val registration = cachedRegistrations.find { it.name == subTokenName } ?: return false
-    val tokenField = rawOrBearer.trim()
-    val authHeader = tryDecodeSubBearer(tokenField.removePrefix("Bearer ").trim())
-
-    if (authHeader != null &&
-        !authHeader.token.isNullOrBlank() &&
-        !authHeader.client.isNullOrBlank()) {
-      val token =
-          getByUserIdAndClient(user.getOgiriUserId(), authHeader.client)?.takeIf {
-            OgiriTokenType.of(it.tokenType) == OgiriTokenType.SUB && it.tokenSubtype == subTokenName
-          }
-              ?: return false
-      return tokenMatches(token, authHeader.token) && registration.validate(authHeader.token)
-    }
-
-    val all =
-        repository
-            .findByUserIdAndTokenSubtypeOrderByUpdatedAtDesc(user.getOgiriUserId(), subTokenName)
-            .filter { OgiriTokenType.of(it.tokenType) == OgiriTokenType.SUB }
-    return all.any { tokenMatches(it, tokenField) && registration.validate(tokenField) }
-  }
+  ): Boolean = subTokenService.validateSubToken(username, subTokenName, rawOrBearer)
 
   /**
    * Retrieve a sub-token for a user by name.
@@ -1046,13 +970,7 @@ constructor(
   fun getSubToken(
       userId: Long,
       subtype: String,
-  ): OgiriToken? {
-    if (cachedRegistrations.none { it.name == subtype }) return null
-
-    return repository
-        .findByUserIdAndTokenSubtypeOrderByUpdatedAtDesc(userId, subtype)
-        .firstOrNull { token -> OgiriTokenType.of(token.tokenType) == OgiriTokenType.SUB }
-  }
+  ): OgiriToken? = subTokenService.getSubToken(userId, subtype)
 
   /**
    * Revoke all sub-tokens of a specific type for a user.
@@ -1068,18 +986,7 @@ constructor(
   fun revokeSubToken(
       userId: Long,
       subtypeName: String,
-  ): Boolean {
-    val tokens =
-        repository.findByUserIdAndTokenSubtypeOrderByUpdatedAtDesc(userId, subtypeName).filter {
-          OgiriTokenType.of(it.tokenType) == OgiriTokenType.SUB
-        }
-
-    if (tokens.isEmpty()) return false
-
-    deleteToken(userId, tokens.map { it.client })
-    auditHook.onSubTokenRevoked(userId, subtypeName)
-    return true
-  }
+  ): Boolean = subTokenService.revokeSubToken(userId, subtypeName)
 
   /**
    * Renew a specific sub-token and return new headers containing only that sub-token.
@@ -1093,43 +1000,10 @@ constructor(
       userId: Long,
       parentClient: String,
       subtypeName: String,
-  ): AuthHeader? {
-    val user = userDirectory.findById(userId) ?: return null
-    val parentToken = lookupToken(userId, parentClient) ?: return null
-    if (parentToken.isExpired()) return null
+  ): AuthHeader? = subTokenService.renewSubToken(userId, parentClient, subtypeName)
 
-    val registration = cachedRegistrations.find { it.name == subtypeName } ?: return null
-    val subClient = registration.clientIdFor(parentClient)
-
-    val newSubToken =
-        createOrUpdateToken(
-            user = user,
-            client = subClient,
-            expiry = registration.expiry(parentToken.expiryAt),
-            tokenType = OgiriTokenType.SUB,
-            tokenSubtype = subtypeName,
-        )
-
-    val plain = newSubToken.plainToken ?: return null
-    val subHeader =
-        SubTokenHeader(
-            client = subClient,
-            token = plain,
-            expiry = newSubToken.expiryAt.toString(),
-        )
-    return AuthHeader(subTokens = mapOf(subtypeName to subHeader))
-  }
-
-  /**
-   * Generate expected sub-client IDs from app client IDs and registrations.
-   *
-   * @param appClients Set of app client IDs
-   * @param registrations Sub-token registrations
-   * @return Set of expected sub-client IDs
-   */
   private fun expectedSubClientsFor(
       appClients: Set<String>,
       registrations: List<OgiriSubTokenRegistration>,
-  ): Set<String> =
-      appClients.flatMap { parent -> registrations.map { it.clientIdFor(parent) } }.toSet()
+  ): Set<String> = subTokenService.expectedSubClientsFor(appClients, registrations)
 }
