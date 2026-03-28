@@ -25,18 +25,10 @@ class OgiriRouteCatalog(
   private val configuredRoutes: List<OgiriRoute> = registries.flatMap { it.routes() }
   private val publicRoutes: List<OgiriRoute> = configuredRoutes.filterNot { it.useAuth }
 
-  /**
-   * Provide the list of routes configured by all registered OgiriRouteRegistry implementations.
-   *
-   * @return The list of configured OgiriRoute objects.
-   */
+  /** Routes configured by all registered [OgiriRouteRegistry] implementations. */
   fun configured(): List<OgiriRoute> = configuredRoutes
 
-  /**
-   * List routes that do not require authentication.
-   *
-   * @return A list of public [OgiriRoute] instances (routes with authentication disabled).
-   */
+  /** Routes that do not require authentication (`useAuth = false`). */
   fun public(): List<OgiriRoute> = publicRoutes
 
   /**

@@ -56,7 +56,7 @@ class CaffeineOgiriTokenLookupCache<T : OgiriToken>(
       cache.invalidate(OgiriCacheKey.key(userId, client))
 
   override fun evictAll(userId: Long) {
-    val keys = cache.asMap().keys.filter { it.startsWith(OgiriCacheKey.prefix(userId)) }.toList()
+    val keys = cache.asMap().keys.filter { it.startsWith(OgiriCacheKey.prefix(userId)) }
     cache.invalidateAll(keys)
   }
 }

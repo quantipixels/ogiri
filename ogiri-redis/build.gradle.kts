@@ -6,6 +6,7 @@ plugins {
   id("io.spring.dependency-management") version libs.versions.dependencyManagement.get()
   `maven-publish`
   signing
+  jacoco
 }
 
 group = "com.quantipixels.ogiri"
@@ -46,7 +47,29 @@ dependencies {
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
-tasks.withType<Test> { useJUnitPlatform() }
+tasks.withType<Test> {
+  useJUnitPlatform()
+  finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.jacocoTestReport {
+  dependsOn(tasks.test)
+  reports {
+    xml.required = true
+    csv.required = false
+    html.required = true
+  }
+}
+
+jacoco { toolVersion = libs.versions.jacoco.get() }
+
+// Coverage baseline: 37% (current). Raise this as tests are added.
+tasks.jacocoTestCoverageVerification {
+  dependsOn(tasks.test)
+  violationRules { rule { limit { minimum = "0.37".toBigDecimal() } } }
+}
+
+tasks.named("check") { dependsOn(tasks.jacocoTestCoverageVerification) }
 
 publishing {
   publications {
@@ -115,8 +138,12 @@ publishing {
 }
 
 signing {
-  val hasGpgKey = findProperty("signing.keyId") != null || System.getenv("GPG_KEY_ID") != null
-  if (hasGpgKey) {
+  val signingKey = (findProperty("signing.key") ?: System.getenv("GPG_PRIVATE_KEY"))?.toString()
+  val signingPassword =
+      (findProperty("signing.password") ?: System.getenv("GPG_PASSPHRASE"))?.toString()
+
+  if (signingKey != null && signingPassword != null) {
+    useInMemoryPgpKeys(signingKey, signingPassword)
     val pub = publishing.publications.findByName("mavenJava")
     if (pub != null) sign(pub)
   }

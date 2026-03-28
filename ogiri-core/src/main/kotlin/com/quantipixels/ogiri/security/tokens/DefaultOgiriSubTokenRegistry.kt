@@ -18,10 +18,5 @@ package com.quantipixels.ogiri.security.tokens
 class DefaultOgiriSubTokenRegistry(
     private val registrations: List<OgiriSubTokenRegistration> = emptyList(),
 ) : OgiriSubTokenRegistry {
-  /**
-   * Provides the list of registered Ogiri sub-token registrations.
-   *
-   * @return The list of `OgiriSubTokenRegistration` instances held by this registry.
-   */
   override fun registrations(): List<OgiriSubTokenRegistration> = registrations
 }

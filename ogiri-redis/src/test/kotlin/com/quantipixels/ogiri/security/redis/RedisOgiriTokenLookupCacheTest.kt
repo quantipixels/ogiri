@@ -35,19 +35,18 @@ class RedisOgiriTokenLookupCacheTest {
 
   private lateinit var cache: RedisOgiriTokenLookupCache<OgiriStubToken>
 
-  private fun defaultProperties() =
-      OgiriConfigurationProperties().apply {
-        lookup.apply {
-          maxSize = 1000
-          expiryMinutes = 5
-        }
-      }
-
   @BeforeEach
   fun setup() {
-    val config = RedisStandaloneConfiguration(redis.host, redis.getMappedPort(6379))
-    val factory = LettuceConnectionFactory(config).also { it.afterPropertiesSet() }
-    cache = RedisOgiriTokenLookupCache(factory, defaultProperties())
+    val properties =
+        OgiriConfigurationProperties().apply {
+          lookup.maxSize = 1000
+          lookup.expiryMinutes = 5
+        }
+    val factory =
+        LettuceConnectionFactory(
+                RedisStandaloneConfiguration(redis.host, redis.getMappedPort(6379)))
+            .also { it.afterPropertiesSet() }
+    cache = RedisOgiriTokenLookupCache(factory, properties)
     // Flush all keys before each test for isolation
     factory.connection.use { it.serverCommands().flushAll() }
   }

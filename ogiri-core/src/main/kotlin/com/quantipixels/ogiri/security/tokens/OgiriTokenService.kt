@@ -40,6 +40,7 @@ import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource
 import org.springframework.transaction.annotation.Transactional
@@ -885,8 +886,10 @@ constructor(
   companion object {
     private val logger = LoggerFactory.getLogger(OgiriTokenService::class.java)
 
-    // Pre-computed BCrypt hash for timing normalization
-    private const val DUMMY_HASH = "\$2a\$10\$dummyhashvalueforconstanttimecheck"
+    // Valid BCrypt hash for timing normalization — prevents user enumeration via response-time
+    // diff.
+    // Generated fresh each startup; a new hash each run means no pre-computed attack applies.
+    private val DUMMY_HASH = BCryptPasswordEncoder().encode("dummy")
 
     private val SHA256: ThreadLocal<java.security.MessageDigest> =
         ThreadLocal.withInitial { java.security.MessageDigest.getInstance("SHA-256") }
@@ -965,30 +968,29 @@ constructor(
    * Base64 decoding failure, JSON parse error, or type cast error. All other exceptions are
    * re-thrown.
    */
-  fun tryDecodeSubBearer(encodedPart: String): SubTokenHeader? {
-    return try {
-      val json = String(Base64.getDecoder().decode(encodedPart), Charsets.UTF_8)
-      JsonCodec.mapper.readValue(json, Map::class.java)?.let { map ->
-        @Suppress("UNCHECKED_CAST") val values = map as Map<String, Any?>
-        SubTokenHeader(
-            client = values["client"] as? String,
-            token = values["token"] as? String,
-            expiry = values["expiry"] as? String,
-        )
-      }
-    } catch (e: Exception) {
-      when (e) {
-        is IllegalArgumentException,
-        is JsonProcessingException,
-        is ClassCastException -> {
-          logger.trace(
-              "Sub-bearer decode failed (input length={}): {}", encodedPart.length, e.message)
-          null
+  fun tryDecodeSubBearer(encodedPart: String): SubTokenHeader? =
+      try {
+        val json = String(Base64.getDecoder().decode(encodedPart), Charsets.UTF_8)
+        JsonCodec.mapper.readValue(json, Map::class.java)?.let { map ->
+          @Suppress("UNCHECKED_CAST") val values = map as Map<String, Any?>
+          SubTokenHeader(
+              client = values["client"] as? String,
+              token = values["token"] as? String,
+              expiry = values["expiry"] as? String,
+          )
         }
-        else -> throw e
+      } catch (e: Exception) {
+        when (e) {
+          is IllegalArgumentException,
+          is JsonProcessingException,
+          is ClassCastException -> {
+            logger.trace(
+                "Sub-bearer decode failed (input length={}): {}", encodedPart.length, e.message)
+            null
+          }
+          else -> throw e
+        }
       }
-    }
-  }
 
   private fun tokenMatches(
       token: T,

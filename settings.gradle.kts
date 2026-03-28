@@ -81,6 +81,9 @@ dependencyResolutionManagement {
       version("springBoot", "3.5.7")
       version("dependencyManagement", "1.1.7")
       version("versionsPlugin", "0.52.0")
+      version("caffeine", "3.2.3")
+      version("owasp", "12.1.9")
+      version("jacoco", "0.8.11")
     }
   }
 }

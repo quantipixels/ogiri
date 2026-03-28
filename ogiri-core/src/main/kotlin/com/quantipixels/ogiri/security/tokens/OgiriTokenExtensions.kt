@@ -12,53 +12,26 @@
  */
 package com.quantipixels.ogiri.security.tokens
 
-/**
- * Filter the collection to tokens that match the specified OgiriTokenType.
- *
- * @param type The OgiriTokenType to keep.
- * @return A list containing only tokens whose `tokenType` resolves to `type`.
- */
+/** Filter the collection to tokens that match the specified OgiriTokenType. */
 fun <T : OgiriToken> Collection<T>.filterByOgiriTokenType(type: OgiriTokenType): List<T> = filter {
   OgiriTokenType.of(it.tokenType) == type
 }
 
-/**
- * Filters the collection to tokens of type APP.
- *
- * @return A list of tokens whose token type corresponds to `OgiriTokenType.APP`.
- */
+/** Filters the collection to tokens of type APP. */
 fun <T : OgiriToken> Collection<T>.appTokens(): List<T> = filterByOgiriTokenType(OgiriTokenType.APP)
 
-/**
- * Return tokens whose OgiriTokenType is SUB.
- *
- * @return A list containing only tokens with type SUB.
- */
+/** Return tokens whose OgiriTokenType is SUB. */
 fun <T : OgiriToken> Collection<T>.subTokens(): List<T> = filterByOgiriTokenType(OgiriTokenType.SUB)
 
-/**
- * Collects unique client IDs from the tokens in this collection.
- *
- * @return A set of client ID strings present in the collection.
- */
+/** Collects unique client IDs from the tokens in this collection. */
 fun <T : OgiriToken> Collection<T>.clientIds(): Set<String> = map { it.client }.toSet()
 
-/**
- * Filters tokens whose `client` value is contained in the provided set.
- *
- * @param clientIds Set of client IDs to include.
- * @return List of tokens with a `client` present in `clientIds`.
- */
+/** Filters tokens whose `client` value is contained in the provided set. */
 fun <T : OgiriToken> Collection<T>.filterByClientIds(clientIds: Set<String>): List<T> = filter {
   it.client in clientIds
 }
 
-/**
- * Exclude tokens whose client is in the provided set.
- *
- * @param clientIds Set of client IDs to exclude.
- * @return List of tokens whose `client` is not contained in `clientIds`.
- */
+/** Excludes tokens whose client is in the provided set. */
 fun <T : OgiriToken> Collection<T>.filterOutClientIds(clientIds: Set<String>): List<T> = filter {
   it.client !in clientIds
 }

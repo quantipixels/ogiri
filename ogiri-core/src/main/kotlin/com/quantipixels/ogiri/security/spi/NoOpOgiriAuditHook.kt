@@ -22,4 +22,4 @@ package com.quantipixels.ogiri.security.spi
  * **Usage in tests:** prefer referencing this object directly rather than implementing an anonymous
  * `object : OgiriAuditHook {}`, so the null-object pattern is visible and consistent.
  */
-public object NoOpOgiriAuditHook : OgiriAuditHook
+object NoOpOgiriAuditHook : OgiriAuditHook

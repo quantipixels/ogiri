@@ -51,9 +51,9 @@ class RedisOgiriTokenLookupCache<T : OgiriToken>(
     properties: OgiriConfigurationProperties,
 ) : OgiriTokenLookupCache<T> {
 
-  private val ttl: Duration = Duration.ofMinutes(properties.lookup.expiryMinutes)
+  private val ttl = Duration.ofMinutes(properties.lookup.expiryMinutes)
 
-  private val template: RedisTemplate<String, T> = buildTemplate(connectionFactory)
+  private val template = buildTemplate<T>(connectionFactory)
 
   override fun get(userId: Long, client: String): T? =
       template.opsForValue().get(OgiriCacheKey.key(userId, client))
@@ -77,7 +77,7 @@ class RedisOgiriTokenLookupCache<T : OgiriToken>(
     val keysToDelete = mutableListOf<String>()
     template.execute { connection ->
       connection.keyCommands().scan(options).use { cursor ->
-        cursor.forEachRemaining { key -> keysToDelete.add(String(key)) }
+        cursor.forEachRemaining { keysToDelete.add(String(it)) }
       }
     }
     if (keysToDelete.isNotEmpty()) {

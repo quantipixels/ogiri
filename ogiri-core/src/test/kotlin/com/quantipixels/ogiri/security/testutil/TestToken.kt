@@ -24,47 +24,22 @@ import java.time.Instant
  * All properties are mutable to allow TokenService to update them as needed.
  */
 data class TestToken(
-    /** Primary key - mutable for testing. */
     override var id: Long = 0,
-    /** User ID. */
     override val userId: Long,
-    /** Client identifier. */
     override val client: String,
-    /** Token hash. */
     override var token: String,
-    /** Token type ("app" or "sub"). */
     override val tokenType: String = "app",
-    /** Expiration time. */
     override var expiryAt: Instant,
-    /** Creation time. */
     override val createdAt: Instant = Instant.now(),
-    /** Last update time - mutable for testing. */
     override var updatedAt: Instant = Instant.now(),
-    /** Last token update time - mutable for testing. */
     override var tokenUpdatedAt: Instant = Instant.now(),
-    /** Sub-token type. */
     override var tokenSubtype: String? = null,
-    /** Previous token hash - mutable for testing. */
     override var lastToken: String? = null,
-    /** Token before last - mutable for testing. */
     override var previousToken: String? = null,
-    /** Last used timestamp - mutable for testing. */
     override var lastUsedAt: Instant? = null,
 ) : OgiriBaseToken() {
-  /**
-   * Plain (unhashed) token value - temporary for testing. Note: This uses the inherited var
-   * plainToken from BaseToken.
-   */
   companion object {
-    /**
-     * Create a TestToken populated with the minimal fields commonly needed in tests.
-     *
-     * @param userId The ID of the token owner.
-     * @param client The client identifier associated with the token.
-     * @param token The stored token value (e.g., a hashed token).
-     * @param expiryAt The instant when the token expires.
-     * @return A TestToken instance with the provided values and defaults for remaining fields.
-     */
+    /** Creates a [TestToken] with the minimal fields needed in most tests. */
     fun create(
         userId: Long = 1L,
         client: String = "test-client",
@@ -78,13 +53,7 @@ data class TestToken(
             expiryAt = expiryAt,
         )
 
-    /**
-     * Constructs a TestToken with an expiry time already in the past.
-     *
-     * @param userId The user ID to assign to the token.
-     * @param client The client identifier to assign to the token.
-     * @return A TestToken whose `expiryAt` is set to one second before the current instant.
-     */
+    /** Creates a [TestToken] with `expiryAt` set to one second before now. */
     fun expired(
         userId: Long = 1L,
         client: String = "test-client",

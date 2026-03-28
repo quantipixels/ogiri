@@ -6,6 +6,7 @@ plugins {
   id("io.spring.dependency-management") version libs.versions.dependencyManagement.get()
   `maven-publish`
   signing
+  jacoco
 }
 
 group = "com.quantipixels.ogiri"
@@ -31,7 +32,7 @@ dependencyManagement {
 
 dependencies {
   api(project(":ogiri-core"))
-  implementation("com.github.ben-manes.caffeine:caffeine:3.2.3")
+  implementation("com.github.ben-manes.caffeine:caffeine:${libs.versions.caffeine.get()}")
   implementation("org.springframework.boot:spring-boot-autoconfigure")
 
   testImplementation(testFixtures(project(":ogiri-core")))
@@ -41,7 +42,28 @@ dependencies {
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
-tasks.withType<Test> { useJUnitPlatform() }
+tasks.withType<Test> {
+  useJUnitPlatform()
+  finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.jacocoTestReport {
+  dependsOn(tasks.test)
+  reports {
+    xml.required = true
+    csv.required = false
+    html.required = true
+  }
+}
+
+jacoco { toolVersion = libs.versions.jacoco.get() }
+
+tasks.jacocoTestCoverageVerification {
+  dependsOn(tasks.test)
+  violationRules { rule { limit { minimum = "0.50".toBigDecimal() } } }
+}
+
+tasks.named("check") { dependsOn(tasks.jacocoTestCoverageVerification) }
 
 publishing {
   publications {
@@ -89,7 +111,7 @@ publishing {
           dependenciesNode.appendNode("dependency").apply {
             appendNode("groupId", "com.github.ben-manes.caffeine")
             appendNode("artifactId", "caffeine")
-            appendNode("version", "3.2.3")
+            appendNode("version", libs.versions.caffeine.get())
             appendNode("scope", "compile")
           }
         }
@@ -111,8 +133,12 @@ publishing {
 }
 
 signing {
-  val hasGpgKey = findProperty("signing.keyId") != null || System.getenv("GPG_KEY_ID") != null
-  if (hasGpgKey) {
+  val signingKey = (findProperty("signing.key") ?: System.getenv("GPG_PRIVATE_KEY"))?.toString()
+  val signingPassword =
+      (findProperty("signing.password") ?: System.getenv("GPG_PASSPHRASE"))?.toString()
+
+  if (signingKey != null && signingPassword != null) {
+    useInMemoryPgpKeys(signingKey, signingPassword)
     val pub = publishing.publications.findByName("mavenJava")
     if (pub != null) sign(pub)
   }

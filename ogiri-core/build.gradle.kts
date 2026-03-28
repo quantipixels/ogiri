@@ -4,7 +4,7 @@ plugins {
   kotlin("jvm")
   kotlin("plugin.spring")
   id("io.spring.dependency-management") version libs.versions.dependencyManagement.get()
-  id("org.owasp.dependencycheck") version "12.1.9"
+  id("org.owasp.dependencycheck") version libs.versions.owasp.get()
   jacoco
   `java-test-fixtures`
   `maven-publish`
@@ -53,7 +53,7 @@ dependencies {
   // Users who use Spring Data will have this at runtime
   compileOnly("org.springframework.data:spring-data-commons")
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-  implementation("com.github.ben-manes.caffeine:caffeine:3.2.3")
+  implementation("com.github.ben-manes.caffeine:caffeine:${libs.versions.caffeine.get()}")
 
   // Configuration processor for IDE autocomplete and property hints
   annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
@@ -92,7 +92,7 @@ tasks.jacocoTestReport {
  * JaCoCo code coverage configuration. Enforces minimum 50% coverage for critical token
  * functionality.
  */
-jacoco { toolVersion = "0.8.11" }
+jacoco { toolVersion = libs.versions.jacoco.get() }
 
 tasks.jacocoTestCoverageVerification {
   dependsOn(tasks.test)
