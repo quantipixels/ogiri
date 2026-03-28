@@ -98,7 +98,7 @@ Coverage report: `ogiri-core/build/reports/jacoco/test/html/index.html`
 Install hooks for code quality enforcement:
 
 ```bash
-./gradlew setupDev
+lefthook install
 ```
 
 - **Pre-commit:** Runs `spotlessCheck`
@@ -131,7 +131,7 @@ chore: bump version to 1.0.2
 Version is defined in `settings.gradle.kts`:
 
 ```kotlin
-val projectVersion = System.getenv("RELEASE_VERSION") ?: "1.0.1"
+val projectVersion = System.getenv("RELEASE_VERSION") ?: "3.0.1"
 ```
 
 ### Override Version

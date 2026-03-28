@@ -149,12 +149,9 @@ Spring Data auto-generates these from method names:
         identifierPolicy: IdentifierPolicy,
         subTokenRegistry: OgiriSubTokenRegistry,
         properties: OgiriConfigurationProperties,
-        auditHookProvider: ObjectProvider<OgiriAuditHook>,
-        rateLimitHookProvider: ObjectProvider<OgiriRateLimitHook>,
     ) : OgiriTokenService<MyToken>(
         tokenRepository, passwordEncoder, userDirectory,
         identifierPolicy, subTokenRegistry, properties,
-        auditHookProvider, rateLimitHookProvider,
     ) {
         override fun tokenFactory(
             userId: Long, client: String, hashedToken: String,
@@ -183,13 +180,10 @@ Spring Data auto-generates these from method names:
             OgiriUserDirectory userDirectory,
             IdentifierPolicy identifierPolicy,
             OgiriSubTokenRegistry subTokenRegistry,
-            OgiriConfigurationProperties properties,
-            ObjectProvider<OgiriAuditHook> auditHookProvider,
-            ObjectProvider<OgiriRateLimitHook> rateLimitHookProvider
+            OgiriConfigurationProperties properties
         ) {
             super(tokenRepository, passwordEncoder, userDirectory,
-                  identifierPolicy, subTokenRegistry, properties,
-                  auditHookProvider, rateLimitHookProvider);
+                  identifierPolicy, subTokenRegistry, properties);
         }
 
         @Override
@@ -340,12 +334,9 @@ Extend `OgiriJdbcTokenRepository<T>` and implement two methods:
         identifierPolicy: IdentifierPolicy,
         subTokenRegistry: OgiriSubTokenRegistry,
         properties: OgiriConfigurationProperties,
-        auditHookProvider: ObjectProvider<OgiriAuditHook>,
-        rateLimitHookProvider: ObjectProvider<OgiriRateLimitHook>,
     ) : OgiriTokenService<MyToken>(
         tokenRepository, passwordEncoder, userDirectory,
         identifierPolicy, subTokenRegistry, properties,
-        auditHookProvider, rateLimitHookProvider,
     ) {
         override fun tokenFactory(
             userId: Long, client: String, hashedToken: String,
@@ -374,13 +365,10 @@ Extend `OgiriJdbcTokenRepository<T>` and implement two methods:
             OgiriUserDirectory userDirectory,
             IdentifierPolicy identifierPolicy,
             OgiriSubTokenRegistry subTokenRegistry,
-            OgiriConfigurationProperties properties,
-            ObjectProvider<OgiriAuditHook> auditHookProvider,
-            ObjectProvider<OgiriRateLimitHook> rateLimitHookProvider
+            OgiriConfigurationProperties properties
         ) {
             super(tokenRepository, passwordEncoder, userDirectory,
-                  identifierPolicy, subTokenRegistry, properties,
-                  auditHookProvider, rateLimitHookProvider);
+                  identifierPolicy, subTokenRegistry, properties);
         }
 
         @Override
