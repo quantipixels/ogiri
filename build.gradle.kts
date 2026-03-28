@@ -57,6 +57,7 @@ allprojects {
           "**/build/**",
           "**/node_modules/**",
           ".claude/**",
+          ".ai-toolkit/**",
           "plans/**",
           "**/pnpm-lock.yaml",
           "pnpm-workspace.yaml",
