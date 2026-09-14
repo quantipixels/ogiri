@@ -26,7 +26,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-web")
 
   // Database drivers
-  runtimeOnly("com.h2database:h2:2.4.240")
+  runtimeOnly("com.h2database:h2:2.5.250")
   runtimeOnly("org.postgresql:postgresql:42.7.13")
 
   testImplementation(project(":ogiri-test"))
