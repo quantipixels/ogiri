@@ -1,8 +1,8 @@
-# Ogiri 0.1.0
+# Ogiri 0.0.1
 
 Low-setup opaque bearer sessions for **Spring Boot 4.1 / Java 17+**, with **PostgreSQL and MySQL 8+**. Keep your accounts, password encoder, identity model and authorization rules. Ogiri provides the reusable session lifecycle and Boot integration.
 
-This is an unpublished greenfield API. The earlier PostgreSQL-only 0.1.0 candidate is superseded: `JdbcSessions` replaces `PostgresSessions`, the adapter becomes a Boot starter, and the schema changes. Do not mix old/new binaries or schema. No v3/v4 credential migration is implied.
+This is a new, unpublished prototype API and schema. Earlier v3/v4 credentials and database layouts are incompatible; use the application-owned migration and require existing users to sign in again.
 
 ## Install
 
@@ -10,13 +10,13 @@ This is an unpublished greenfield API. The earlier PostgreSQL-only 0.1.0 candida
 <dependency>
   <groupId>com.quantipixels.ogiri</groupId>
   <artifactId>ogiri-spring-boot-starter</artifactId>
-  <version>0.1.0</version>
+  <version>0.0.1</version>
 </dependency>
 ```
 
 Until published, run `mvn clean install` with a disposable database (see [CONTRIBUTING.md](CONTRIBUTING.md)). Add **one** database driver: `org.postgresql:postgresql` or `com.mysql:mysql-connector-j`. Your application's Spring Boot BOM manages its version. The starter includes Spring JDBC, the native OAuth2 resource-server pipeline, and Spring MVC; it does not require JPA, Redis or a Kotlin runtime.
 
-Configure your ordinary `spring.datasource.*` settings and provision the schema. Provide your existing `UserDetailsService`; no Ogiri user entity, session repository, authentication manager, filter or controller is needed for the default path:
+Configure your ordinary `spring.datasource.*` settings, provision the schema, and set `ogiri.enabled=true`. Provide your existing `UserDetailsService`; no Ogiri user entity, session repository, authentication manager, filter or controller is needed for the default path:
 
 ```java
 @Bean
@@ -55,7 +55,7 @@ ogiri:
   enabled: true
 ```
 
-All settings above show defaults, not required configuration. Properties are bound and validated by Boot, with generated IDE metadata. Reaching the session cap rejects the new issuance; it does not evict another device. Expiry is fixed, not sliding. Session reads check current account status and authorities. Invalid credentials fail authentication; directory/storage outages remain failures, never fabricated anonymous success.
+`ogiri.enabled=true` is required; the other settings above show defaults. This opt-in prevents merely adding the dependency from registering security endpoints or requiring a database schema. Properties are bound and validated by Boot, with generated IDE metadata. Reaching the session cap rejects the new issuance; it does not evict another device. Expiry is fixed, not sliding. Session reads check current account status and authorities. Invalid credentials fail authentication; directory/storage outages remain failures, never fabricated anonymous success.
 
 ## Keep an existing security chain
 
@@ -92,54 +92,20 @@ Use the authoritative primary and a normal underlying pool, not a transaction-aw
 
 The starter reuses the application transaction manager, including Spring JPA. With the core alone, pass the manager for the supplied DataSource to `new JdbcSessions(dataSource, policy, transactionManager)`. The two-argument constructor creates a JDBC manager and is intended for JDBC-only transaction contexts. Multiple data sources or managers require an explicitly selected `JdbcSessions` bean; do not select an unrelated manager.
 
-With caching disabled (the default), each authentication performs one indexed session read and no writes, followed by the current account lookup in the Spring adapter. Malformed credentials fail before query execution. Five-second SQL timeouts do not replace connection, socket or HTTP timeouts. Configure those through your pool/server. JDBC driver timeout units differ: PostgreSQL `socketTimeout` uses seconds; MySQL uses milliseconds. Do not share that numeric setting between drivers. Authentication expiry does not depend on cleanup.
+Each authentication performs one indexed session read and no writes, followed by the current account lookup in the Spring adapter. Malformed credentials fail before query execution. Five-second SQL timeouts do not replace connection, socket or HTTP timeouts. Configure those through your pool/server. JDBC driver timeout units differ: PostgreSQL `socketTimeout` uses seconds; MySQL uses milliseconds. Do not share that numeric setting between drivers. Authentication expiry does not depend on cleanup.
 
 Schedule `JdbcSessions.cleanup(batchSize)` in your existing jobs. It locks a bounded ID page with `SKIP LOCKED` and deletes it in the same transaction; concurrent workers need no leader lease. Limit job runtime and stop when fewer than a page is returned. Core-only callers can depend on `ogiri` and construct `JdbcSessions(dataSource, policy)` without Boot.
 
-## Optional session caching
+## Session freshness and caching decision
 
-Caching is **disabled by default**. Enable it only when your application accepts delayed revocation of cached sessions. Ogiri caches successful session lookups, not passwords, account status, authorities, principals or invalid tokens. The account adapter still runs on every request. A session-cache hit can authenticate during a database outage until its validation age or session expiry is reached; it cannot bypass an account-provider failure.
+Every authentication queries the authoritative database and then loads current account status and authorities. Revocation is visible to the next authentication request after its database commit. A database outage fails authentication instead of accepting a previously observed session.
 
-Reuse your application's Spring `CacheManager` and a dedicated region:
-
-```yaml
-ogiri:
-  cache:
-    enabled: true
-    name: my-app.ogiri.sessions
-    max-age: 5s
-```
-
-`max-age` defaults to `5s` and accepts `1ms` through `1m`. It bounds the age of the SQL validation, not time since the latest cache hit. Each hit checks both validation age and absolute session expiry. Ogiri measures age before the database read, so a late concurrent fill does not restart the window. Keep application and database clocks synchronized; the bound is subject to clock skew. Nodes with a shorter configured maximum age enforce that shorter age when reading shared entries.
-
-Enabling caching without an available `CacheManager` or the named region fails startup. A supplied `JdbcSessions` bean takes precedence and must be configured explicitly. Ogiri never enables caching for the rest of your application, installs a provider, or changes credential erasure. Multiple managers need a primary choice or an explicitly configured `JdbcSessions` bean.
-
-For **Caffeine**, add `spring-boot-starter-cache` and `com.github.ben-manes.caffeine:caffeine` in your application, enable Spring caching in a configuration class with `@EnableCaching`, and configure Boot:
-
-```yaml
-spring:
-  cache:
-    type: caffeine
-    cache-names: my-app.ogiri.sessions
-    caffeine:
-      spec: maximumSize=10000,expireAfterWrite=5s
-```
-
-An explicitly declared `CacheManager` works without `@EnableCaching` because Ogiri uses the programmatic Spring Cache API. Other Spring Cache providers can be supplied through the same contract; configure their physical expiry, size limits and serialization. The payload supports Java serialization. Caffeine and Spring's store-by-value concurrent-map provider are exercised by the tests; a specific Redis deployment or custom serializer is not thereby certified. Use a dedicated region for each session database, restrict cache access as authentication authority, and clear that region on library upgrades. No raw bearer token is used as a key or value; keys contain a SHA-256 digest.
-
-Successful `revoke` and `revokeAll` evict the affected keys **after the SQL transaction commits**. Cache failures fall back to the database for reads and do not undo committed revocations. Do not depend on eviction for immediate cross-node revocation: local caches do not broadcast, shared caches can have in-flight fills, and eviction can fail. A cached session may remain accepted until its maximum age or expiry. Direct SQL changes and writers without the same cache have the same bounded-staleness limitation. Keep caching disabled for strict revocation, or independently require fresh authorization for sensitive operations.
-
-Core-only integration uses the same implementation:
-
-```java
-var cache = new SessionCache(cacheManager.getCache("my-app.ogiri.sessions"), Duration.ofSeconds(5));
-var sessions = new JdbcSessions(dataSource, SessionPolicy.defaults(), transactionManager, cache);
-```
+Ogiri 0.0.1 deliberately has no session lookup cache. Caching would make revocation stale across nodes, in-flight fills, direct SQL changes and cache outages. It also adds a second security-sensitive store and provider configuration to a prototype whose primary promise is immediate revocation. Applications may cache unrelated data through Spring Cache; that does not change Ogiri authentication. Revisit session caching only with an explicit consistency contract and measured need.
 
 ## Deliberate limits
 
 No refresh/rotation protocol, cookie transport, registration, recovery orchestration or MFA is invented. Ordinary browser HttpSession applications should consider Spring Session JDBC; federated OAuth/OIDC should use an identity provider. These tools are complementary, not reimplemented here. See [SECURITY.md](SECURITY.md) for recovery coordination and token-lifetime trade-offs, and [PUBLISHING.md](PUBLISHING.md) for the opt-in Central release path.
 
-The [independent example](examples/spring-app) consumes the actual installed artifacts. It exercises both the zero-plumbing default and existing multi-chain applications against both database engines. Production performance is not inferred from line counts; the opt-in benchmark measures a defined local storage workload.
+The [independent example](examples/spring-app) consumes the actual installed artifacts. It exercises the opt-in default chain and existing multi-chain applications against both database engines. Production performance is not inferred from line counts; the opt-in benchmark measures a defined local storage workload.
 
 Licensed under Apache-2.0.

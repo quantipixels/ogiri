@@ -17,6 +17,7 @@ import org.springframework.security.crypto.password.*;
 class OgiriAutoConfigurationTest {
     private final WebApplicationContextRunner runner = new WebApplicationContextRunner()
             .withConfiguration(AutoConfigurations.of(OgiriAutoConfiguration.class))
+            .withPropertyValues("ogiri.enabled=true")
             .withBean(DataSource.class, () -> new DriverManagerDataSource(System.getenv("OGIRI_TEST_JDBC_URL"),
                     System.getenv("OGIRI_TEST_JDBC_USER"), System.getenv("OGIRI_TEST_JDBC_PASSWORD")))
             .withBean(UserDetailsService.class, () -> new InMemoryUserDetailsManager(
@@ -26,6 +27,17 @@ class OgiriAutoConfigurationTest {
         runner.withPropertyValues("ogiri.enabled=false").run(context -> {
             assertThat(context).hasNotFailed().doesNotHaveBean(JdbcSessions.class).doesNotHaveBean(OgiriSecurity.class);
         });
+    }
+
+    @Test void starterIsInactiveUntilEnabled() {
+        new WebApplicationContextRunner().withConfiguration(AutoConfigurations.of(OgiriAutoConfiguration.class))
+                .run(context -> assertThat(context).hasNotFailed().doesNotHaveBean(JdbcSessions.class));
+    }
+
+    @Test void missingDataSourceHasAnActionableFailure() {
+        new WebApplicationContextRunner().withConfiguration(AutoConfigurations.of(OgiriAutoConfiguration.class))
+                .withPropertyValues("ogiri.enabled=true")
+                .run(context -> assertThat(context).hasFailed());
     }
 
     @Test void boundPolicyAndCustomAuthenticationBeansWin() {
@@ -45,29 +57,42 @@ class OgiriAutoConfigurationTest {
         runner.withPropertyValues("ogiri.base-path=/auth/**").run(context -> assertThat(context).hasFailed());
     }
 
-    @Test void cacheOptInRequiresAProviderAndAnExistingRegion() {
-        runner.withPropertyValues("ogiri.cache.enabled=true").run(context -> {
-            assertThat(context).hasFailed();
-            assertThat(context.getStartupFailure()).hasRootCauseMessage("ogiri.cache.enabled requires an application CacheManager");
-        });
-        runner.withPropertyValues("ogiri.cache.enabled=true", "ogiri.cache.name=not-configured")
-                .withBean(org.springframework.cache.CacheManager.class, () -> new org.springframework.cache.concurrent.ConcurrentMapCacheManager("only-this"))
-                .run(context -> {
-                    assertThat(context).hasFailed();
-                    assertThat(context.getStartupFailure()).hasRootCauseMessage("Configure the dedicated cache named by ogiri.cache.name");
-                });
-        runner.withPropertyValues("ogiri.cache.max-age=0s").run(context -> assertThat(context).hasFailed());
-    }
-
-    @Test void disabledCacheDoesNotConsultAnExistingManagerAndCustomStorageWins() {
-        org.springframework.cache.CacheManager unwanted = new org.springframework.cache.concurrent.ConcurrentMapCacheManager() {
-            @Override public org.springframework.cache.Cache getCache(String name) { throw new AssertionError("Disabled cache consulted provider"); }
-        };
-        runner.withBean(org.springframework.cache.CacheManager.class, () -> unwanted)
-                .run(context -> assertThat(context).hasNotFailed());
+    @Test void customStorageWins() {
         var custom = new JdbcSessions(new DriverManagerDataSource(System.getenv("OGIRI_TEST_JDBC_URL"),
                 System.getenv("OGIRI_TEST_JDBC_USER"), System.getenv("OGIRI_TEST_JDBC_PASSWORD")));
-        runner.withPropertyValues("ogiri.cache.enabled=true").withBean(JdbcSessions.class, () -> custom)
+        runner.withBean(JdbcSessions.class, () -> custom)
                 .run(context -> { assertThat(context).hasNotFailed(); assertThat(context.getBean(JdbcSessions.class)).isSameAs(custom); });
+    }
+
+    @Test void customAccountsDoNotRequireAUserDetailsService() {
+        new WebApplicationContextRunner().withConfiguration(AutoConfigurations.of(OgiriAutoConfiguration.class))
+                .withPropertyValues("ogiri.enabled=true", "ogiri.endpoints-enabled=false")
+                .withBean(DataSource.class, () -> new DriverManagerDataSource(System.getenv("OGIRI_TEST_JDBC_URL"),
+                        System.getenv("OGIRI_TEST_JDBC_USER"), System.getenv("OGIRI_TEST_JDBC_PASSWORD")))
+                .withBean(OgiriAccounts.class, () -> new OgiriAccounts() {
+                    public Subject subject(org.springframework.security.core.Authentication authentication) {
+                        return new Subject("users", "", authentication.getName());
+                    }
+                    public UserDetails load(Subject subject) {
+                        return User.withUsername(subject.subjectId()).password("unused").roles("USER").build();
+                    }
+                })
+                .run(context -> assertThat(context).hasNotFailed().hasSingleBean(JdbcSessions.class).hasSingleBean(OgiriAccounts.class));
+    }
+
+    @Test void multipleTransactionManagersRequireExplicitStorageWiring() {
+        runner.withBean("firstManager", org.springframework.transaction.PlatformTransactionManager.class,
+                        () -> new org.springframework.jdbc.support.JdbcTransactionManager(
+                                new DriverManagerDataSource(System.getenv("OGIRI_TEST_JDBC_URL"),
+                                        System.getenv("OGIRI_TEST_JDBC_USER"), System.getenv("OGIRI_TEST_JDBC_PASSWORD"))))
+                .withBean("secondManager", org.springframework.transaction.PlatformTransactionManager.class,
+                        () -> new org.springframework.jdbc.support.JdbcTransactionManager(
+                                new DriverManagerDataSource(System.getenv("OGIRI_TEST_JDBC_URL"),
+                                        System.getenv("OGIRI_TEST_JDBC_USER"), System.getenv("OGIRI_TEST_JDBC_PASSWORD"))))
+                .run(context -> {
+                    assertThat(context).hasFailed();
+                    assertThat(context.getStartupFailure()).hasRootCauseMessage(
+                            "Multiple transaction managers found; provide a JdbcSessions bean using the manager for Ogiri's DataSource");
+                });
     }
 }

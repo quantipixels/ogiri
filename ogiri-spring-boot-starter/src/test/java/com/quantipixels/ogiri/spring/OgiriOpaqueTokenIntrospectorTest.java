@@ -53,12 +53,8 @@ class OgiriOpaqueTokenIntrospectorTest {
         assertFalse(principal.getAttributes().containsKey("token_hash"));
     }
 
-    @org.junit.jupiter.params.ParameterizedTest
-    @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
-    void disabledLockedExpiredAndMissingAccountsFailClosedWithoutCachingState(boolean cached) {
-        if (cached) sessions = new JdbcSessions(dataSource, SessionPolicy.defaults(),
-                new org.springframework.jdbc.support.JdbcTransactionManager(dataSource),
-                new SessionCache(new org.springframework.cache.concurrent.ConcurrentMapCache("accounts-test"), java.time.Duration.ofSeconds(5)));
+    @Test
+    void disabledLockedExpiredAndMissingAccountsFailClosed() {
         var token = sessions.issue(OWNER, "phone").token();
         var current = new AtomicReference<UserDetails>(User.withUsername("login").password("unused").roles("USER").build());
         var adapter = new OgiriOpaqueTokenIntrospector(sessions, subject -> current.get());

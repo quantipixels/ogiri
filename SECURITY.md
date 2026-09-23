@@ -26,7 +26,7 @@ Writes use Spring-managed independent transactions at READ_COMMITTED. Account ad
 
 Database read operations suspend outer JDBC or JPA transactions and query the primary. Do not supply transaction-aware or lagging-replica-routing data sources. An existing outer transaction needs additional connection capacity. Spring handles suspension/resumption, rollback and connection-state restoration; a connection loss during commit can still make the outcome unknown. In that case no credential is returned, but an orphaned row may occupy capacity. Do not blindly retry issuance.
 
-With caching disabled (the default), every session validation queries authoritative storage. Storage/directory failures remain distinct from invalid credentials. Opt-in caching changes revocation and database-outage behavior as described below. SQL timeout is five seconds; configure pool acquisition/socket timeouts, TLS and gateway limits separately. Cleanup skips locked expired rows and never determines whether an expired token is accepted.
+Every session validation queries authoritative storage. Storage/directory failures remain distinct from invalid credentials. Ogiri has no session lookup cache, so a storage outage cannot validate a previously observed session. SQL timeout is five seconds; configure pool acquisition/socket timeouts, TLS and gateway limits separately. Cleanup skips locked expired rows and never determines whether an expired token is accepted.
 
 ## Secret handling and proof
 
@@ -35,13 +35,3 @@ With caching disabled (the default), every session validation queries authoritat
 Tests use disposable databases and destructive fixture setup. Functional tests, selected mutation probes, CodeQL, resolved-dependency scanning and local benchmarks cover different boundaries. No one signal proves absence of vulnerabilities, every possible race, or production capacity. Human review is still appropriate before production adoption.
 
 The starter uses the host transaction manager to suspend and resume JDBC or JPA state correctly. Direct core users with JPA must pass the corresponding manager. Session transactions remain independent; they do not make password reset and concurrent sign-in atomic.
-
-## Opt-in cache consistency and trust
-
-`ogiri.cache.enabled=true` explicitly changes session revocation from authoritative per-request validation to bounded-age validation. The default maximum age is five seconds; accepted values are one millisecond through one minute. Every hit checks the original validation age and absolute session expiry. Hits do not renew age. Late fills retain their original validation timestamp. Accurate bounds require synchronized application/database clocks; detected backward movement before a validation timestamp forces a miss.
-
-The database remains durable session authority, but a cache hit is sufficient for the session portion of authentication. Protect cache writes, network access and deserialization accordingly. Use a dedicated region per session database; do not share it with unrelated applications or allow untrusted values or type metadata. Only token digests and serializable session metadata enter the region. Passwords, account flags, authorities, principals, raw tokens, misses and backend failures are not cached by Ogiri. Account status and permissions are still resolved for each request, with the freshness provided by your account adapter.
-
-Revocation evicts affected entries after a successful independent database commit. Eviction is best effort, not a distributed security protocol. A concurrent load can refill after eviction; another JVM's local cache is unaffected; a cache outage can prevent eviction. All such entries remain limited by their original age and session expiry. Direct SQL revocation and unconfigured writers may likewise remain invisible to cached readers until that deadline. Provider TTL is a memory-management policy and does not replace Ogiri's hit-time checks. Configure bounded provider eviction even though expired entries cannot authenticate.
-
-During a database outage an already cached live session can be accepted for the remaining window, provided account checks succeed. A cache miss/read failure uses authoritative storage; a database failure is never converted to a successful new cache entry. An eviction failure does not report a committed database revocation as rolled back. Keep caching disabled when your security policy requires immediate revocation or unconditional database availability on every request.

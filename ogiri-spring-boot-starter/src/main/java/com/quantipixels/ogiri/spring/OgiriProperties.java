@@ -19,7 +19,7 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
  */
 @ConfigurationProperties("ogiri")
 public record OgiriProperties(
-        @DefaultValue("true") boolean enabled,
+        @DefaultValue("false") boolean enabled,
         @DefaultValue("users") String realm,
         @DefaultValue("7d") Duration lifetime,
         @DefaultValue("10") int maximumSessions,

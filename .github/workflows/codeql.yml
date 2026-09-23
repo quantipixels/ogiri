@@ -2,7 +2,7 @@ name: CodeQL
 on:
   pull_request:
   push:
-    branches: [ori, build/ogiri-0.1.0]
+    branches: [ori]
   schedule:
     - cron: '17 3 * * 1'
 permissions:

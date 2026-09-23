@@ -1,6 +1,6 @@
 # Publish Ogiri
 
-Version is 0.1.0. The `release` profile signs the parent POM and both code artifacts, including sources and Javadoc. Normal `install` and CI never upload to Central. Historical tags are unchanged.
+Version is 0.0.1. The `release` profile signs the parent POM and both code artifacts, including sources and Javadoc. Normal `install` and CI never upload to Central. Historical tags are unchanged.
 
 Run both database suites and the independent consumer, review the resolved dependency scan, and pin the exact commit before release. Supply Sonatype user-token credentials through Maven server ID `central` outside the repository. Use GnuPG agent or `MAVEN_GPG_PASSPHRASE`; never put a private key or password in a POM, command argument or log. Verify namespace ownership in Central.
 
