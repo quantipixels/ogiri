@@ -82,8 +82,9 @@ public final class OgiriAutoConfiguration {
     }
 
     @Bean @ConditionalOnMissingBean
-    OgiriSecurity ogiriSecurity(OgiriOpaqueTokenIntrospector introspector, OgiriProperties properties) {
-        return new OgiriSecurity(introspector, properties);
+    OgiriSecurity ogiriSecurity(OgiriOpaqueTokenIntrospector introspector, OgiriProperties properties,
+            org.springframework.core.env.Environment environment) {
+        return new OgiriSecurity(introspector, properties, environment.getProperty("spring.mvc.servlet.path", ""));
     }
 
     @Bean @ConditionalOnMissingBean

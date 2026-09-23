@@ -18,9 +18,15 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 public final class OgiriSecurity {
     private final OgiriOpaqueTokenIntrospector introspector;
     private final OgiriProperties properties;
+    private final String servletPath;
 
     public OgiriSecurity(OgiriOpaqueTokenIntrospector introspector, OgiriProperties properties) {
+        this(introspector, properties, "");
+    }
+
+    public OgiriSecurity(OgiriOpaqueTokenIntrospector introspector, OgiriProperties properties, String servletPath) {
         this.introspector = introspector; this.properties = properties;
+        this.servletPath = servletPath == null || servletPath.equals("/") ? "" : servletPath.replaceFirst("/+$", "");
     }
 
     /** Add bearer authentication only. Authorization, other mechanisms and login CSRF policy remain yours. */
@@ -41,9 +47,12 @@ public final class OgiriSecurity {
 
     /** Only non-simple JSON sign-in; use for explicit CSRF exemptions in an application-owned chain. */
     public RequestMatcher signInRequest() {
+        String endpoint = properties.basePath() + "/sign-in";
         return request -> properties.endpointsEnabled()
                 && request.getMethod().equals("POST")
-                && request.getServletPath().equals(properties.basePath() + "/sign-in")
+                && (servletPath.isEmpty()
+                    ? request.getServletPath().equals(endpoint) && request.getPathInfo() == null
+                    : request.getServletPath().equals(servletPath) && endpoint.equals(request.getPathInfo()))
                 && "Ogiri".equals(request.getHeader("X-Requested-With"))
                 && request.getContentType() != null
                 && request.getContentType().split(";", 2)[0].trim().equalsIgnoreCase(MediaType.APPLICATION_JSON_VALUE);
