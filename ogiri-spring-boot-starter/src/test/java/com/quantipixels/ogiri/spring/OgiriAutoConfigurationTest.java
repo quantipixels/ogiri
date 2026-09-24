@@ -7,12 +7,15 @@ import java.time.Duration;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
+import org.springframework.boot.security.autoconfigure.web.servlet.ServletWebSecurityAutoConfiguration;
 import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.authentication.*;
 import org.springframework.security.crypto.password.*;
+import org.springframework.security.web.SecurityFilterChain;
 
 class OgiriAutoConfigurationTest {
     private final WebApplicationContextRunner runner = new WebApplicationContextRunner()
@@ -32,6 +35,22 @@ class OgiriAutoConfigurationTest {
     @Test void starterIsInactiveUntilEnabled() {
         new WebApplicationContextRunner().withConfiguration(AutoConfigurations.of(OgiriAutoConfiguration.class))
                 .run(context -> assertThat(context).hasNotFailed().doesNotHaveBean(JdbcSessions.class));
+    }
+
+    @Test void disabledOgiriLeavesBootSecurityAutoConfigurationInCharge() {
+        new WebApplicationContextRunner().withConfiguration(AutoConfigurations.of(
+                OgiriAutoConfiguration.class, SecurityAutoConfiguration.class,
+                ServletWebSecurityAutoConfiguration.class))
+                .withPropertyValues("ogiri.enabled=false")
+                .run(context -> {
+                    assertThat(context).hasNotFailed()
+                            .doesNotHaveBean(JdbcSessions.class)
+                            .doesNotHaveBean(OgiriSecurity.class)
+                            .doesNotHaveBean(OgiriEndpoints.class)
+                            .hasSingleBean(SecurityFilterChain.class);
+                    assertThat(context.getBean(SecurityFilterChain.class))
+                            .isSameAs(context.getBean("defaultSecurityFilterChain"));
+                });
     }
 
     @Test void missingDataSourceHasAnActionableFailure() {

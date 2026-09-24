@@ -55,7 +55,9 @@ ogiri:
   enabled: true
 ```
 
-`ogiri.enabled=true` is required; the other settings above show defaults. This opt-in prevents merely adding the dependency from registering security endpoints or requiring a database schema. Properties are bound and validated by Boot, with generated IDE metadata. Reaching the session cap rejects the new issuance; it does not evict another device. Expiry is fixed, not sliding. Session reads check current account status and authorities. Invalid credentials fail authentication; directory/storage outages remain failures, never fabricated anonymous success.
+`ogiri.enabled=true` is required; the other settings above show defaults. Until enabled, Ogiri registers no session endpoints, storage beans or security chain and needs no Ogiri schema. The starter still adds Spring Security, JDBC and MVC to the classpath, so [Boot's normal auto-configuration](https://docs.spring.io/spring-boot/reference/web/spring-security.html) applies: it can secure an application without an existing chain, and JDBC still needs the application's DataSource configuration. Disabling Ogiri does not disable those Spring features.
+
+Properties are bound and validated by Boot, with generated IDE metadata. Reaching the session cap rejects the new issuance; it does not evict another device. Expiry is fixed, not sliding. Session reads check current account status and authorities. Invalid credentials fail authentication; directory/storage outages remain failures, never fabricated anonymous success.
 
 ## Keep an existing security chain
 
