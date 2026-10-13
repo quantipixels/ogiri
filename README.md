@@ -21,7 +21,7 @@ In your application's POM (with `spring-boot-starter-parent` 4.1.1):
 ```xml
 <properties>
   <jackson-bom.version>3.1.7</jackson-bom.version>
-  <tomcat.version>11.0.26</tomcat.version>
+  <tomcat.version>11.0.27</tomcat.version>
 </properties>
 <dependencyManagement>
   <dependencies>
