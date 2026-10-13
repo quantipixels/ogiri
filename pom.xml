@@ -18,7 +18,7 @@
     <!-- Runtime compatibility: Spring Boot 4.x, Java 17+, Jackson 3. Build tools require Java 21+. -->
     <spring-boot.version>4.1.1</spring-boot.version>
     <jackson.version>3.1.7</jackson.version><ogiri.test.jvm>${java.home}/bin/java</ogiri.test.jvm>
-    <tomcat.version>11.0.26</tomcat.version>
+    <tomcat.version>11.0.27</tomcat.version>
     <postgresql.version>42.7.13</postgresql.version>
   </properties>
   <dependencyManagement><dependencies>
