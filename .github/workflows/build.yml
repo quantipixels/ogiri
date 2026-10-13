@@ -1,0 +1,164 @@
+name: Build
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, labeled]
+  push:
+  schedule:
+    - cron: '31 5 * * 1'
+  workflow_dispatch:
+    inputs:
+      benchmark:
+        description: Measure local session lookup performance
+        type: boolean
+        default: false
+permissions: {}
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  repo:
+    name: Repository checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    env:
+      MISE_ENABLE_TOOLS: python,actionlint,zizmor,gitleaks,osv-scanner,shellcheck,shfmt
+      GATE_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+      GATE_FORCE_FULL: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event.action == 'ready_for_review' || contains(github.event.pull_request.labels.*.name, 'full-ci') }}
+    outputs:
+      java: ${{ steps.paths.outputs.java }}
+      parity: ${{ steps.paths.outputs.parity }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
+        with:
+          version: 2026.8.10
+          cache: false
+      - id: paths
+        run: mise run ci:paths
+      - run: mise run check:repo
+
+  java:
+    needs: repo
+    if: needs.repo.outputs.java == 'true'
+    name: Java ${{ matrix.java }} / ${{ matrix.database }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        java: ['temurin-17.0.17+10', '25.0.2']
+        database: [postgresql, mysql]
+        include:
+          - database: postgresql
+            image: postgres:16@sha256:ca0bd484cb98bf4b24eb1010e73fb3fcbd6714d240fbc1a10eea5b7dbecb641d
+            port: 5432
+            health: pg_isready -U ogiri -d ogiri_test
+            url: jdbc:postgresql://localhost:5432/ogiri_test?socketTimeout=10
+          - database: mysql
+            image: mysql:8.4@sha256:6ea90827b1100f8f2ae306a539f86d2c264a26ed435a2a9f75551dd5c3aeb242
+            port: 3306
+            health: mysqladmin ping -h 127.0.0.1
+            url: jdbc:mysql://localhost:3306/ogiri_test?allowPublicKeyRetrieval=true&sslMode=DISABLED&socketTimeout=10000
+    services:
+      database:
+        image: ${{ matrix.image }}
+        env:
+          POSTGRES_USER: ogiri
+          POSTGRES_PASSWORD: ogiri
+          POSTGRES_DB: ogiri_test
+          MYSQL_ROOT_PASSWORD: root-test-only
+          MYSQL_USER: ogiri
+          MYSQL_PASSWORD: ogiri
+          MYSQL_DATABASE: ogiri_test
+        ports:
+          - ${{ matrix.port }}:${{ matrix.port }}
+        options: >-
+          --health-cmd "${{ matrix.health }}"
+          --health-interval 5s --health-timeout 5s --health-retries 30
+    env:
+      MISE_ENABLE_TOOLS: java,maven,python,osv-scanner
+      MISE_JAVA_VERSION: ${{ matrix.java }}
+      OGIRI_TEST_DATABASE: ${{ matrix.database }}
+      OGIRI_TEST_JDBC_URL: ${{ matrix.url }}
+      OGIRI_TEST_JDBC_USER: ogiri
+      OGIRI_TEST_JDBC_PASSWORD: ogiri
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+        with:
+          persist-credentials: false
+      - uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
+        with:
+          version: 2026.8.10
+          cache: false
+      - run: mise run ci:java
+      - name: Inventory and scan resolved runtime dependencies
+        if: matrix.java == 'temurin-17.0.17+10' && matrix.database == 'postgresql'
+        run: mise run check:java:sbom
+      - name: Rehearse the unsigned local Central bundle
+        if: matrix.java == 'temurin-17.0.17+10' && matrix.database == 'postgresql'
+        run: mise run check:java:release
+      - name: Optional local session lookup benchmark
+        if: github.event_name == 'workflow_dispatch' && inputs.benchmark
+        run: mise run check:java:benchmark
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: always()
+        with:
+          name: verification-java${{ matrix.java }}-${{ matrix.database }}
+          path: |
+            target/*.json
+            **/target/surefire-reports/TEST-*.xml
+            **/target/benchmark-*.json
+            target/ogiri-unsigned-bundle.zip
+            ogiri/target/*.jar
+            ogiri-spring-boot-autoconfigure/target/*.jar
+            ogiri-spring-boot-starter/target/*.jar
+          retention-days: 7
+
+  parity:
+    name: Spring HTTP conformance
+    needs: repo
+    if: needs.repo.outputs.parity == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    env:
+      MISE_ENABLE_TOOLS: python,uv,node,java,maven
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+        with:
+          persist-credentials: false
+      - uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
+        with:
+          version: 2026.8.10
+          cache: false
+      - run: mise run check:parity
+
+  quality-gates:
+    name: quality-gates
+    if: always()
+    needs: [repo, java, parity]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    env:
+      MISE_ENABLE_TOOLS: python
+      GATE_RESULTS: ${{ toJSON(needs) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+        with:
+          persist-credentials: false
+      - uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
+        with:
+          version: 2026.8.10
+          cache: false
+      - run: mise run ci:result
