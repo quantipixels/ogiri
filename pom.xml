@@ -19,7 +19,7 @@
     <spring-boot.version>4.1.1</spring-boot.version>
     <jackson.version>3.1.7</jackson.version><ogiri.test.jvm>${java.home}/bin/java</ogiri.test.jvm>
     <tomcat.version>11.0.27</tomcat.version>
-    <postgresql.version>42.7.13</postgresql.version>
+    <postgresql.version>42.7.14</postgresql.version>
   </properties>
   <dependencyManagement><dependencies>
     <dependency><groupId>tools.jackson</groupId><artifactId>jackson-bom</artifactId><version>${jackson.version}</version><type>pom</type><scope>import</scope></dependency>
