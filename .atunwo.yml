@@ -1,0 +1,5 @@
+version: 1
+review:
+  approval: human
+  automatic: true
+  min_severity: medium
