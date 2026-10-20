@@ -22,7 +22,7 @@
           <configuration><bestPractices>true</bestPractices></configuration>
           <executions><execution><id>sign</id><phase>verify</phase><goals><goal>sign</goal></goals></execution></executions>
         </plugin>
-        <plugin><groupId>org.sonatype.central</groupId><artifactId>central-publishing-maven-plugin</artifactId><version>0.11.0</version>
+        <plugin><groupId>org.sonatype.central</groupId><artifactId>central-publishing-maven-plugin</artifactId><version>0.12.0</version>
           <extensions>true</extensions><configuration>
             <publishingServerId>central</publishingServerId><autoPublish>${central.autoPublish}</autoPublish><waitUntil>${central.waitUntil}</waitUntil>
             <skipPublishing>${central.skipPublishing}</skipPublishing>
