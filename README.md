@@ -2,7 +2,7 @@
 
 Ogiri adds database-backed opaque sessions and devise_token_auth (DTA) account endpoints to a Spring Boot application. Existing DTA frontends keep working. Every authenticated request checks the stored session and the current account. Your application keeps its account model and authorization rules.
 
-Requirements: Spring Boot 4.x (built against 4.1.1), Java 17+, Jackson 3, PostgreSQL or MySQL 8.4 (InnoDB). Boot 3 and Jackson 2 are unsupported. Version `0.1.0` is an unpublished prototype; before 1.0, API and schema changes can break compatibility (see the [changelog](CHANGELOG.md)).
+Requirements: Spring Boot 4.x (built against 4.1.2), Java 17+, Jackson 3, PostgreSQL or MySQL 8.4 (InnoDB). Boot 3 and Jackson 2 are unsupported. Version `0.1.0` is an unpublished prototype; before 1.0, API and schema changes can break compatibility (see the [changelog](CHANGELOG.md)).
 
 Coding agents: use the [ogiri-integration skill](skills/ogiri-integration/SKILL.md) to add Ogiri to an app, and [auth-design](skills/auth-design/SKILL.md) to plan auth first.
 
@@ -16,11 +16,11 @@ mise exec -- bash scripts/platform/java.sh sample
 
 This stages the artifacts in `target/java/consumer-cache` and writes `target/java/consumer-settings.xml`; pass that file with `mvn -s` from your application. It needs no database and does not touch your shared Maven cache.
 
-In your application's POM (with `spring-boot-starter-parent` 4.1.1):
+In your application's POM (with `spring-boot-starter-parent` 4.1.2):
 
 ```xml
 <properties>
-  <jackson-bom.version>3.1.7</jackson-bom.version>
+  <jackson-bom.version>3.2.4</jackson-bom.version>
   <tomcat.version>11.0.27</tomcat.version>
 </properties>
 <dependencyManagement>
@@ -47,7 +47,7 @@ In your application's POM (with `spring-boot-starter-parent` 4.1.1):
 </dependencies>
 ```
 
-For MySQL use `com.mysql:mysql-connector-j`. The Jackson and Tomcat overrides pick up security fixes missing from Boot 4.1.1's defaults. The BOM aligns only Ogiri artifacts.
+For MySQL use `com.mysql:mysql-connector-j`. The Jackson override matches the Jackson version Ogiri is built against; the Tomcat pin matches Boot 4.1.2's default and keeps older Boot 4.1.x releases on a patched Tomcat. The BOM aligns only Ogiri artifacts.
 
 ## 2. Create the tables
 

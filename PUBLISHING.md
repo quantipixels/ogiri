@@ -2,7 +2,7 @@
 
 Version is `0.1.0`. The reactor publishes five coordinates under `com.quantipixels.ogiri`: `ogiri-parent` and `ogiri-bom` (POMs), plus `ogiri`, `ogiri-spring-boot-autoconfigure`, and `ogiri-spring-boot-starter` (binary, sources and Javadoc JARs with POMs). The dependency-only starter's source/Javadoc attachments contain an explanatory README. The standalone BOM aligns only the three Ogiri libraries, without importing the build parent's dependency management.
 
-Supported runtime: Spring Boot 4.x, Java 17+, Jackson 3; current dependency baseline is Boot 4.1.1/Jackson 3.1.7. Build tools require Java 21+; the gate selects JDK 25. Boot 3/Jackson 2 are unsupported.
+Supported runtime: Spring Boot 4.x, Java 17+, Jackson 3; current dependency baseline is Boot 4.1.2/Jackson 3.2.4. Build tools require Java 21+; the gate selects JDK 25. Boot 3/Jackson 2 are unsupported.
 
 ## Local unsigned rehearsal
 
