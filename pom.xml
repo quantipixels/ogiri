@@ -23,7 +23,7 @@
   </properties>
   <dependencyManagement><dependencies>
     <dependency><groupId>tools.jackson</groupId><artifactId>jackson-bom</artifactId><version>${jackson.version}</version><type>pom</type><scope>import</scope></dependency>
-    <!-- Boot 4.1.1 predates the fixes for CVE-2026-65905, CVE-2026-65182 and CVE-2026-68525. -->
+    <!-- Boot 4.1.2 ships this Tomcat; the explicit pin keeps the fixes for CVE-2026-65905, CVE-2026-65182 and CVE-2026-68525 if the Boot import changes. -->
     <dependency><groupId>org.apache.tomcat.embed</groupId><artifactId>tomcat-embed-core</artifactId><version>${tomcat.version}</version></dependency>
     <dependency><groupId>org.apache.tomcat.embed</groupId><artifactId>tomcat-embed-el</artifactId><version>${tomcat.version}</version></dependency>
     <dependency><groupId>org.apache.tomcat.embed</groupId><artifactId>tomcat-embed-websocket</artifactId><version>${tomcat.version}</version></dependency>
