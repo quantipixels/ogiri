@@ -1,5 +1,5 @@
-version: 1
 review:
-  approval: human
   automatic: true
+  shadow: false
+  approve: false
   min_severity: medium
