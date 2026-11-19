@@ -86,13 +86,24 @@ def staged():
     print("check:staged: PASS", flush=True)
 
 
+def commit_reachable(sha):
+    completed = subprocess.run(
+        ["git", "cat-file", "-e", f"{sha}^{{commit}}"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=False,
+    )
+    return completed.returncode == 0
+
+
 def paths():
     base = os.environ.get("GATE_BASE_SHA", "")
     force = os.environ.get("GATE_FORCE_FULL", "false") == "true"
-    if force or not base or set(base) == {"0"}:
+    # Empty, all-zero and unreachable bases take the same full run as GATE_FORCE_FULL.
+    # A reachable base whose diff fails is still a gate failure.
+    if force or not base or set(base) == {"0"} or not commit_reachable(base):
         changed = None
     else:
-        # A missing base is a gate failure, never an intentional path skip.
         changed = git_paths("diff", "--name-only", base, "HEAD")
     common = {"mise.toml", "lefthook.yml", ".gitignore", "compose.yaml"}
     shared = changed is None or any(p.as_posix() in common or p.as_posix().startswith((".github/", "contracts/", "examples/")) or (p.as_posix().startswith("scripts/") and not p.as_posix().startswith("scripts/platform/")) for p in changed)
