@@ -1,6 +1,6 @@
 # Rails DTA oracle
 
-A disposable Rails 8 API application, not an Ogiri implementation. The Docker image pins Ruby by image digest and locks Rails 8.0.5.1, Devise `05811fb8366edd08874111d0f6fb44543e1c91ef`, and DeviseTokenAuth `b02076a930f7d0a4a155e25feaa7a50b86dbc625`. Controllers and token handling come from the upstream gems without patches.
+A disposable Rails 8 API application, not an Ogiri implementation. The Docker image pins Ruby by image digest and locks Rails 8.0.5.2, Devise `05811fb8366edd08874111d0f6fb44543e1c91ef`, and DeviseTokenAuth `b02076a930f7d0a4a155e25feaa7a50b86dbc625`. Controllers and token handling come from the upstream gems without patches.
 
 From the repository root:
 
